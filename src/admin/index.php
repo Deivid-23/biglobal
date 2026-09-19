@@ -7,7 +7,7 @@ require_once "../bd/conexion.php";
    PROTEGER PANEL ADMINISTRATIVO
 ========================================================= */
 
-protegerRol("admin");
+protegerRol("administrador");
 
 
 /* =========================================================

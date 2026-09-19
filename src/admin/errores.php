@@ -2,7 +2,7 @@
 
 require_once "../auth/proteger.php";
 
-protegerRol("admin");
+protegerRol("administrador");
 
 /*
  * "Reportes y errores" se consolidó dentro de la sección de
