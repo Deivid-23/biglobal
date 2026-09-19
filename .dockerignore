@@ -1,0 +1,13 @@
+.git
+.gitignore
+.env
+.env.example
+README.md
+database/
+tools/
+Dockerfile
+.dockerignore
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

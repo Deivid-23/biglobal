@@ -1,0 +1,801 @@
+/* ==========================================================================
+   VARIABLES DE COLOR Y CONFIGURACIÓN (Estilo Imagen 1)
+   ========================================================================== */
+:root {
+    --color-primario: #2563EB;
+    /* Azul vibrante principal */
+    --color-primario-oscuro: #1D4ED8;
+    --color-secundario: #EFF6FF;
+    /* Fondo azul ultra suave */
+    --color-texto: #1E293B;
+    /* Azul oscuro/gris para texto principal */
+    --color-texto-suave: #64748B;
+    /* Gris para párrafos y detalles */
+    --blanco: #FFFFFF;
+}
+
+body {
+    background-color: var(--blanco);
+    color: var(--color-texto);
+    font-family: 'Lato', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: 'Manrope', sans-serif;
+    color: var(--color-texto);
+    margin: 0;
+}
+
+.color-primario {
+    color: var(--color-primario) !important;
+}
+
+/* ==========================================================================
+   BARRA DE NAVEGACIÓN
+   ========================================================================== */
+.barra-navegacion {
+    background-color: var(--blanco);
+    padding: 1rem 0;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.04);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.contenedor-logo {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.logo-img {
+    height: 48px;
+    width: auto;
+    margin-right: 10px;
+}
+
+.logo-texto {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 800;
+    font-size: 1.5rem;
+    color: var(--color-primario);
+}
+
+.navbar-nav {
+    margin: 0 auto;
+}
+
+.nav-link {
+    color: var(--color-texto) !important;
+    font-weight: 600;
+    padding: 0.5rem 1.2rem;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+    color: var(--color-primario) !important;
+}
+
+.botones-acceso {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+@media (max-width: 991px) {
+    .botones-acceso {
+        margin-top: 1.5rem;
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+/* ==========================================================================
+   BOTONES PERSONALIZADOS
+   ========================================================================== */
+.btn-principal {
+    background-color: var(--color-primario);
+    color: var(--blanco) !important;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    padding: 0.6rem 1.4rem;
+    border-radius: 8px;
+    border: 2px solid var(--color-primario);
+    text-decoration: none;
+    text-align: center;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.btn-principal:hover {
+    background-color: var(--color-primario-oscuro);
+    border-color: var(--color-primario-oscuro);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.btn-secundario {
+    background-color: transparent;
+    color: var(--color-primario) !important;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    padding: 0.6rem 1.4rem;
+    border-radius: 8px;
+    border: 2px solid var(--color-primario);
+    text-decoration: none;
+    text-align: center;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.btn-secundario:hover {
+    background-color: var(--color-secundario);
+}
+
+.btn-grande {
+    padding: 0.8rem 1.8rem;
+    font-size: 1.05rem;
+}
+
+/* ==========================================================================
+   SECCIÓN HERO (PORTADA)
+   ========================================================================== */
+.seccion-hero {
+    padding: 5rem 0;
+    background: linear-gradient(180deg, var(--color-secundario) 0%, var(--blanco) 100%);
+    min-height: calc(80vh - 80px);
+}
+
+.contenedor-fila-hero {
+    align-items: center;
+}
+
+@media (max-width: 991px) {
+    .contenedor-fila-hero {
+        flex-direction: column-reverse;
+        gap: 3rem;
+        text-align: center;
+    }
+}
+
+.etiqueta-alerta {
+    display: inline-block;
+    background-color: #DBEAFE;
+    color: var(--color-primario-oscuro);
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    margin-bottom: 1.5rem;
+}
+
+.titulo-principal {
+    font-size: 3.2rem;
+    font-weight: 900;
+    line-height: 1.15;
+    margin-bottom: 1.5rem;
+    color: #0F172A;
+}
+
+.descripcion-hero {
+    font-size: 1.2rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    color: var(--color-texto-suave);
+}
+
+.contenedor-botones-hero {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+@media (max-width: 991px) {
+    .contenedor-botones-hero {
+        justify-content: center;
+    }
+
+    .titulo-principal {
+        font-size: 2.4rem;
+    }
+}
+
+/* ==========================================================================
+    ESTILOS PARA LA IMG PRINCIPLAL (HERO)
+   ========================================================================== */
+.col-imagen-mascota {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 420px;
+}
+
+/* Resplandor suave detrás de los estudiantes */
+.fondo-resplandor-hero {
+    position: absolute;
+    width: 380px;
+    height: 380px;
+    background: linear-gradient(135deg, #DBEAFE 0%, #FFEDD5 100%);
+    border-radius: 50%;
+    filter: blur(50px);
+    z-index: 1;
+    opacity: 0.85;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Sombra adaptada a la silueta humana */
+.imagen-hero-estudiantes {
+    z-index: 2;
+    max-height: 520px;
+    width: auto;
+    filter: drop-shadow(0 20px 25px rgba(0, 0, 0, 0.12));
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.imagen-hero-estudiantes:hover {
+    transform: scale(1.03);
+}
+
+/* Tarjeta flotante con efecto vidrio y animación */
+.tarjeta-flotante-hero {
+    position: absolute;
+    bottom: 30px;
+    left: 10%;
+    z-index: 3;
+    background: rgba(255, 255, 255, 0.85);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    padding: 0.75rem 1.25rem;
+    border-radius: 16px;
+    box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1);
+    animation: flotar 4s ease-in-out infinite alternate;
+}
+.icono-flotante {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+}
+
+/* Animación de flotación suave */
+@keyframes flotar {
+    0% {
+        transform: translateY(0px);
+    }
+    100% {
+        transform: translateY(-12px);
+    }
+}
+
+/* Ajuste responsive para pantallas móviles */
+@media (max-width: 768px) {
+    .fondo-resplandor-hero {
+        width: 260px;
+        height: 260px;
+    }
+    .imagen-hero-estudiantes {
+        max-height: 380px;
+    }
+    
+    /* Ajustes para que la tarjeta flotante se adapte perfecto al celular */
+    .tarjeta-flotante-hero {
+        bottom: 15px;
+        left: 5%;
+        padding: 0.5rem 0.85rem;
+        border-radius: 12px;
+        box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.15);
+    }
+    
+    .icono-flotante {
+        width: 32px;
+        height: 32px;
+        font-size: 0.9rem;
+    }
+    
+    .tarjeta-flotante-hero .fw-bold {
+        font-size: 0.8rem !important;
+    }
+    
+    .tarjeta-flotante-hero .text-muted {
+        font-size: 0.65rem !important;
+    }
+}
+
+/* ==========================================================================
+    BARRA DE CARACTERÍSTICAS
+   ========================================================================== */
+.barra-caracteristicas {
+    background-color: var(--blanco);
+    border-top: 1px solid #F1F5F9;
+    border-bottom: 1px solid #F1F5F9;
+}
+
+.fila-caracteristicas {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2rem;
+}
+
+.fila-caracteristicas .col {
+    text-align: center;
+    min-width: 140px;
+    flex: 1;
+}
+
+.fila-caracteristicas i,
+.fila-caracteristicas img {
+    font-size: 2rem;
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    color: var(--color-primario);
+    margin-bottom: 0.8rem;
+    transition: transform 0.2s ease;
+}
+
+.fila-caracteristicas .col:hover img,
+.fila-caracteristicas .col:hover i {
+    transform: scale(1.1);
+}
+
+/* ==========================================================================
+    ESTILOS PARA LA SECCIÓN DE VENTAJAS ("¿Por qué usar nuestra plataforma?")
+   ========================================================================== */
+.seccion-ventajas {
+    background-color: #F8FAFC;
+    padding: 5rem 0;
+}
+
+.tarjeta-ventaja {
+    background-color: var(--blanco);
+    border: 1px solid #E2E8F0;
+    border-radius: 16px;
+    padding: 2rem 1.5rem;
+    height: 100%;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.tarjeta-ventaja:hover {
+    transform: translateY(-5px);
+    border-color: var(--color-primario);
+    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.08);
+}
+
+.icono-ventaja {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+/* Tonos suaves de fondo para los iconos de las ventajas */
+.fondo-verde-suave {
+    background-color: #D1FAE5;
+    color: #059669;
+}
+
+.fondo-naranja-suave {
+    background-color: #FFEDD5;
+    color: #F97316;
+}
+
+.fondo-azul-suave {
+    background-color: #DBEAFE;
+    color: #2563EB;
+}
+
+.fondo-celeste-suave {
+    background-color: #E0F2FE;
+    color: #0284C7;
+}
+
+/* ==========================================================================
+    ESTILOS PARA LA SECCIÓN DEL MÉTODO (CÓMO FUNCIONA)
+   ========================================================================== */
+.tarjeta-metodo {
+    background-color: var(--blanco);
+    border: 1px solid #E2E8F0;
+    border-radius: 16px;
+    padding: 2.5rem 2rem;
+    height: 100%;
+    position: relative;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.tarjeta-metodo:hover {
+    transform: translateY(-5px);
+    border-color: var(--color-primario);
+    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.08);
+}
+
+.numero-paso {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #E2E8F0;
+    font-family: 'Manrope', sans-serif;
+}
+
+.icono-metodo {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+/* ==========================================================================
+    SECCIÓN DE CURSOS 
+   ========================================================================== */
+.seccion-cursos {
+    padding: 5rem 0;
+    background-color: #F8FAFC;
+}
+
+.tarjeta-curso {
+    background: var(--blanco);
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #E2E8F0;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.tarjeta-curso:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.08);
+}
+
+.cabecera-curso {
+    height: 140px;
+    padding: 1.2rem;
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    background-size: 16px 16px;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.25) 1.5px, transparent 1.5px);
+}
+
+.fondo-verde {
+    background-color: #059669;
+}
+
+.fondo-verde-claro {
+    background-color: #10B981;
+}
+
+.fondo-azul {
+    background-color: #3B82F6;
+}
+
+.fondo-naranja {
+    background-color: #F97316;
+}
+
+.fondo-lima {
+    background-color: #84CC16;
+}
+
+.fondo-rojo {
+    background-color: #EF4444;
+}
+
+.etiqueta-curso {
+    background-color: rgba(255, 255, 255, 0.25);
+    color: var(--blanco);
+    padding: 0.25rem 0.75rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+}
+
+.etiqueta-nivel {
+    background-color: var(--blanco);
+    color: var(--color-texto);
+    padding: 0.25rem 0.75rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.boton-reproducir {
+    position: absolute;
+    bottom: -18px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    background-color: var(--blanco);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #059669;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: none;
+    transition: transform 0.2s;
+}
+
+.tarjeta-curso:hover .boton-reproducir {
+    transform: scale(1.1);
+}
+
+.cuerpo-curso {
+    padding: 1.8rem 1.2rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.titulo-curso {
+    font-size: 1.25rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    color: var(--color-texto);
+}
+
+.detalles-curso {
+    display: flex;
+    justify-content: space-between;
+    color: var(--color-texto-suave);
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #F1F5F9;
+    padding-bottom: 1rem;
+}
+
+.pie-curso {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+}
+
+.calificacion {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--color-texto);
+}
+
+.calificacion i {
+    color: #FBBF24;
+}
+
+.enlace-comenzar {
+    color: #059669;
+    font-weight: 700;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+}
+
+.enlace-comenzar:hover {
+    color: #047857;
+}
+
+/* ==========================================================================
+   SECCIÓN DE PLANES / PRECIOS
+   ========================================================================== */
+.seccion-planes {
+    padding: 5rem 0;
+    background-color: var(--blanco);
+}
+
+.tarjeta-plan {
+    border: 2px solid #E2E8F0;
+    border-radius: 20px;
+    padding: 2.5rem;
+    height: 100%;
+    transition: all 0.3s ease;
+    background: var(--blanco);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.tarjeta-plan:hover {
+    border-color: var(--color-primario);
+    transform: translateY(-5px);
+}
+
+.tarjeta-plan.plan-destacado {
+    border-color: var(--color-primario);
+    background: linear-gradient(180deg, var(--color-secundario) 0%, var(--blanco) 100%);
+    box-shadow: 0 20px 25px -5px rgba(37, 99, 235, 0.1);
+}
+
+.etiqueta-popular {
+    position: absolute;
+    top: -12px;
+    right: 24px;
+    background-color: var(--color-primario);
+    color: var(--blanco);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.25rem 0.75rem;
+    border-radius: 50px;
+}
+
+.precio-plan {
+    font-size: 3rem;
+    font-weight: 900;
+    color: var(--color-texto);
+    margin: 1.5rem 0;
+}
+
+.precio-plan span {
+    font-size: 1rem;
+    font-weight: 400;
+    color: var(--color-texto-suave);
+}
+
+.lista-beneficios {
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0 2rem;
+}
+
+.lista-beneficios li {
+    margin-bottom: 0.8rem;
+    color: var(--color-texto-suave);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.lista-beneficios i {
+    color: #10B981;
+}
+
+/* ==========================================================================
+    ESTILOS PARA LA SECCIÓN DE PREGUNTAS FRECUENTES (FAQ)
+   ========================================================================== */
+.seccion-faq {
+    background-color: #F8FAFC;
+    padding: 5rem 0;
+}
+
+/* Contenedor FAQ con ancho máximo */
+.container-faq {
+    max-width: 800px;
+}
+
+.accordion-item {
+    border: 1px solid #E2E8F0 !important;
+    overflow: hidden;
+    margin-bottom: 1rem;
+    border-radius: 12px !important;
+}
+
+.accordion-button {
+    font-family: 'Manrope', sans-serif;
+    color: var(--color-texto);
+    background-color: var(--blanco);
+    box-shadow: none !important;
+}
+
+.accordion-button:not(.collapsed) {
+    color: var(--color-primario);
+    background-color: var(--color-secundario);
+}
+
+.accordion-button:focus {
+    border-color: var(--color-primario);
+    box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.15) !important;
+}
+
+/* ==========================================================================
+    PIE DE PÁGINA (FOOTER)
+   ========================================================================== */
+.pie-pagina {
+    background-color: #F8FAFC;
+    border-top: 1px solid #E2E8F0;
+    color: var(--color-texto-suave);
+}
+
+.redes-sociales a {
+    width: 36px;
+    height: 36px;
+    background-color: var(--blanco);
+    border: 1px solid #E2E8F0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-texto);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.redes-sociales a:hover {
+    background-color: var(--color-primario);
+    border-color: var(--color-primario);
+    color: var(--blanco);
+}
+
+/* Footer */
+.enlaces-footer li {
+    margin-bottom: 0.6rem;
+}
+
+.enlaces-footer a,
+.enlace-legal {
+    color: var(--color-texto-suave);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.enlaces-footer a:hover,
+.enlace-legal:hover {
+    color: var(--color-primario);
+}
+
+.linea-footer {
+    border-color: #E2E8F0;
+    margin: 2rem 0 1rem;
+}
+
+.campo-boletin {
+    border-radius: 8px 0 0 8px;
+    border: 1px solid #CBD5E1;
+    padding: 0.6rem 1rem;
+}
+
+.campo-boletin:focus {
+    border-color: var(--color-primario);
+    box-shadow: none;
+}
+
+.input-group .btn-principal {
+    border-radius: 0 8px 8px 0;
+    padding: 0.6rem 1.2rem;
+}
+
+/* Botón secundario dentro del formulario de registro */
+#form-register .btn-secondary {
+    margin-top: 10px;
+}
+
+/* Primer form-group dentro del formulario de login */
+#form-login .form-group:first-of-type {
+    margin-top: 16px;
+}
+
+
+/* Texto pequeño en tarjeta flotante */
+.texto-pequeno {
+    font-size: 0.75rem;
+}

@@ -1,0 +1,14 @@
+# Configuracion sensible
+.env
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode/
+.idea/
+
+# Dependencias (si se agregan en el futuro)
+/vendor/
+/node_modules/
