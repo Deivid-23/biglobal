@@ -9,52 +9,76 @@
 ========================================================= */
 
 :root {
-    --primary: #2563EB;
-    --primary-dark: #1D4ED8;
-    --primary-light: #EFF6FF;
+    --indigo: #4338CA;
+    --indigo-dark: #372AA6;
+    --indigo-light: #EEF0FC;
 
-    --background: #F8FAFC;
+    --teal: #0D9488;
+    --teal-dark: #0B7A70;
+    --teal-light: #E6F6F4;
+
+    --plum: #6D4FA0;
+    --plum-light: #F1ECF8;
+
+    --amber: #B45309;
+    --amber-light: #FBF0E4;
+
+    --rose: #A6436B;
+    --rose-light: #F8EBF0;
+
+    --terracotta: #B3452C;
+    --terracotta-light: #F9EAE6;
+
+    --background: #F6F6FA;
     --white: #FFFFFF;
 
-    --text-dark: #172033;
-    --text: #344054;
-    --text-light: #667085;
-    --muted: #98A2B3;
+    --text-dark: #1C1B2E;
+    --text: #46445C;
+    --text-light: #6F6D85;
+    --muted: #9997AC;
 
-    --border: #E4E7EC;
-    --border-light: #F0F2F5;
+    --border: #E5E4ED;
+    --border-light: #EFEEF5;
 
-    --success: #12B76A;
-    --success-light: #ECFDF3;
+    --success: var(--teal);
+    --success-light: var(--teal-light);
 
-    --warning: #F79009;
-    --warning-light: #FFFAEB;
+    --warning: var(--amber);
+    --warning-light: var(--amber-light);
 
-    --danger: #EF4444;
-    --danger-light: #FEF2F2;
+    --danger: var(--terracotta);
+    --danger-light: var(--terracotta-light);
 
-    --purple: #7F56D9;
-    --purple-light: #F4F3FF;
+    --purple: var(--plum);
+    --purple-light: var(--plum-light);
 
-    --orange: #F97316;
-    --orange-light: #FFF7ED;
+    --orange: var(--amber);
+    --orange-light: var(--amber-light);
 
-    --pink: #EC4899;
-    --pink-light: #FDF2F8;
+    --pink: var(--rose);
+    --pink-light: var(--rose-light);
 
-    --yellow: #EAB308;
-    --yellow-light: #FEFCE8;
+    --yellow: #92702A;
+    --yellow-light: #F7F1E3;
+
+    /* Alias de compatibilidad: el resto del CSS usa --primary */
+    --primary: var(--indigo);
+    --primary-dark: var(--indigo-dark);
+    --primary-light: var(--indigo-light);
+
+    --font-display: 'Sora', 'Segoe UI', Arial, sans-serif;
+    --font-body: 'IBM Plex Sans', 'Segoe UI', Arial, sans-serif;
 
     --sidebar-width: 260px;
 
-    --radius-sm: 9px;
-    --radius-md: 12px;
-    --radius-lg: 16px;
-    --radius-xl: 20px;
+    --radius-sm: 8px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 18px;
 
-    --shadow-sm: 0 1px 3px rgba(16, 24, 40, 0.06);
-    --shadow: 0 4px 12px rgba(16, 24, 40, 0.06);
-    --shadow-lg: 0 10px 30px rgba(16, 24, 40, 0.10);
+    --shadow-sm: 0 1px 2px rgba(28, 27, 46, 0.05);
+    --shadow: 0 6px 16px rgba(28, 27, 46, 0.08);
+    --shadow-lg: 0 16px 40px rgba(28, 27, 46, 0.14);
 }
 
 
@@ -77,7 +101,7 @@ body {
     background: var(--background);
     color: var(--text-dark);
 
-    font-family: 'Lato', Arial, sans-serif;
+    font-family: var(--font-body);
 
     min-height: 100vh;
 }
@@ -90,7 +114,7 @@ h5,
 h6 {
     margin-top: 0;
 
-    font-family: 'Manrope', Arial, sans-serif;
+    font-family: var(--font-display);
 
     color: var(--text-dark);
 }
@@ -212,7 +236,7 @@ img {
 }
 
 .logo-admin span {
-    font-family: 'Manrope', Arial, sans-serif;
+    font-family: var(--font-display);
 
     font-size: 22px;
     font-weight: 800;
@@ -285,10 +309,12 @@ img {
 }
 
 .menu-item.active {
-    background: var(--primary);
-    color: var(--white);
+    padding-left: 10px;
 
-    box-shadow: 0 5px 12px rgba(37, 99, 235, 0.20);
+    border-left: 3px solid var(--indigo);
+
+    background: var(--indigo-light);
+    color: var(--indigo);
 }
 
 
@@ -415,7 +441,7 @@ img {
 .menu-toggle:hover {
     background: var(--primary-light);
     color: var(--primary);
-    border-color: #BFDBFE;
+    border-color: #C7D2FE;
 }
 
 
@@ -533,7 +559,7 @@ img {
 ========================================================= */
 
 .welcome-card {
-    min-height: 185px;
+    min-height: 170px;
 
     position: relative;
 
@@ -545,37 +571,14 @@ img {
 
     margin-bottom: 30px;
 
-    padding: 32px;
+    padding: 32px 36px;
 
     border-radius: var(--radius-xl);
+    border-left: 4px solid var(--teal);
 
-    background:
-        linear-gradient(
-            135deg,
-            var(--primary) 0%,
-            var(--primary-dark) 100%
-        );
+    background: var(--text-dark);
 
     color: var(--white);
-
-    box-shadow:
-        0 12px 25px rgba(37, 99, 235, 0.18);
-}
-
-.welcome-card::after {
-    content: "";
-
-    width: 270px;
-    height: 270px;
-
-    position: absolute;
-
-    right: -100px;
-    top: -110px;
-
-    border-radius: 50%;
-
-    background: rgba(255, 255, 255, 0.08);
 }
 
 .welcome-content {
@@ -592,14 +595,19 @@ img {
     gap: 8px;
 
     margin-bottom: 14px;
-    padding: 7px 12px;
+    padding: 6px 12px;
 
+    border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: 999px;
 
-    background: rgba(255, 255, 255, 0.14);
+    background: transparent;
+    color: var(--teal-light);
 
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
+
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
 }
 
 .welcome-content h2 {
@@ -714,21 +722,25 @@ img {
     background: var(--white);
 
     border: 1px solid var(--border);
+    border-top: 3px solid var(--border);
 
     border-radius: var(--radius-lg);
 
-    box-shadow: var(--shadow-sm);
-
     transition:
         transform 0.2s ease,
-        box-shadow 0.2s ease;
+        border-color 0.2s ease;
 }
 
 .stat-card:hover {
-    transform: translateY(-3px);
-
-    box-shadow: var(--shadow);
+    transform: translateY(-2px);
 }
+
+.stat-card:has(.stat-icon.blue) { border-top-color: var(--indigo); }
+.stat-card:has(.stat-icon.purple) { border-top-color: var(--purple); }
+.stat-card:has(.stat-icon.green) { border-top-color: var(--success); }
+.stat-card:has(.stat-icon.orange) { border-top-color: var(--orange); }
+.stat-card:has(.stat-icon.pink) { border-top-color: var(--pink); }
+.stat-card:has(.stat-icon.yellow) { border-top-color: var(--yellow); }
 
 .stat-icon {
     width: 50px;
@@ -990,7 +1002,7 @@ img {
 
     background: #F8FBFF;
 
-    border-color: #BFDBFE;
+    border-color: #C7D2FE;
 }
 
 .quick-item-icon {
@@ -1153,7 +1165,7 @@ img {
     font-weight: 700;
 
     box-shadow:
-        0 5px 12px rgba(37, 99, 235, 0.20);
+        0 5px 12px rgba(67, 56, 202, 0.20);
 
     transition: 0.2s ease;
 }
@@ -1288,7 +1300,7 @@ img {
     border-color: var(--primary);
 
     box-shadow:
-        0 0 0 3px rgba(37, 99, 235, 0.08);
+        0 0 0 3px rgba(67, 56, 202, 0.08);
 }
 
 .search-box i {
@@ -1350,7 +1362,7 @@ img {
     border-color: var(--primary);
 
     box-shadow:
-        0 0 0 3px rgba(37, 99, 235, 0.08);
+        0 0 0 3px rgba(67, 56, 202, 0.08);
 }
 
 
@@ -1618,7 +1630,7 @@ img {
 .table-action.edit:hover {
     background: var(--primary-light);
 
-    border-color: #BFDBFE;
+    border-color: #C7D2FE;
 }
 
 .table-action.delete {
@@ -1818,7 +1830,7 @@ img {
     border-color: var(--primary);
 
     box-shadow:
-        0 0 0 3px rgba(37, 99, 235, 0.08);
+        0 0 0 3px rgba(67, 56, 202, 0.08);
 
     outline: none;
 }
@@ -1923,7 +1935,7 @@ img {
     border-color: var(--primary);
 
     box-shadow:
-        0 0 0 3px rgba(37, 99, 235, 0.08);
+        0 0 0 3px rgba(67, 56, 202, 0.08);
 }
 
 
@@ -2002,7 +2014,7 @@ img {
     background: var(--primary-light);
     color: var(--primary);
 
-    font-family: 'Manrope', Arial, sans-serif;
+    font-family: var(--font-display);
 
     font-size: 16px;
     font-weight: 800;
@@ -2042,7 +2054,7 @@ img {
 
     color: var(--text-dark);
 
-    font-family: 'Manrope', Arial, sans-serif;
+    font-family: var(--font-display);
 
     font-size: 17px;
     font-weight: 800;
@@ -2151,7 +2163,7 @@ img {
 .lesson-action-btn.edit:hover {
     background: var(--primary-light);
 
-    border-color: #BFDBFE;
+    border-color: #C7D2FE;
 
     color: var(--primary-dark);
 }
@@ -2757,7 +2769,7 @@ textarea#descripcion {
 
     color: #172033;
 
-    font-family: 'Manrope', Arial, sans-serif;
+    font-family: var(--font-display);
 
     font-size: 27px;
     font-weight: 800;
@@ -2806,7 +2818,7 @@ textarea#descripcion {
 
     text-decoration: none;
 
-    box-shadow: 0 5px 12px rgba(37, 99, 235, 0.18);
+    box-shadow: 0 5px 12px rgba(67, 56, 202, 0.18);
 
     transition: all 0.2s ease;
 }
@@ -2818,7 +2830,7 @@ textarea#descripcion {
 
     transform: translateY(-1px);
 
-    box-shadow: 0 7px 15px rgba(37, 99, 235, 0.23);
+    box-shadow: 0 7px 15px rgba(67, 56, 202, 0.23);
 }
 
 .add-activity-btn i {
@@ -2905,7 +2917,7 @@ textarea#descripcion {
 
     color: #475467;
 
-    font-family: 'Manrope', Arial, sans-serif;
+    font-family: var(--font-display);
 
     font-size: 13px;
     font-weight: 800;
@@ -3016,7 +3028,7 @@ textarea#descripcion {
 
     color: #172033;
 
-    font-family: 'Manrope', Arial, sans-serif;
+    font-family: var(--font-display);
 
     font-size: 15px;
     font-weight: 800;
@@ -3164,7 +3176,7 @@ textarea#descripcion {
 .activity-action.edit:hover {
     background: #EFF6FF;
 
-    border-color: #BFDBFE;
+    border-color: #C7D2FE;
 
     color: #1D4ED8;
 }
@@ -3225,7 +3237,7 @@ textarea#descripcion {
 
     color: #172033;
 
-    font-family: 'Manrope', Arial, sans-serif;
+    font-family: var(--font-display);
 
     font-size: 19px;
     font-weight: 800;

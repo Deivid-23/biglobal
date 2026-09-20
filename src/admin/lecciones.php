@@ -157,7 +157,7 @@ foreach ($lecciones as $leccion) {
 
     <!-- Fuentes -->
     <link
-        href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&family=Manrope:wght@300;400;600;800&display=swap"
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Sora:wght@400;600;700;800&display=swap"
         rel="stylesheet"
     >
 
