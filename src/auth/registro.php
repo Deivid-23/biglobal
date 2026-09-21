@@ -19,6 +19,14 @@ try {
     $correo = trim($_POST["correo"] ?? "");
     $password = $_POST["password"] ?? "";
     $confirmPassword = $_POST["confirm_password"] ?? "";
+    $rolSolicitado = $_POST["rol"] ?? "estudiante";
+
+    /* Whitelist: cualquier valor que no sea exactamente uno de
+       estos dos se trata como "estudiante" (nunca se confia en
+       lo que mande el formulario para decidir permisos). */
+    if ($rolSolicitado !== "profesor") {
+        $rolSolicitado = "estudiante";
+    }
 
 
     /* =========================
@@ -126,6 +134,19 @@ try {
 
 
     /* =========================
+       ROL Y ESTADO INICIAL
+    ========================= */
+
+    if ($rolSolicitado === "profesor") {
+        $rolId = 3;            // Instructor (database/schema.sql)
+        $estadoInicial = "Pendiente";
+    } else {
+        $rolId = 2;            // Estudiante
+        $estadoInicial = "Activo";
+    }
+
+
+    /* =========================
        CREAR USUARIO
     ========================= */
 
@@ -143,8 +164,8 @@ try {
             :apellido,
             :correo,
             :password,
-            2,
-            'Activo'
+            :rol_id,
+            :estado
         )
     ");
 
@@ -153,7 +174,9 @@ try {
         ":nombre" => $nombre,
         ":apellido" => $apellido,
         ":correo" => $correo,
-        ":password" => $passwordHash
+        ":password" => $passwordHash,
+        ":rol_id" => $rolId,
+        ":estado" => $estadoInicial
 
     ]);
 
@@ -161,6 +184,18 @@ try {
     /* =========================
        RESPUESTA
     ========================= */
+
+    if ($estadoInicial === "Pendiente") {
+
+        // Sin "redirect": el frontend muestra el mensaje en vez de
+        // redirigir en silencio, porque todavia no puede iniciar sesion.
+        echo json_encode([
+            "success" => true,
+            "message" => "Tu solicitud como profesor fue enviada. Un administrador debe aprobarla antes de que puedas iniciar sesión."
+        ]);
+
+        exit;
+    }
 
     echo json_encode([
         "success" => true,

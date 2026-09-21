@@ -1214,7 +1214,7 @@ img {
     font-size: 17px;
 }
 
-.users-toolbar>div:first-child span {
+.users-toolbar > div:first-child span {
     color: var(--text-light);
 
     font-size: 11px;
@@ -1480,6 +1480,11 @@ img {
 .status.pending {
     background: #F2F4F7;
     color: var(--text-light);
+}
+
+.pending-status {
+    background: var(--warning-light);
+    color: var(--warning);
 }
 
 
@@ -2042,7 +2047,7 @@ img {
     margin-top: 12px;
 }
 
-.lesson-meta>span:first-child {
+.lesson-meta > span:first-child {
     display: inline-flex;
     align-items: center;
 
@@ -2053,7 +2058,7 @@ img {
     font-size: 11px;
 }
 
-.lesson-meta>span:first-child i {
+.lesson-meta > span:first-child i {
     color: var(--purple);
 }
 
@@ -2423,7 +2428,7 @@ textarea#descripcion {
         padding: 15px 0;
     }
 
-    .table-row>span:not(.status) {
+    .table-row > span:not(.status) {
         color: var(--text-light);
     }
 

@@ -479,6 +479,14 @@ async function handleAuth(event, type) {
             "confirm_password",
             confirmPassword
         );
+
+        const rolSeleccionado =
+            document.querySelector('input[name="reg-role"]:checked');
+
+        data.append(
+            "rol",
+            rolSeleccionado ? rolSeleccionado.value : "estudiante"
+        );
     }
 
 
@@ -654,3 +662,31 @@ function handleGoogleLogin() {
         "La autenticación con Google todavía no está configurada."
     );
 }
+
+/* =========================================================
+   MOSTRAR AVISO SI SE ELIGE "PROFESOR" EN EL REGISTRO
+========================================================= */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    const opcionesRol =
+        document.querySelectorAll('input[name="reg-role"]');
+
+    const hint =
+        document.getElementById("role-choice-hint");
+
+    if (!opcionesRol.length || !hint) {
+        return;
+    }
+
+    opcionesRol.forEach((opcion) => {
+
+        opcion.addEventListener("change", () => {
+
+            hint.style.display =
+                opcion.value === "profesor" && opcion.checked
+                    ? "block"
+                    : "none";
+        });
+    });
+});

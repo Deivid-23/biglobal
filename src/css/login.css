@@ -248,6 +248,49 @@ body {
     cursor: pointer;
 }
 
+.role-choice-group {
+    display: flex;
+    gap: 10px;
+}
+
+.role-choice {
+    flex: 1;
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 10px 14px;
+
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+
+    font-size: 13px;
+    color: #334155;
+
+    cursor: pointer;
+}
+
+.role-choice:has(input:checked) {
+    border-color: #3b82f6;
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.role-choice input {
+    accent-color: #3b82f6;
+    cursor: pointer;
+}
+
+.role-choice-hint {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #92702a;
+    background: #fefce8;
+    border-radius: 8px;
+    padding: 8px 10px;
+}
+
 .form-options {
     display: flex;
     justify-content: space-between;

@@ -166,6 +166,23 @@
               <div class="error-feedback" id="match-error">Las contraseñas no coinciden.</div>
             </div>
 
+            <div class="form-group">
+              <label class="form-label">Quiero registrarme como</label>
+              <div class="role-choice-group">
+                <label class="role-choice">
+                  <input type="radio" name="reg-role" id="reg-role-estudiante" value="estudiante" checked>
+                  <span>Estudiante</span>
+                </label>
+                <label class="role-choice">
+                  <input type="radio" name="reg-role" id="reg-role-profesor" value="profesor">
+                  <span>Profesor</span>
+                </label>
+              </div>
+              <div class="role-choice-hint" id="role-choice-hint" style="display:none;">
+                Las cuentas de profesor quedan pendientes hasta que un administrador las apruebe.
+              </div>
+            </div>
+
             <div class="checkbox-group">
               <input type="checkbox" id="terms" required>
               <label for="terms">Acepto los términos de servicio y la política de privacidad de BiGlobal.</label>

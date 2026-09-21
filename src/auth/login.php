@@ -119,9 +119,13 @@ try {
 
     if (($usuario["estado"] ?? "") !== "Activo") {
 
+        $mensajeEstado = ($usuario["estado"] ?? "") === "Pendiente"
+            ? "Tu solicitud como profesor todavía está pendiente de aprobación por un administrador."
+            : "Tu cuenta está inactiva. Contacta al administrador.";
+
         echo json_encode([
             "success" => false,
-            "message" => "Tu cuenta está inactiva. Contacta al administrador."
+            "message" => $mensajeEstado
         ]);
 
         exit;

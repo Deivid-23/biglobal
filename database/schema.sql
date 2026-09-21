@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     correo         VARCHAR(150) NOT NULL UNIQUE,
     password       VARCHAR(255) NOT NULL,
     rol_id         INT NOT NULL,
-    estado         ENUM('Activo', 'Inactivo') NOT NULL DEFAULT 'Activo',
+    estado         ENUM('Activo', 'Inactivo', 'Pendiente') NOT NULL DEFAULT 'Activo',
     fecha_registro DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_usuarios_rol

@@ -2,7 +2,7 @@
 
 require_once "../auth/proteger.php";
 
-protegerRol("administrador");
+protegerRol("admin");
 
 require_once "../bd/conexion.php";
 
@@ -29,6 +29,10 @@ $stmt = $conexion->prepare($sql);
 $stmt->execute();
 
 $usuarios = $stmt->fetchAll();
+
+$totalUsuariosActivos = count(array_filter($usuarios, fn($u) => $u["estado"] === "Activo"));
+$totalInstructores = count(array_filter($usuarios, fn($u) => $u["rol"] === "Instructor"));
+$totalPendientes = count(array_filter($usuarios, fn($u) => $u["estado"] === "Pendiente"));
 
 ?>
 
@@ -344,9 +348,9 @@ $usuarios = $stmt->fetchAll();
                             Usuarios activos
                         </span>
 
-                            <strong>
-                                1.126
-                            </strong>
+                        <strong>
+                            <?= $totalUsuariosActivos ?>
+                        </strong>
 
                     </div>
 
@@ -369,9 +373,8 @@ $usuarios = $stmt->fetchAll();
                         </span>
 
                         <strong>
-                            24
+                            <?= $totalInstructores ?>
                         </strong>
-                       
                     </div>
 
                 </div>
@@ -393,7 +396,7 @@ $usuarios = $stmt->fetchAll();
                         </span>
 
                         <strong>
-                            8
+                            <?= $totalPendientes ?>
                         </strong>
 
                     </div>
@@ -586,6 +589,12 @@ $usuarios = $stmt->fetchAll();
 
                         <span class="status active-status">
                             Activo
+                        </span>
+
+                    <?php elseif ($usuario['estado'] === 'Pendiente'): ?>
+
+                        <span class="status pending-status">
+                            Pendiente
                         </span>
 
                     <?php else: ?>

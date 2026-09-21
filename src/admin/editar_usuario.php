@@ -2,7 +2,7 @@
 
 require_once "../auth/proteger.php";
 
-protegerRol("administrador");
+protegerRol("admin");
 
 require_once "../bd/conexion.php";
 
@@ -414,6 +414,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                     <?= $usuario["estado"] === "Activo" ? "selected" : "" ?>
                                 >
                                     Activo
+                                </option>
+
+                                <option
+                                    value="Pendiente"
+                                    <?= $usuario["estado"] === "Pendiente" ? "selected" : "" ?>
+                                >
+                                    Pendiente (solicitud de profesor sin aprobar)
                                 </option>
 
                                 <option
