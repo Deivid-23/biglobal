@@ -107,6 +107,13 @@ a {
     text-decoration: none;
 }
 
+/* Bootstrap se carga despues de este archivo en algunas paginas y
+   vuelve a subrayar los enlaces (misma especificidad, gana por orden).
+   Este selector es mas especifico y evita ese problema sin tocar el HTML. */
+.admin-container a {
+    text-decoration: none;
+}
+
 button,
 input,
 select,
@@ -579,17 +586,14 @@ img {
     background: #DBEAFE;
     color: var(--primary);
 
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
-
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
 }
 
 .welcome-content h2 {
     margin-bottom: 8px;
 
-    color: var(--white);
+    color: var(--text-dark);
 
     font-size: 29px;
 }
@@ -1210,7 +1214,7 @@ img {
     font-size: 17px;
 }
 
-.users-toolbar > div:first-child span {
+.users-toolbar>div:first-child span {
     color: var(--text-light);
 
     font-size: 11px;
@@ -2038,7 +2042,7 @@ img {
     margin-top: 12px;
 }
 
-.lesson-meta > span:first-child {
+.lesson-meta>span:first-child {
     display: inline-flex;
     align-items: center;
 
@@ -2049,7 +2053,7 @@ img {
     font-size: 11px;
 }
 
-.lesson-meta > span:first-child i {
+.lesson-meta>span:first-child i {
     color: var(--purple);
 }
 
@@ -2419,7 +2423,7 @@ textarea#descripcion {
         padding: 15px 0;
     }
 
-    .table-row > span:not(.status) {
+    .table-row>span:not(.status) {
         color: var(--text-light);
     }
 
