@@ -4,8 +4,9 @@ Plataforma para aprender idiomas (inglés, español y lengua de señas),
 inspirada en Open English y Duolingo.
 
 Este README documenta la parte del proyecto correspondiente a
-**login, panel de administrador, página principal y el nuevo rol de
-estudiante**.
+**login, panel de administrador, página principal, el rol de
+estudiante, el despliegue en producción y la migración en curso a
+una arquitectura MVC**.
 
 ## 1. Instalación
 
@@ -97,7 +98,7 @@ estudiante**.
   (`login.php`, `registro.php`, `logout.php`, `proteger.php`), en vez
   de tener una carpeta genérica "html" separada de su propia lógica.
 
-## 3. Rol de estudiante (nuevo)
+## 3. Rol de estudiante
 
 En `src/estudiante/`:
 
@@ -108,41 +109,99 @@ En `src/estudiante/`:
   automáticamente** cuando se completan todas las lecciones publicadas de un curso.
 - `certificados.php` — certificados obtenidos por el estudiante.
 
+Estos 5 archivos son ahora "front controllers" delgados: la lógica real
+vive en `app/Controllers/EstudianteController.php` y
+`app/Models/EstudianteModel.php` (ver sección 4).
+
 Reutiliza la misma paleta de colores y tipografía del panel de
 administrador (`src/admin/css/style.css`) más un archivo adicional
 (`src/estudiante/css/estudiante.css`) con los componentes nuevos
 (tarjetas de curso, barra de progreso, tarjeta de certificado).
 
-## 4. Despliegue y hosting
+### Registro como profesor (solicitud pendiente de aprobación)
 
-El proyecto sigue siendo PHP + MySQL "clásico" (sin contenedores
-obligatorios), así que tienes dos caminos razonables:
+El registro público (`src/auth/registro.php`) deja elegir entre
+**Estudiante** y **Profesor**. Estudiante se activa al instante
+(`rol_id=2`, `estado='Activo'`). Profesor queda en espera (`rol_id=3`,
+`estado='Pendiente'`) y no puede iniciar sesión hasta que un
+administrador lo apruebe cambiándole el estado a Activo desde
+**Usuarios y roles**.
 
-**Opción simple (recomendada para la entrega académica):** un hosting
-compartido con PHP y MySQL en el mismo lugar (sin configurar nada
-externo): Hostinger (plan económico, confiable, con dominio y correo)
-o, si el presupuesto es cero, InfinityFree. Subes `src/` como raíz
-del sitio, importas `database/schema.sql` desde phpMyAdmin y llenas
-`.env` con las credenciales que te da el panel.
+## 4. Arquitectura: migración a MVC (en curso)
 
-**Opción "profesional" (separar app y base de datos, como pediste):**
-- **App:** Render o Railway (despliegan desde Git; PHP corre en un
-  contenedor Docker sencillo). Railway tiene un plan gratuito con
-  crédito mensual limitado; Render tiene plan gratuito sin
-  restricción de horario pero el servicio "duerme" tras un rato sin
-  uso y demora al despertar.
-- **Base de datos externa:** Aiven ofrece un plan gratuito con MySQL
-  real (1 GB de RAM/disco), pensado justo para este caso. TiDB Cloud
-  Serverless (compatible con MySQL) es otra alternativa con capa
-  gratuita generosa. Evita Clever Cloud para esto: quitó su plan
-  gratuito en 2023.
+El proyecto se está reestructurando de "un archivo PHP por página" a
+Modelo-Vista-Controlador, módulo por módulo:
 
-Con cualquiera de las dos opciones, solo necesitas cambiar los
-valores de `.env` — el código ya está preparado para apuntar a una
-base de datos externa sin tocar `conexion.php`.
+```
+app/
+├── bootstrap.php              # carga auth/proteger.php + bd/conexion.php
+├── Controllers/
+│   ├── EstudianteController.php
+│   └── Admin/
+│       └── UsuariosController.php
+├── Models/
+│   ├── EstudianteModel.php
+│   └── UsuarioModel.php
+└── Views/
+    ├── partials/
+    │   ├── admin_sidebar.php   # compartido entre páginas admin, recibe $paginaActiva
+    │   └── admin_topbar.php    # compartido, recibe $tituloPagina
+    ├── estudiante/
+    └── admin/usuarios/
+```
 
-## 5. Próximos pasos sugeridos (no incluidos en esta entrega)
+Los archivos en `src/estudiante/` y en `src/admin/` de los módulos ya
+migrados solo instancian su Controller correspondiente; las URLs no
+cambiaron.
 
+**Migrado:** `estudiante/` completo · `admin/usuarios.php` +
+`editar_usuario.php` + `guardar_usuario.php` + `eliminar_usuario.php`.
+
+**Pendiente:** el resto de `admin/` (`index.php`, `cursos.php`,
+`idiomas.php`, `lecciones.php`, `reportes.php`, `errores.php`,
+`moderacion.php`, `certificados.php`, `configuracion.php`) sigue con la
+estructura original de un archivo por página. Al migrarlos, reusar
+`admin_sidebar.php` / `admin_topbar.php` en vez de duplicar ese HTML.
+
+`src/profesor/` está vacío (módulo externo a cargo de otra persona/equipo,
+ver sección 6) — no se toca ni se migra por ahora.
+
+## 5. Despliegue en producción
+
+El proyecto está desplegado con la app y la base de datos separadas:
+
+- **App:** [Render](https://render.com), Web Service con Docker
+  (`Dockerfile` en la raíz), plan Free.
+  - Imagen base `php:8.2-apache`; `DocumentRoot` apunta a `src/` (no a la
+    raíz del repo), así que `config/`, `app/` y `database/` no quedan
+    expuestos públicamente aunque viajen dentro del contenedor.
+  - El `Dockerfile` copia `config/`, `app/` y `src/` a la imagen — si se
+    agrega una carpeta nueva en la raíz del proyecto, hay que sumar su
+    `COPY` ahí también.
+- **Base de datos:** [TiDB Cloud Serverless](https://tidbcloud.com)
+  (compatible con MySQL), conexión con SSL obligatorio.
+  `src/bd/conexion.php` activa SSL de forma condicional según la variable
+  `DB_SSL`, así que en local (XAMPP/WAMP, sin SSL) no hay que cambiar
+  nada.
+
+Variables de entorno que se configuran en el panel de Render (no en
+`.env`, que solo se usa en local):
+
+```
+DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASS
+DB_SSL=true
+DB_SSL_CA=/etc/ssl/certs/ca-certificates.crt
+DB_CHARSET=utf8mb4
+APP_ENV=production
+APP_DEBUG=false
+```
+
+Flujo de trabajo: los commits son locales hasta hacer `git push` a
+`main`; Render redespliega automáticamente al detectar el push.
+
+## 6. Próximos pasos sugeridos
+
+- Terminar la migración a MVC del resto de `admin/` (sección 4).
 - Agregar una columna `idioma_id` en `cursos` para vincular cada curso
   a un idioma de forma explícita (hoy son dos catálogos independientes).
 - Extender la protección CSRF ya creada para login/registro a los
@@ -150,7 +209,12 @@ base de datos externa sin tocar `conexion.php`.
 - Reemplazar las tablas simples de `reportes_contenido` con un flujo
   real de reportes generado por usuarios (hoy no hay una pantalla
   pública para reportar contenido).
-- Construir el rol de **instructor/profesor** (carpeta `src/profesor/`,
-  a cargo de otro integrante del equipo).
+- Construir el panel del rol de **instructor/profesor**
+  (`src/profesor/`, actualmente vacío) — a cargo de otro integrante del
+  equipo; el registro y la aprobación de la cuenta ya funcionan, falta
+  el panel en sí.
 - Un motor real de actividades interactivas (quizzes evaluables, audio,
   etc.); hoy `actividades` son de solo lectura para el estudiante.
+- Unificar la librería de íconos del panel admin: el dashboard
+  (`admin/index.php`) usa Bootstrap Icons, el resto de `admin/` todavía
+  usa Font Awesome.
