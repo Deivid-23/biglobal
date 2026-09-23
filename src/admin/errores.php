@@ -1,13 +1,6 @@
 <?php
 
-require_once "../auth/proteger.php";
+require_once __DIR__ . "/../../app/bootstrap.php";
+require_once __DIR__ . "/../../app/Controllers/Admin/ErroresController.php";
 
-protegerRol("administrador");
-
-/*
- * "Reportes y errores" se consolidó dentro de la sección de
- * Reportes para no duplicar la misma información en dos pantallas.
- */
-
-header("Location: reportes.php");
-exit;
+(new ErroresController())->index();
