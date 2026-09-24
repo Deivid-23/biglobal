@@ -1,9 +1,6 @@
 <?php
 
-require_once "csrf.php";
+require_once __DIR__ . "/../auth/csrf.php";
+require_once __DIR__ . "/../../app/Controllers/AuthController.php";
 
-header('Content-Type: application/json; charset=utf-8');
-
-echo json_encode([
-    "csrf_token" => generarCsrfToken()
-]);
+(new AuthController())->csrfToken();
