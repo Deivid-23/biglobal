@@ -25,6 +25,8 @@ class ModeracionController
 
         if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["accion"], $_POST["id"])) {
 
+            verificarCsrfFormulario($_POST["csrf_token"] ?? "");
+
             $id = $_POST["id"];
             $accion = $_POST["accion"];
 

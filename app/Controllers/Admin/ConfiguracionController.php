@@ -26,6 +26,8 @@ class ConfiguracionController
 
         if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
+            verificarCsrfFormulario($_POST["csrf_token"] ?? "");
+
             $nombreSitio = trim($_POST["nombre_sitio"] ?? "");
             $correoContacto = trim($_POST["correo_contacto"] ?? "");
             $modoMantenimiento = isset($_POST["modo_mantenimiento"]) ? "1" : "0";

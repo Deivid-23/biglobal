@@ -12,3 +12,4 @@
 
 require_once __DIR__ . "/../src/auth/proteger.php";
 require_once __DIR__ . "/../src/bd/conexion.php";
+require_once __DIR__ . "/../src/auth/csrf.php";

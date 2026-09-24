@@ -54,6 +54,8 @@ class IdiomasController
 
         if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
+            verificarCsrfFormulario($_POST["csrf_token"] ?? "");
+
             $nombre = trim($_POST["nombre"] ?? "");
             $codigo = strtoupper(trim($_POST["codigo"] ?? ""));
             $estado = $_POST["estado"] ?? "Activo";
@@ -79,7 +81,6 @@ class IdiomasController
 
                 header("Location: idiomas.php?editado=1");
                 exit;
-
             } catch (PDOException $e) {
                 die("Error al actualizar el idioma: " . $e->getMessage());
             }
@@ -96,6 +97,8 @@ class IdiomasController
         }
 
         $conexion = $this->conexion;
+
+        verificarCsrfFormulario($_POST["csrf_token"] ?? "");
 
         $nombre = trim($_POST["nombre"] ?? "");
         $codigo = strtoupper(trim($_POST["codigo"] ?? ""));
@@ -122,7 +125,6 @@ class IdiomasController
 
             header("Location: idiomas.php?creado=1");
             exit;
-
         } catch (PDOException $e) {
             die("Error al crear el idioma: " . $e->getMessage());
         }
@@ -137,6 +139,8 @@ class IdiomasController
 
         $conexion = $this->conexion;
 
+        verificarCsrfFormulario($_POST["csrf_token"] ?? "");
+
         $id = $_POST["id"] ?? null;
 
         if (!$id || !is_numeric($id)) {
@@ -149,7 +153,6 @@ class IdiomasController
 
             header("Location: idiomas.php?eliminado=1");
             exit;
-
         } catch (PDOException $e) {
             die("Error al eliminar el idioma: " . $e->getMessage());
         }

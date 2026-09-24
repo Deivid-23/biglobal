@@ -61,6 +61,8 @@ class ActividadesController
 
         if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
+            verificarCsrfFormulario($_POST["csrf_token"] ?? "");
+
             $titulo = trim($_POST["titulo"] ?? "");
             $tipo = trim($_POST["tipo"] ?? "");
             $contenido = trim($_POST["contenido"] ?? "");
@@ -89,7 +91,6 @@ class ActividadesController
 
                 header("Location: actividades.php?leccion=" . urlencode($leccionId) . "&creado=1");
                 exit;
-
             } catch (PDOException $e) {
                 die("Error al crear la actividad: " . $e->getMessage());
             }
@@ -119,6 +120,8 @@ class ActividadesController
 
         if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
+            verificarCsrfFormulario($_POST["csrf_token"] ?? "");
+
             $titulo = trim($_POST["titulo"] ?? "");
             $tipo = trim($_POST["tipo"] ?? "");
             $contenido = trim($_POST["contenido"] ?? "");
@@ -146,7 +149,6 @@ class ActividadesController
 
                 header("Location: actividades.php?leccion=" . urlencode($actividad["leccion_id"]) . "&editado=1");
                 exit;
-
             } catch (PDOException $e) {
                 die("Error al actualizar la actividad: " . $e->getMessage());
             }
@@ -163,6 +165,8 @@ class ActividadesController
         }
 
         $conexion = $this->conexion;
+
+        verificarCsrfFormulario($_POST["csrf_token"] ?? "");
 
         $id = $_POST["id"] ?? null;
 
@@ -183,7 +187,6 @@ class ActividadesController
 
             header("Location: actividades.php?leccion=" . urlencode($actividad["leccion_id"]) . "&eliminado=1");
             exit;
-
         } catch (PDOException $e) {
             die("Error al eliminar la actividad: " . $e->getMessage());
         }

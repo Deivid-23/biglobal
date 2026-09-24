@@ -55,6 +55,8 @@ class UsuariosController
 
         if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
+            verificarCsrfFormulario($_POST["csrf_token"] ?? "");
+
             $nombre = trim($_POST["nombre"] ?? "");
             $apellido = trim($_POST["apellido"] ?? "");
             $correo = trim($_POST["correo"] ?? "");
@@ -97,7 +99,6 @@ class UsuariosController
 
                 header("Location: usuarios.php?editado=1");
                 exit;
-
             } catch (Exception $e) {
 
                 if ($conexion->inTransaction()) {
@@ -119,6 +120,8 @@ class UsuariosController
         }
 
         $conexion = $this->conexion;
+
+        verificarCsrfFormulario($_POST["csrf_token"] ?? "");
 
         $nombre = trim($_POST["nombre"] ?? "");
         $apellido = trim($_POST["apellido"] ?? "");
@@ -163,7 +166,6 @@ class UsuariosController
 
             header("Location: usuarios.php?creado=1");
             exit;
-
         } catch (PDOException $e) {
 
             if ($conexion->inTransaction()) {
@@ -183,6 +185,8 @@ class UsuariosController
 
         $conexion = $this->conexion;
 
+        verificarCsrfFormulario($_POST["csrf_token"] ?? "");
+
         $id = $_POST["id"] ?? null;
 
         if (!$id || !is_numeric($id)) {
@@ -199,7 +203,6 @@ class UsuariosController
 
             header("Location: usuarios.php?eliminado=1");
             exit;
-
         } catch (PDOException $e) {
 
             if ($conexion->inTransaction()) {

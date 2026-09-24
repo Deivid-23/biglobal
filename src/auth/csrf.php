@@ -48,3 +48,18 @@ function verificarCsrf(string $tokenRecibido): void
         exit;
     }
 }
+
+/**
+ * Verifica el token CSRF de un formulario normal del admin
+ * (no AJAX). A diferencia de verificarCsrf(), no responde JSON:
+ * corta la ejecución con un mensaje simple, igual que las demás
+ * validaciones de los Controllers de admin.
+ */
+function verificarCsrfFormulario(string $tokenRecibido): void
+{
+    $tokenValido = $_SESSION["csrf_token"] ?? null;
+
+    if (!$tokenValido || !hash_equals($tokenValido, $tokenRecibido)) {
+        die("Token de seguridad inválido o expirado. Vuelve atrás y recarga la página.");
+    }
+}

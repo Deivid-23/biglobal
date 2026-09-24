@@ -56,6 +56,8 @@ class CursosController
 
         if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
+            verificarCsrfFormulario($_POST["csrf_token"] ?? "");
+
             $nombre = trim($_POST["nombre"] ?? "");
             $descripcion = trim($_POST["descripcion"] ?? "");
             $nivel = $_POST["nivel"] ?? "";
@@ -79,7 +81,6 @@ class CursosController
 
                 header("Location: cursos.php?editado=1");
                 exit;
-
             } catch (PDOException $e) {
                 die("Error al actualizar el curso: " . $e->getMessage());
             }
@@ -98,6 +99,8 @@ class CursosController
         }
 
         $conexion = $this->conexion;
+
+        verificarCsrfFormulario($_POST["csrf_token"] ?? "");
 
         $nombre = trim($_POST["nombre"] ?? "");
         $descripcion = trim($_POST["descripcion"] ?? "");
@@ -130,7 +133,6 @@ class CursosController
                 if (!CursoModel::instructorValido($conexion, (int) $instructorId)) {
                     die("El instructor seleccionado no existe o no está activo.");
                 }
-
             } else {
                 $instructorId = null;
             }
@@ -145,7 +147,6 @@ class CursosController
 
             header("Location: cursos.php?creado=1");
             exit;
-
         } catch (PDOException $e) {
             die("Error al crear el curso: " . $e->getMessage());
         }
@@ -160,6 +161,8 @@ class CursosController
 
         $conexion = $this->conexion;
 
+        verificarCsrfFormulario($_POST["csrf_token"] ?? "");
+
         $id = $_POST["id"] ?? null;
 
         if (!$id || !is_numeric($id)) {
@@ -172,7 +175,6 @@ class CursosController
 
             header("Location: cursos.php?eliminado=1");
             exit;
-
         } catch (PDOException $e) {
             die("Error al eliminar el curso: " . $e->getMessage());
         }

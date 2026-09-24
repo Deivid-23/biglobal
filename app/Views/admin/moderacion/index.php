@@ -83,6 +83,7 @@
                                             <div class="action-buttons">
 
                                                 <form method="POST" style="display:inline;">
+                                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generarCsrfToken()) ?>">
                                                     <input type="hidden" name="id" value="<?= $r["id"] ?>">
                                                     <input type="hidden" name="accion" value="aprobar">
                                                     <button class="table-action edit" type="submit" title="Marcar como revisado">
@@ -91,6 +92,7 @@
                                                 </form>
 
                                                 <form method="POST" style="display:inline;" onsubmit="return confirm('¿Descartar este reporte?');">
+                                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generarCsrfToken()) ?>">
                                                     <input type="hidden" name="id" value="<?= $r["id"] ?>">
                                                     <input type="hidden" name="accion" value="descartar">
                                                     <button class="table-action delete" type="submit" title="Descartar">

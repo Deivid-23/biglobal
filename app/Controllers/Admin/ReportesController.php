@@ -24,6 +24,8 @@ class ReportesController
 
         if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["accion_estado"])) {
 
+            verificarCsrfFormulario($_POST["csrf_token"] ?? "");
+
             $id = $_POST["id"] ?? null;
             $nuevoEstado = $_POST["accion_estado"];
 

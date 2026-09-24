@@ -70,6 +70,8 @@ class LeccionesController
 
         if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
+            verificarCsrfFormulario($_POST["csrf_token"] ?? "");
+
             $cursoId = $_POST["curso_id"] ?? "";
             $titulo = trim($_POST["titulo"] ?? "");
             $descripcion = trim($_POST["descripcion"] ?? "");
@@ -105,7 +107,6 @@ class LeccionesController
 
                 header("Location: lecciones.php?curso=" . urlencode($cursoId) . "&editado=1");
                 exit;
-
             } catch (PDOException $e) {
                 die("Error al actualizar la lección: " . $e->getMessage());
             }
@@ -122,6 +123,8 @@ class LeccionesController
         }
 
         $conexion = $this->conexion;
+
+        verificarCsrfFormulario($_POST["csrf_token"] ?? "");
 
         $cursoId = $_POST["curso_id"] ?? "";
         $titulo = trim($_POST["titulo"] ?? "");
@@ -158,7 +161,6 @@ class LeccionesController
 
             header("Location: lecciones.php?curso=" . urlencode($cursoId) . "&creado=1");
             exit;
-
         } catch (PDOException $e) {
             die("Error al crear la lección: " . $e->getMessage());
         }
@@ -173,6 +175,8 @@ class LeccionesController
 
         $conexion = $this->conexion;
 
+        verificarCsrfFormulario($_POST["csrf_token"] ?? "");
+
         $id = $_POST["id"] ?? null;
 
         if (!$id || !is_numeric($id)) {
@@ -185,7 +189,6 @@ class LeccionesController
 
             header("Location: lecciones.php?eliminado=1");
             exit;
-
         } catch (PDOException $e) {
             die("Error al eliminar la lección: " . $e->getMessage());
         }

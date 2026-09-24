@@ -130,6 +130,7 @@ $leccionId = $leccion["id"];
                         </a>
 
                         <form action="eliminar_actividad.php" method="POST" onsubmit="return confirmarEliminacionActividad();">
+                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generarCsrfToken()) ?>">
                             <input type="hidden" name="id" value="<?= $actividad["id"] ?>">
                             <button type="submit" class="activity-action delete" title="Eliminar actividad">
                                 <i class="fa-solid fa-trash"></i>

@@ -166,6 +166,7 @@
                                                     </a>
 
                                                     <form action="eliminar_idioma.php" method="POST" style="display:inline;" onsubmit="return confirmarEliminacionIdioma();">
+                                                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generarCsrfToken()) ?>">
                                                         <input type="hidden" name="id" value="<?= $idioma['id'] ?>">
                                                         <button type="submit" class="table-action delete" title="Eliminar">
                                                             <i class="fa-solid fa-trash"></i>
@@ -220,6 +221,8 @@
             </div>
 
             <form action="guardar_idioma.php" method="POST">
+
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generarCsrfToken()) ?>">
 
                 <div class="form-group">
                     <label for="nombre">Nombre del idioma</label>
