@@ -82,7 +82,7 @@ class CursosController
                 header("Location: cursos.php?editado=1");
                 exit;
             } catch (PDOException $e) {
-                die("Error al actualizar el curso: " . $e->getMessage());
+                manejarErrorBD($e, "Error al actualizar el curso. Intenta de nuevo.");
             }
         }
 
@@ -148,7 +148,7 @@ class CursosController
             header("Location: cursos.php?creado=1");
             exit;
         } catch (PDOException $e) {
-            die("Error al crear el curso: " . $e->getMessage());
+            manejarErrorBD($e, "Error al crear el curso. Intenta de nuevo.");
         }
     }
 
@@ -176,7 +176,7 @@ class CursosController
             header("Location: cursos.php?eliminado=1");
             exit;
         } catch (PDOException $e) {
-            die("Error al eliminar el curso: " . $e->getMessage());
+            manejarErrorBD($e, "Error al eliminar el curso. Intenta de nuevo.");
         }
     }
 }

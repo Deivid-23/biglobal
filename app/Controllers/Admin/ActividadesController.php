@@ -92,7 +92,7 @@ class ActividadesController
                 header("Location: actividades.php?leccion=" . urlencode($leccionId) . "&creado=1");
                 exit;
             } catch (PDOException $e) {
-                die("Error al crear la actividad: " . $e->getMessage());
+                manejarErrorBD($e, "Error al crear la actividad. Intenta de nuevo.");
             }
         }
 
@@ -150,7 +150,7 @@ class ActividadesController
                 header("Location: actividades.php?leccion=" . urlencode($actividad["leccion_id"]) . "&editado=1");
                 exit;
             } catch (PDOException $e) {
-                die("Error al actualizar la actividad: " . $e->getMessage());
+                manejarErrorBD($e, "Error al actualizar la actividad. Intenta de nuevo.");
             }
         }
 
@@ -188,7 +188,7 @@ class ActividadesController
             header("Location: actividades.php?leccion=" . urlencode($actividad["leccion_id"]) . "&eliminado=1");
             exit;
         } catch (PDOException $e) {
-            die("Error al eliminar la actividad: " . $e->getMessage());
+            manejarErrorBD($e, "Error al eliminar la actividad. Intenta de nuevo.");
         }
     }
 }

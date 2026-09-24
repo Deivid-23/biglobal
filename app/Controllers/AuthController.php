@@ -123,12 +123,21 @@ class AuthController
             ]);
             exit;
 
-        } catch (PDOException $e) {
+
 
             echo json_encode([
                 "success" => false,
                 "message" => "Error de conexión con la base de datos.",
                 "error" => $e->getMessage()
+            ]);
+            exit;
+        } catch (PDOException $e) {
+
+            error_log("[BiGlobal] " . $e->getMessage());
+
+            echo json_encode([
+                "success" => false,
+                "message" => "Error de conexión con la base de datos. Intenta de nuevo más tarde."
             ]);
             exit;
         }
@@ -216,13 +225,14 @@ class AuthController
                 "redirect" => "login.html"
             ]);
             exit;
-
+            
         } catch (PDOException $e) {
+
+            error_log("[BiGlobal] " . $e->getMessage());
 
             echo json_encode([
                 "success" => false,
-                "message" => "Error de conexión con la base de datos.",
-                "error" => $e->getMessage()
+                "message" => "Error de conexión con la base de datos. Intenta de nuevo más tarde."
             ]);
             exit;
         }

@@ -108,7 +108,7 @@ class LeccionesController
                 header("Location: lecciones.php?curso=" . urlencode($cursoId) . "&editado=1");
                 exit;
             } catch (PDOException $e) {
-                die("Error al actualizar la lección: " . $e->getMessage());
+                manejarErrorBD($e, "Error al actualizar la lección. Intenta de nuevo.");
             }
         }
 
@@ -162,7 +162,7 @@ class LeccionesController
             header("Location: lecciones.php?curso=" . urlencode($cursoId) . "&creado=1");
             exit;
         } catch (PDOException $e) {
-            die("Error al crear la lección: " . $e->getMessage());
+            manejarErrorBD($e, "Error al crear la lección. Intenta de nuevo.");
         }
     }
 
@@ -190,7 +190,7 @@ class LeccionesController
             header("Location: lecciones.php?eliminado=1");
             exit;
         } catch (PDOException $e) {
-            die("Error al eliminar la lección: " . $e->getMessage());
+            manejarErrorBD($e, "Error al eliminar la lección. Intenta de nuevo.");
         }
     }
 }

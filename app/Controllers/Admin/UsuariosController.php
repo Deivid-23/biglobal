@@ -105,7 +105,7 @@ class UsuariosController
                     $conexion->rollBack();
                 }
 
-                die("Error al actualizar el usuario: " . $e->getMessage());
+                manejarErrorBD($e, "Error al actualizar el usuario. Intenta de nuevo.");
             }
         }
 
@@ -172,7 +172,7 @@ class UsuariosController
                 $conexion->rollBack();
             }
 
-            die("Error al crear el usuario: " . $e->getMessage());
+            manejarErrorBD($e, "Error al crear el usuario. Intenta de nuevo.");
         }
     }
 
@@ -209,7 +209,7 @@ class UsuariosController
                 $conexion->rollBack();
             }
 
-            die("Error al eliminar usuario: " . $e->getMessage());
+            manejarErrorBD($e, "Error al eliminar el usuario. Intenta de nuevo.");
         }
     }
 }

@@ -82,7 +82,7 @@ class IdiomasController
                 header("Location: idiomas.php?editado=1");
                 exit;
             } catch (PDOException $e) {
-                die("Error al actualizar el idioma: " . $e->getMessage());
+                manejarErrorBD($e, "Error al actualizar el idioma. Intenta de nuevo.");
             }
         }
 
@@ -126,7 +126,7 @@ class IdiomasController
             header("Location: idiomas.php?creado=1");
             exit;
         } catch (PDOException $e) {
-            die("Error al crear el idioma: " . $e->getMessage());
+            manejarErrorBD($e, "Error al crear el idioma. Intenta de nuevo.");
         }
     }
 
@@ -154,7 +154,7 @@ class IdiomasController
             header("Location: idiomas.php?eliminado=1");
             exit;
         } catch (PDOException $e) {
-            die("Error al eliminar el idioma: " . $e->getMessage());
+            manejarErrorBD($e, "Error al eliminar el idioma. Intenta de nuevo.");
         }
     }
 }
