@@ -15,8 +15,19 @@ if (!$cursoActual): ?>
         <h1 style="margin-top: var(--esp-2);"><?= e($cursoActual["nombre"]) ?></h1>
         <p><?= e($cursoActual["descripcion"] ?: "Sin descripción.") ?></p>
     </div>
-    <?= (int) ($cursoActual["estado"] ?? 0) === 1 ? '<span class="chip chip--exito">Publicado</span>' : '<span class="chip chip--neutro">Borrador</span>' ?>
+    <div class="pnl-item__acciones">
+        <?= (int) ($cursoActual["estado"] ?? 0) === 1 ? '<span class="chip chip--exito">Publicado</span>' : '<span class="chip chip--neutro">Borrador</span>' ?>
+        <?php $acciones = [
+            "nombre" => $cursoActual["nombre"], "modal" => "modal-editar", "action" => "acciones.php",
+            "datos" => ["curso_id" => $cursoActual["id"], "nombre" => $cursoActual["nombre"], "descripcion" => $cursoActual["descripcion"],
+                        "nivel" => $cursoActual["nivel"], "estado" => $cursoActual["estado"]],
+            "eliminar" => ["accion" => "eliminar_curso", "campos" => ["curso_id" => $cursoActual["id"]],
+                           "confirmar" => "¿Eliminar el curso «" . $cursoActual["nombre"] . "» con todas sus lecciones y actividades? Solo se puede si ningún estudiante ha avanzado."],
+        ]; require __DIR__ . "/../panel/_acciones_fila.php"; ?>
+    </div>
 </header>
+
+<?php $editarTipo = "curso"; require __DIR__ . "/_modal_editar.php"; ?>
 
 <section class="pnl-datos" aria-label="Resumen del curso">
     <div class="pnl-dato">

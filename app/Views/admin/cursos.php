@@ -27,7 +27,7 @@ $tipoNuevo = "cursos";
     <?php else: ?>
         <div class="pnl-tabla-caja">
             <table class="pnl-tabla">
-                <thead><tr><th>ID</th><th>Nombre</th><th>Descripción</th><th>Nivel</th><th>Docente</th><th>Estado</th></tr></thead>
+                <thead><tr><th>ID</th><th>Nombre</th><th>Descripción</th><th>Nivel</th><th>Docente</th><th>Estado</th><th class="col-acciones">Acciones</th></tr></thead>
                 <tbody>
                     <?php foreach ($cursos as $cu): ?>
                         <tr>
@@ -37,6 +37,15 @@ $tipoNuevo = "cursos";
                             <td class="col-suave"><?= e($cu["nivel"] ?: "—") ?></td>
                             <td class="col-suave"><?= e($cu["docente"] ?: "Sin asignar") ?></td>
                             <td><?= (int) $cu["estado"] === 1 ? '<span class="chip chip--exito">Publicado</span>' : '<span class="chip chip--neutro">Borrador</span>' ?></td>
+                            <td class="col-acciones">
+                                <?php $acciones = [
+                                    "nombre" => $cu["nombre"], "modal" => "modal-editar", "action" => "index.php",
+                                    "datos" => ["id" => $cu["id"], "nombre" => $cu["nombre"], "descripcion" => $cu["descripcion"],
+                                                "nivel" => $cu["nivel"], "instructor_id" => $cu["instructor_id"], "estado" => $cu["estado"]],
+                                    "eliminar" => ["accion" => "eliminar", "campos" => ["registro" => "cursos", "id" => $cu["id"]],
+                                                   "confirmar" => "¿Eliminar el curso «" . $cu["nombre"] . "» con sus lecciones y actividades? Solo se puede si ningún estudiante ha avanzado."],
+                                ]; require __DIR__ . "/../panel/_acciones_fila.php"; ?>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -46,3 +55,4 @@ $tipoNuevo = "cursos";
 </section>
 
 <?php require __DIR__ . "/_modal_nuevo.php"; ?>
+<?php require __DIR__ . "/_modal_editar.php"; ?>

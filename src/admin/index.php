@@ -26,9 +26,12 @@ if ($pagina === "configuracion") {
 
 $controlador = new AdminController();
 
-if ($_SERVER["REQUEST_METHOD"] === "POST" && ($_POST["accion"] ?? "") === "crear") {
-    $controlador->crear();
-    exit;
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    switch ($_POST["accion"] ?? "") {
+        case "crear":    $controlador->crear();    exit;
+        case "editar":   $controlador->editar();   exit;
+        case "eliminar": $controlador->eliminar(); exit;
+    }
 }
 
 $paginas = ["inicio", "usuarios", "cursos", "idiomas", "lecciones", "actividades", "solicitudes", "perfil"];

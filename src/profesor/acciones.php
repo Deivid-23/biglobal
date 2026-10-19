@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . "/../../app/bootstrap.php";
+require_once __DIR__ . "/../../app/Models/ContenidoModel.php";
 
 protegerRol("docente");
 require_once __DIR__ . "/verificar_aprobado.php";
@@ -123,10 +124,9 @@ try {
                 volverCon("error", "La lección no existe o no es tuya.");
             }
 
-            $stmt = $conexion->prepare("DELETE FROM lecciones WHERE id = ?");
-            $stmt->execute([$leccionId]);
-
-            volverCon("ok", "Lección eliminada.", "index.php?page=lecciones&id=" . $cursoId);
+            /* Solo si ningún estudiante ha avanzado (ver ContenidoModel) */
+            $error = ContenidoModel::eliminarLeccion($conexion, $leccionId);
+            volverCon($error ? "error" : "ok", $error ?? "Lección eliminada.", "index.php?page=lecciones&id=" . $cursoId);
 
         /* =========================================================
            ACCIÓN DESCONOCIDA
@@ -143,6 +143,9 @@ try {
 
             if ($leccionId <= 0 || $titulo === "" || $tipo === "") {
                 volverCon("error", "Lección, título y tipo son obligatorios.");
+            }
+            if (!in_array($tipo, ContenidoModel::TIPOS_ACTIVIDAD, true)) {
+                volverCon("error", "Elige un tipo de actividad de la lista.");
             }
 
             /* Verificar que la lección pertenece a un curso del docente */
@@ -204,6 +207,78 @@ try {
             volverCon("ok", "Actividad eliminada.", "index.php?page=actividades&id=" . $cursoId);
 
 
+
+        /* =========================================================
+           EDITAR CURSO (solo si es del docente)
+        ========================================================= */
+        case "editar_curso":
+
+            $cursoId = (int) ($_POST["curso_id"] ?? 0);
+            if (!ContenidoModel::cursoDelDocente($conexion, $cursoId, $docenteId)) {
+                volverCon("error", "El curso no existe o no es tuyo.");
+            }
+
+            $datos = ContenidoModel::datosCurso($_POST);
+            if (is_string($datos)) {
+                volverCon("error", $datos, "index.php?page=curso&id=" . $cursoId);
+            }
+
+            ContenidoModel::actualizarCurso($conexion, $cursoId, $datos);
+            volverCon("ok", "Curso actualizado.", "index.php?page=curso&id=" . $cursoId);
+
+        /* =========================================================
+           ELIMINAR CURSO (solo si es del docente y nadie ha avanzado)
+        ========================================================= */
+        case "eliminar_curso":
+
+            $cursoId = (int) ($_POST["curso_id"] ?? 0);
+            if (!ContenidoModel::cursoDelDocente($conexion, $cursoId, $docenteId)) {
+                volverCon("error", "El curso no existe o no es tuyo.");
+            }
+
+            $error = ContenidoModel::eliminarCurso($conexion, $cursoId);
+            if ($error) {
+                volverCon("error", $error, "index.php?page=curso&id=" . $cursoId);
+            }
+            volverCon("ok", "Curso eliminado.");
+
+        /* =========================================================
+           EDITAR LECCIÓN (solo si es de un curso del docente)
+        ========================================================= */
+        case "editar_leccion":
+
+            $leccionId = (int) ($_POST["leccion_id"] ?? 0);
+            $cursoId = ContenidoModel::leccionDelDocente($conexion, $leccionId, $docenteId);
+            if (!$cursoId) {
+                volverCon("error", "La lección no existe o no es tuya.");
+            }
+
+            $datos = ContenidoModel::datosLeccion($_POST);
+            if (is_string($datos)) {
+                volverCon("error", $datos, "index.php?page=lecciones&id=" . $cursoId);
+            }
+
+            ContenidoModel::actualizarLeccion($conexion, $leccionId, $datos);
+            volverCon("ok", "Lección actualizada.", "index.php?page=lecciones&id=" . $cursoId);
+
+        /* =========================================================
+           EDITAR ACTIVIDAD (solo si es de un curso del docente)
+        ========================================================= */
+        case "editar_actividad":
+
+            $actividadId = (int) ($_POST["actividad_id"] ?? 0);
+            $cursoId = ContenidoModel::actividadDelDocente($conexion, $actividadId, $docenteId);
+            if (!$cursoId) {
+                volverCon("error", "La actividad no existe o no es tuya.");
+            }
+
+            $datos = ContenidoModel::datosActividad($_POST);
+            if (is_string($datos)) {
+                volverCon("error", $datos, "index.php?page=actividades&id=" . $cursoId);
+            }
+
+            ContenidoModel::actualizarActividad($conexion, $actividadId, $datos);
+            volverCon("ok", "Actividad actualizada.", "index.php?page=actividades&id=" . $cursoId);
 
         default:
 

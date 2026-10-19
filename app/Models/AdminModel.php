@@ -117,7 +117,7 @@ class AdminModel
     public static function cursos(PDO $c): array
     {
         return self::lista($c, "
-            SELECT cu.id, cu.nombre, cu.descripcion, cu.nivel, cu.estado, cu.fecha_creacion,
+            SELECT cu.id, cu.nombre, cu.descripcion, cu.nivel, cu.estado, cu.fecha_creacion, cu.instructor_id,
                    CONCAT(u.nombre, ' ', u.apellido) AS docente
             FROM cursos cu LEFT JOIN usuarios u ON u.id = cu.instructor_id
             ORDER BY cu.id DESC");
@@ -131,7 +131,7 @@ class AdminModel
     public static function lecciones(PDO $c): array
     {
         return self::lista($c, "
-            SELECT l.id, l.titulo, l.orden, l.estado, cu.nombre AS curso
+            SELECT l.id, l.curso_id, l.titulo, l.descripcion, l.contenido, l.orden, l.estado, cu.nombre AS curso
             FROM lecciones l INNER JOIN cursos cu ON cu.id = l.curso_id
             ORDER BY l.id DESC LIMIT 200");
     }
@@ -139,7 +139,7 @@ class AdminModel
     public static function actividades(PDO $c): array
     {
         return self::lista($c, "
-            SELECT a.id, a.titulo, a.tipo, a.descripcion, l.titulo AS leccion
+            SELECT a.id, a.leccion_id, a.titulo, a.tipo, a.descripcion, l.titulo AS leccion
             FROM actividades a INNER JOIN lecciones l ON l.id = a.leccion_id
             ORDER BY a.id DESC LIMIT 200");
     }

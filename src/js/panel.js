@@ -53,6 +53,46 @@ document.addEventListener("DOMContentLoaded", () => {
         modal.addEventListener("click", (e) => { if (e.target === modal) modal.close(); });
     });
 
+    /* ---------- 2b. Modal "Editar": rellena el formulario con los datos de la fila ----------
+       El botón trae data-editar='{"id":5,"nombre":"…"}' y data-editar-modal="modal-editar".
+       Cada valor va al campo del formulario que tiene ese mismo name. */
+    document.querySelectorAll("[data-editar]").forEach((boton) => {
+        boton.addEventListener("click", () => {
+            const modal = document.getElementById(boton.dataset.editarModal);
+            const form = modal ? modal.querySelector("form") : null;
+            if (!form || !modal.showModal) return;
+
+            let datos = {};
+            try { datos = JSON.parse(boton.dataset.editar || "{}"); } catch (e) { return; }
+
+            // Quitar opciones "(valor anterior)" que dejó otra fila
+            form.querySelectorAll("option[data-temporal]").forEach((o) => o.remove());
+
+            Object.entries(datos).forEach(([nombre, valor]) => {
+                const campo = form.elements.namedItem(nombre);
+                if (!campo || !("value" in campo)) return;
+                const texto = valor === null ? "" : String(valor);
+
+                // Si un select no tiene ese valor (dato viejo), se agrega para no perderlo
+                if (campo.tagName === "SELECT" && texto !== ""
+                    && ![...campo.options].some((o) => o.value === texto)) {
+                    const opcion = new Option(`${texto} (valor anterior)`, texto);
+                    opcion.dataset.temporal = "true";
+                    campo.add(opcion);
+                }
+                campo.value = texto;
+            });
+
+            // "Editar curso · Inglés A1"
+            const titulo = modal.querySelector("[data-editar-titulo]");
+            if (titulo) titulo.textContent = `${titulo.dataset.editarTitulo} · ${boton.dataset.editarNombre || ""}`;
+
+            modal.showModal();
+            const primero = form.querySelector("input:not([type=hidden]), select, textarea");
+            if (primero) primero.focus();
+        });
+    });
+
     /* ---------- 3. Confirmar acciones peligrosas ---------- */
     document.querySelectorAll("form[data-confirmar]").forEach((form) => {
         form.addEventListener("submit", (e) => {

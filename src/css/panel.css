@@ -854,3 +854,8 @@ select.entrada { cursor: pointer; }
     background: var(--neutro-100);
     font-size: 0.9em;
 }
+
+/* ---------- Botones Editar / Eliminar de cada fila ---------- */
+.pnl-acciones-fila { justify-content: flex-end; flex-wrap: nowrap; }
+.pnl-acciones-fila form { display: contents; }
+.pnl-item .pnl-acciones-fila { flex: 0 0 auto; }

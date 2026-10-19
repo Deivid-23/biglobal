@@ -21,7 +21,7 @@ $tipoNuevo = "idiomas";
         <?php else: ?>
             <div class="pnl-tabla-caja">
                 <table class="pnl-tabla">
-                    <thead><tr><th>ID</th><th>Nombre</th><th>Código</th><th>Estado</th></tr></thead>
+                    <thead><tr><th>ID</th><th>Nombre</th><th>Código</th><th>Estado</th><th class="col-acciones">Acciones</th></tr></thead>
                     <tbody>
                         <?php foreach ($idiomas as $i): ?>
                             <tr>
@@ -29,6 +29,13 @@ $tipoNuevo = "idiomas";
                                 <td class="col-fuerte"><?= e($i["nombre"]) ?></td>
                                 <td class="col-suave"><?= e($i["codigo"]) ?></td>
                                 <td><?= (int) $i["estado"] === 1 ? '<span class="chip chip--exito">Activo</span>' : '<span class="chip chip--neutro">Inactivo</span>' ?></td>
+                                <td class="col-acciones">
+                                    <?php $acciones = [
+                                        "nombre" => $i["nombre"], "modal" => "modal-editar", "action" => "index.php",
+                                        "datos" => ["id" => $i["id"], "nombre" => $i["nombre"], "codigo" => $i["codigo"], "estado" => $i["estado"]],
+                                        "eliminar" => null,
+                                    ]; require __DIR__ . "/../panel/_acciones_fila.php"; ?>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -42,3 +49,4 @@ $tipoNuevo = "idiomas";
 </div>
 
 <?php require __DIR__ . "/_modal_nuevo.php"; ?>
+<?php require __DIR__ . "/_modal_editar.php"; ?>

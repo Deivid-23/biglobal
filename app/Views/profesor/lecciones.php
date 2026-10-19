@@ -26,14 +26,14 @@
                                 <p class="pnl-item__titulo"><?= e($l["titulo"]) ?></p>
                                 <p class="pnl-item__texto"><?= e($l["descripcion"] ?: "Sin descripción") ?></p>
                             </div>
-                            <form method="POST" action="acciones.php" data-confirmar="¿Eliminar la lección «<?= e($l["titulo"]) ?>»? También se borran sus actividades.">
-                                <input type="hidden" name="accion" value="eliminar_leccion">
-                                <input type="hidden" name="leccion_id" value="<?= (int) $l["id"] ?>">
-                                <input type="hidden" name="csrf_token" value="<?= e($csrfToken) ?>">
-                                <button class="boton boton--peligro boton--sm" type="submit" aria-label="Eliminar <?= e($l["titulo"]) ?>">
-                                    <i class="fa-solid fa-trash" aria-hidden="true"></i>
-                                </button>
-                            </form>
+                            <?php if ((int) $l["estado"] !== 1): ?><span class="chip chip--neutro">Borrador</span><?php endif; ?>
+                            <?php $acciones = [
+                                "nombre" => $l["titulo"], "modal" => "modal-editar", "action" => "acciones.php",
+                                "datos" => ["leccion_id" => $l["id"], "titulo" => $l["titulo"], "descripcion" => $l["descripcion"],
+                                            "contenido" => $l["contenido"], "orden" => $l["orden"], "estado" => $l["estado"]],
+                                "eliminar" => ["accion" => "eliminar_leccion", "campos" => ["leccion_id" => $l["id"]],
+                                               "confirmar" => "¿Eliminar la lección «" . $l["titulo"] . "» y sus actividades? Solo se puede si ningún estudiante ha avanzado."],
+                            ]; require __DIR__ . "/../panel/_acciones_fila.php"; ?>
                         </li>
                     <?php endforeach; ?>
                 </ul>
@@ -66,6 +66,8 @@
             </form>
         </section>
     </div>
+
+    <?php $editarTipo = "leccion"; require __DIR__ . "/_modal_editar.php"; ?>
 
 <?php else: ?>
 

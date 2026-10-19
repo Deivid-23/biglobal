@@ -157,7 +157,7 @@ $titulosNuevo = [
                     <div class="campo">
                         <label class="campo__etiqueta" for="n-tipo">Tipo</label>
                         <select class="entrada" id="n-tipo" name="tipo">
-                            <?php foreach (["Quiz", "Tarea", "Ejercicio", "Taller", "Proyecto", "Examen"] as $t): ?>
+                            <?php foreach (ContenidoModel::TIPOS_ACTIVIDAD as $t): ?>
                                 <option value="<?= $t ?>"><?= $t ?></option>
                             <?php endforeach; ?>
                         </select>

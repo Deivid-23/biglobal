@@ -26,15 +26,12 @@
                                 <p class="pnl-item__titulo"><?= e($a["titulo"]) ?></p>
                                 <p class="pnl-item__texto"><span class="chip chip--neutro"><?= e($a["tipo"] ?: "Sin tipo") ?></span> <?= e($a["leccion"]) ?></p>
                             </div>
-                            <form method="POST" action="acciones.php" data-confirmar="¿Eliminar la actividad «<?= e($a["titulo"]) ?>»?">
-                                <input type="hidden" name="accion" value="eliminar_actividad">
-                                <input type="hidden" name="actividad_id" value="<?= (int) $a["id"] ?>">
-                                <input type="hidden" name="curso_id" value="<?= (int) $cursoActual["id"] ?>">
-                                <input type="hidden" name="csrf_token" value="<?= e($csrfToken) ?>">
-                                <button class="boton boton--peligro boton--sm" type="submit" aria-label="Eliminar <?= e($a["titulo"]) ?>">
-                                    <i class="fa-solid fa-trash" aria-hidden="true"></i>
-                                </button>
-                            </form>
+                            <?php $acciones = [
+                                "nombre" => $a["titulo"], "modal" => "modal-editar", "action" => "acciones.php",
+                                "datos" => ["actividad_id" => $a["id"], "titulo" => $a["titulo"], "descripcion" => $a["descripcion"], "tipo" => $a["tipo"]],
+                                "eliminar" => ["accion" => "eliminar_actividad", "campos" => ["actividad_id" => $a["id"], "curso_id" => $cursoActual["id"]],
+                                               "confirmar" => "¿Eliminar la actividad «" . $a["titulo"] . "»?"],
+                            ]; require __DIR__ . "/../panel/_acciones_fila.php"; ?>
                         </li>
                     <?php endforeach; ?>
                 </ul>
@@ -73,8 +70,8 @@
                         <label class="campo__etiqueta" for="a-tipo">Tipo</label>
                         <select class="entrada" id="a-tipo" name="tipo" required>
                             <option value="">Elige un tipo</option>
-                            <?php foreach (["Quiz", "Tarea", "Ejercicio", "Proyecto", "Examen"] as $t): ?>
-                                <option value="<?= $t ?>"><?= $t ?></option>
+                            <?php foreach (ContenidoModel::TIPOS_ACTIVIDAD as $t): ?>
+                                <option value="<?= e($t) ?>"><?= e($t) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -83,6 +80,8 @@
             <?php endif; ?>
         </section>
     </div>
+
+    <?php $editarTipo = "actividad"; require __DIR__ . "/_modal_editar.php"; ?>
 
 <?php else: ?>
 

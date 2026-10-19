@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . "/../Models/AdminModel.php";
+require_once __DIR__ . "/../Models/ContenidoModel.php";
 
 /**
  * AdminController
@@ -12,7 +13,7 @@ require_once __DIR__ . "/../Models/AdminModel.php";
  *
  * Páginas: inicio, usuarios, cursos, idiomas, lecciones, actividades,
  *          solicitudes, perfil.
- * POST:    accion=crear (modal "Nuevo"), accion=perfil, accion=password
+ * POST:    accion=crear (modal "Nuevo"), accion=editar, accion=eliminar
  */
 class AdminController
 {
@@ -265,6 +266,9 @@ class AdminController
         if ($leccionId <= 0 || $titulo === "") {
             Panel::volver($volver, "error", "La lección y el título son obligatorios.");
         }
+        if (!in_array(trim($_POST["tipo"] ?? ""), ContenidoModel::TIPOS_ACTIVIDAD, true)) {
+            Panel::volver($volver, "error", "Elige un tipo de actividad de la lista.");
+        }
 
         $stmt = $this->c->prepare("
             INSERT INTO actividades (leccion_id, titulo, descripcion, tipo)
@@ -277,5 +281,101 @@ class AdminController
             trim($_POST["tipo"] ?? "") ?: null,
         ]);
         Panel::volver($volver, "ok", "Actividad creada correctamente.");
+    }
+
+    /* =========================================================
+       EDITAR (modal "Editar" de cada tabla)
+    ========================================================= */
+    public function editar(): void
+    {
+        verificarCsrfFormulario($_POST["csrf_token"] ?? "");
+
+        $registro = $_POST["registro"] ?? "";
+        $id = (int) ($_POST["id"] ?? 0);
+        $paginas = ["cursos", "idiomas", "lecciones", "actividades"];
+        $volver = "index.php?page=" . (in_array($registro, $paginas, true) ? $registro : "inicio");
+
+        if ($id <= 0 || !in_array($registro, $paginas, true)) {
+            Panel::volver($volver, "error", "No se encontró el registro.");
+        }
+
+        try {
+            switch ($registro) {
+                case "cursos":
+                    $datos = ContenidoModel::datosCurso($_POST);
+                    if (is_string($datos)) Panel::volver($volver, "error", $datos);
+                    $docente = (int) ($_POST["instructor_id"] ?? 0);
+                    if ($docente > 0 && !in_array($docente, array_map("intval", array_column(AdminModel::opcionesDocentes($this->c), "id")), true)) {
+                        Panel::volver($volver, "error", "Elige un docente activo de la lista.");
+                    }
+                    ContenidoModel::actualizarCurso($this->c, $id, $datos, $docente ?: null);
+                    Panel::volver($volver, "ok", "Curso actualizado.");
+
+                case "lecciones":
+                    $datos = ContenidoModel::datosLeccion($_POST);
+                    if (is_string($datos)) Panel::volver($volver, "error", $datos);
+                    $cursoId = (int) ($_POST["curso_id"] ?? 0);
+                    if (!in_array($cursoId, array_map("intval", array_column(AdminModel::opcionesCursos($this->c), "id")), true)) {
+                        Panel::volver($volver, "error", "Elige un curso de la lista.");
+                    }
+                    ContenidoModel::actualizarLeccion($this->c, $id, $datos, $cursoId);
+                    Panel::volver($volver, "ok", "Lección actualizada.");
+
+                case "actividades":
+                    $datos = ContenidoModel::datosActividad($_POST);
+                    if (is_string($datos)) Panel::volver($volver, "error", $datos);
+                    $leccionId = (int) ($_POST["leccion_id"] ?? 0);
+                    if (!in_array($leccionId, array_map("intval", array_column(AdminModel::opcionesLecciones($this->c), "id")), true)) {
+                        Panel::volver($volver, "error", "Elige una lección de la lista.");
+                    }
+                    ContenidoModel::actualizarActividad($this->c, $id, $datos, $leccionId);
+                    Panel::volver($volver, "ok", "Actividad actualizada.");
+
+                case "idiomas":
+                    $datos = ContenidoModel::datosIdioma($_POST);
+                    if (is_string($datos)) Panel::volver($volver, "error", $datos);
+                    $error = ContenidoModel::actualizarIdioma($this->c, $id, $datos);
+                    Panel::volver($volver, $error ? "error" : "ok", $error ?? "Idioma actualizado.");
+            }
+        } catch (PDOException $e) {
+            error_log("[BiGlobal][admin editar] " . $e->getMessage());
+            Panel::volver($volver, "error", "No se pudo guardar. Revisa los datos e inténtalo de nuevo.");
+        }
+    }
+
+    /* =========================================================
+       ELIMINAR (curso y lección solo si nadie ha avanzado)
+    ========================================================= */
+    public function eliminar(): void
+    {
+        verificarCsrfFormulario($_POST["csrf_token"] ?? "");
+
+        $registro = $_POST["registro"] ?? "";
+        $id = (int) ($_POST["id"] ?? 0);
+        $paginas = ["cursos", "lecciones", "actividades"];
+        $volver = "index.php?page=" . (in_array($registro, $paginas, true) ? $registro : "inicio");
+
+        if ($id <= 0 || !in_array($registro, $paginas, true)) {
+            Panel::volver($volver, "error", "No se encontró el registro.");
+        }
+
+        try {
+            switch ($registro) {
+                case "cursos":
+                    $error = ContenidoModel::eliminarCurso($this->c, $id);
+                    Panel::volver($volver, $error ? "error" : "ok", $error ?? "Curso eliminado.");
+
+                case "lecciones":
+                    $error = ContenidoModel::eliminarLeccion($this->c, $id);
+                    Panel::volver($volver, $error ? "error" : "ok", $error ?? "Lección eliminada.");
+
+                case "actividades":
+                    ContenidoModel::eliminarActividad($this->c, $id);
+                    Panel::volver($volver, "ok", "Actividad eliminada.");
+            }
+        } catch (PDOException $e) {
+            error_log("[BiGlobal][admin eliminar] " . $e->getMessage());
+            Panel::volver($volver, "error", "No se pudo eliminar. Inténtalo de nuevo.");
+        }
     }
 }
