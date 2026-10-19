@@ -210,6 +210,9 @@ class SuperAdminController
             "tab"         => $tab,
             "sistema"     => $sistema,
             "correoEnv"   => obtenerConfig()["smtp"]["host"] !== null,
+            "proveedor"   => Correo::proveedor(),
+            "remitente"   => Correo::remitente(),
+            "miCorreo"    => (string) ($_SESSION["correo"] ?? ""),
         ]);
     }
 }

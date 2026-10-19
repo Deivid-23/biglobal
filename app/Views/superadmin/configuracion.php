@@ -1,5 +1,5 @@
 <?php
-/** Configuración global. Variables: $tab, $sistema, $correoEnv */
+/** Configuración global. Variables: $tab, $sistema, $correoEnv, $proveedor, $remitente, $miCorreo */
 $pestanas = [
     "general"        => ["General",        "fa-globe"],
     "apariencia"     => ["Apariencia",     "fa-palette"],
@@ -160,7 +160,54 @@ $g = fn(string $clave, $defecto = "") => Config::get($clave, $defecto);
     </form>
 
 <?php elseif ($tab === "correo"): ?>
-    <div class="pnl-tarjeta__cabecera"><div><h2 id="titulo-config">Correo (SMTP)</h2><p>Servidor para enviar los enlaces de recuperación de contraseña</p></div></div>
+    <div class="pnl-tarjeta__cabecera"><div><h2 id="titulo-config">Correo</h2><p>Enlaces de recuperación de contraseña y avisos al equipo</p></div></div>
+
+    <?php
+    $listo = Correo::estaConfigurado();
+    $nombresProveedor = ["brevo" => "API de Brevo", "smtp" => "Servidor SMTP"];
+    ?>
+    <div class="aviso <?= $listo ? "aviso--exito" : "aviso--alerta" ?> pnl-aviso-arriba">
+        <i class="fa-solid <?= $listo ? "fa-circle-check" : "fa-triangle-exclamation" ?>" aria-hidden="true"></i>
+        <span>
+            <?php if ($listo): ?>
+                Los correos salen por <strong><?= e($nombresProveedor[$proveedor]) ?></strong>
+                con el remitente <strong><?= e($remitente !== "" ? $remitente : "(el usuario SMTP)") ?></strong>.
+            <?php elseif ($proveedor === "brevo"): ?>
+                La clave de Brevo está puesta, pero falta un <strong>correo remitente</strong> válido
+                (variable CORREO_REMITENTE en Render o el campo de abajo).
+            <?php else: ?>
+                Todavía no salen correos. En Render gratis el SMTP está bloqueado: usa la <strong>API de Brevo</strong>
+                (pasos abajo).
+            <?php endif; ?>
+        </span>
+    </div>
+
+    <?php if ($listo): ?>
+        <form class="pnl-form pnl-aviso-arriba" method="POST" action="configuracion.php">
+            <?= campoCsrf() ?><input type="hidden" name="accion" value="correo_prueba">
+            <p class="campo__ayuda">Manda un correo de prueba a tu cuenta (<?= e($miCorreo) ?>) para confirmar que todo funciona.</p>
+            <div class="pnl-form__acciones" style="justify-content: flex-start;">
+                <button class="boton boton--secundario" type="submit">
+                    <i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Enviar correo de prueba
+                </button>
+            </div>
+        </form>
+    <?php endif; ?>
+
+    <details class="pnl-ayuda-brevo pnl-aviso-arriba" <?= $proveedor === "" ? "open" : "" ?>>
+        <summary>Cómo conectar Brevo (gratis, 300 correos al día)</summary>
+        <ol>
+            <li>Crea una cuenta en brevo.com.</li>
+            <li>En <strong>Senders, Domains &amp; Dedicated IPs → Senders</strong>, agrega y verifica el correo que usarás como remitente.</li>
+            <li>En <strong>SMTP &amp; API → API Keys</strong>, crea una clave.</li>
+            <li>En Render → biglobal → Environment, agrega <code>BREVO_API_KEY</code> (la clave) y <code>CORREO_REMITENTE</code> (el correo verificado).</li>
+            <li>Cuando Render reinicie, vuelve aquí y usa «Enviar correo de prueba».</li>
+        </ol>
+        <p class="campo__ayuda">La clave de Brevo nunca se guarda en la base de datos: solo vive en Render.</p>
+    </details>
+
+    <h3 class="pnl-subtitulo">Remitente y SMTP (alternativa)</h3>
+    <p class="campo__ayuda pnl-aviso-arriba">El remitente sirve para Brevo y para SMTP. Los datos SMTP solo funcionan en tu computador o en un plan pago de Render.</p>
     <?php if ($correoEnv): ?>
         <div class="aviso aviso--info pnl-aviso-arriba">
             <i class="fa-solid fa-circle-info" aria-hidden="true"></i>

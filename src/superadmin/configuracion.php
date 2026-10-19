@@ -165,6 +165,37 @@ try {
 
 
         /* =====================================================
+           CORREO DE PRUEBA — solo a la cuenta del super admin
+           (nunca a una dirección escrita en el formulario)
+        ===================================================== */
+        case "correo_prueba":
+
+            $stmt = $conexion->prepare("SELECT nombre, correo FROM usuarios WHERE id = ? LIMIT 1");
+            $stmt->execute([(int) $_SESSION["usuario_id"]]);
+            $yo = $stmt->fetch();
+
+            if (!$yo || !filter_var($yo["correo"], FILTER_VALIDATE_EMAIL)) {
+                redirigirCon("correo", "error", "Tu cuenta no tiene un correo válido para la prueba.");
+            }
+
+            $sitio = Config::get("sitio_nombre", "BiGlobal");
+            $nombre = htmlspecialchars($yo["nombre"], ENT_QUOTES, "UTF-8");
+            $ok = Correo::enviar(
+                $yo["correo"],
+                "Correo de prueba de {$sitio}",
+                '<div style="font-family:Arial,sans-serif;color:#1E293B"><h2 style="color:#2563EB">¡Funciona!</h2>'
+                    . "<p>Hola, {$nombre}. Si lees esto, los correos de {$sitio} ya salen bien: "
+                    . "recuperación de contraseña y avisos al equipo.</p></div>",
+                "Hola, {$yo['nombre']}. Si lees esto, los correos de {$sitio} ya salen bien."
+            );
+
+            if ($ok) {
+                redirigirCon("correo", "ok", "Correo de prueba enviado a {$yo['correo']}. Revisa también la carpeta de spam.");
+            }
+            redirigirCon("correo", "error", "No se pudo enviar: " . (Correo::ultimoError() ?: "error desconocido."));
+
+
+        /* =====================================================
            SISTEMA — acciones especiales
         ===================================================== */
         case "sistema":

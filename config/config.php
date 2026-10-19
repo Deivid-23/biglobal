@@ -93,6 +93,13 @@ function obtenerConfig(): array
             "client_secret" => env("GOOGLE_CLIENT_SECRET", ""),
             "redirect_uri"  => env("GOOGLE_REDIRECT_URI", "http://localhost/BiGlobal/src/auth/google_callback.php"),
         ],
+        "correo" => [
+            // API de Brevo: en Render gratis el SMTP está bloqueado, así que
+            // esta es la forma recomendada. La clave va SOLO en el entorno.
+            "brevo_api_key" => env("BREVO_API_KEY"),
+            // Remitente (en Brevo debe estar verificado)
+            "remitente"     => env("CORREO_REMITENTE", env("SMTP_FROM")),
+        ],
         "smtp" => [
             // Si están vacías se usan las de la tabla configuracion (panel admin)
             "host"        => env("SMTP_HOST"),

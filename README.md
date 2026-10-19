@@ -121,8 +121,10 @@ En celular hay barra inferior de navegación; en escritorio, barra lateral.
 
 - El enlace vence en 60 min, sirve una sola vez y se responde igual exista o no el correo.
 - Máximo 3 enlaces por hora por usuario.
-- El correo sale por SMTP (sin librerías). Datos: variables `SMTP_*` del entorno o, si no
-  están, la pestaña Configuración > Correo del admin.
+- El correo sale por la **API de Brevo** si existe `BREVO_API_KEY` (recomendado: Render gratis bloquea
+  los puertos SMTP desde sep-2025). Si no, por SMTP (sin librerías): variables `SMTP_*` o la pestaña
+  Configuración > Correo. El remitente sale de `CORREO_REMITENTE` (o `SMTP_FROM`, o el panel).
+- Configuración > Correo tiene el botón «Enviar correo de prueba» (manda a la cuenta del super admin).
 - En local sin SMTP (`APP_ENV=local`) la pantalla muestra el enlace de prueba.
 - En producción **es obligatorio `APP_URL`** para armar el enlace.
 
@@ -152,7 +154,8 @@ DB_SSL=true
 DB_SSL_CA=/etc/ssl/certs/ca-certificates.crt
 GOOGLE_CLIENT_ID=…  GOOGLE_CLIENT_SECRET=…
 GOOGLE_REDIRECT_URI=https://<tu-servicio>.onrender.com/auth/google_callback.php
-SMTP_HOST=…  SMTP_PORT=587  SMTP_USER=…  SMTP_PASS=…  SMTP_ENCRYPTION=tls  SMTP_FROM=…
+BREVO_API_KEY=…  CORREO_REMITENTE=<correo verificado en Brevo>
+TAREAS_TOKEN=<64 caracteres aleatorios, igual al secreto de GitHub Actions>
 ```
 
 En Linux las rutas distinguen mayúsculas: `app/Helpers/Config.php` (no `helpers/config.php`),

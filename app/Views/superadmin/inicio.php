@@ -37,7 +37,7 @@ $superActivos = count(array_filter($administradores, fn($a) => $a["rol"] === "su
     </a>
     <a class="pnl-dato" href="index.php?page=configuracion&amp;tab=correo">
         <span class="pnl-dato__icono <?= $correoListo ? "pnl-dato__icono--verde" : "pnl-dato__icono--rojo" ?>"><i class="fa-solid fa-envelope" aria-hidden="true"></i></span>
-        <span><span class="pnl-dato__numero"><?= $correoListo ? "Listo" : "Falta" ?></span><br><span class="pnl-dato__texto">Correo SMTP</span></span>
+        <span><span class="pnl-dato__numero"><?= $correoListo ? "Listo" : "Falta" ?></span><br><span class="pnl-dato__texto">Envío de correos</span></span>
     </a>
 </section>
 

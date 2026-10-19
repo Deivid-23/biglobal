@@ -3,20 +3,73 @@
 /**
  * Correo
  *
- * Envía correos por SMTP sin librerías externas (no usamos Composer).
- * Soporta: STARTTLS (puerto 587), SSL directo (465) o sin cifrado.
+ * Envía correos sin librerías externas (no usamos Composer). Dos formas:
  *
- * ¿De dónde salen los datos del servidor SMTP?
- *   1. Variables de entorno SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS,
- *      SMTP_ENCRYPTION, SMTP_FROM   (recomendado: la clave no queda en la BD)
- *   2. Si no existen, la pestaña Configuración > Correo del panel admin
- *      (tabla configuracion: smtp_host, smtp_puerto, ...).
+ *   1. API de Brevo (por HTTPS). Es la que sirve en Render gratis: desde el
+ *      26-sep-2025 Render bloquea los puertos SMTP (25, 465, 587) en el plan
+ *      gratis. Se activa sola si existe la variable de entorno BREVO_API_KEY.
+ *   2. SMTP: STARTTLS (587), SSL directo (465) o sin cifrado. Útil en tu
+ *      computador o en un plan pago de Render.
+ *
+ * ¿De dónde salen los datos?
+ *   - BREVO_API_KEY: solo variable de entorno (es un secreto, nunca va a la BD).
+ *   - Remitente: CORREO_REMITENTE o SMTP_FROM del entorno, o el campo
+ *     "Correo remitente" de Configuración > Correo. En Brevo debe ser un
+ *     remitente verificado en tu cuenta.
+ *   - SMTP: variables SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS,
+ *     SMTP_ENCRYPTION o, si no existen, la pestaña Configuración > Correo.
  *
  * Uso:
  *   Correo::enviar("ana@correo.com", "Asunto", "<p>Hola</p>", "Hola");
+ *   Correo::ultimoError()  → por qué falló el último envío (sin secretos)
  */
 class Correo
 {
+    private const BREVO_URL = "https://api.brevo.com/v3/smtp/email";
+
+    /** Explicación del último fallo, para mostrarla en el botón de prueba. */
+    private static string $ultimoError = "";
+
+    /* =========================================================
+       CONFIGURACIÓN
+    ========================================================= */
+
+    /** "brevo", "smtp" o "" (nada configurado). */
+    public static function proveedor(): string
+    {
+        if (self::claveBrevo() !== "") {
+            return "brevo";
+        }
+        $d = self::datosSmtp();
+        return ($d["host"] !== "" && $d["usuario"] !== "" && $d["clave"] !== "") ? "smtp" : "";
+    }
+
+    /** ¿Hay alguna forma de enviar correos lista? */
+    public static function estaConfigurado(): bool
+    {
+        if (self::proveedor() === "brevo") {
+            return filter_var(self::remitente(), FILTER_VALIDATE_EMAIL) !== false;
+        }
+        return self::proveedor() === "smtp";
+    }
+
+    public static function ultimoError(): string
+    {
+        return self::$ultimoError;
+    }
+
+    /** Correo que aparece como remitente. */
+    public static function remitente(): string
+    {
+        $env = obtenerConfig()["correo"];
+        return (string) ($env["remitente"] ?? Config::get("smtp_remitente", ""));
+    }
+
+    private static function claveBrevo(): string
+    {
+        return (string) (obtenerConfig()["correo"]["brevo_api_key"] ?? "");
+    }
+
     /** Junta la configuración SMTP (entorno primero, luego BD). */
     private static function datosSmtp(): array
     {
@@ -28,21 +81,16 @@ class Correo
             "usuario"      => $env["usuario"]      ?? Config::get("smtp_usuario", ""),
             "clave"        => $env["clave"]        ?? Config::get("smtp_password", ""),
             "encriptacion" => strtolower($env["encriptacion"] ?? Config::get("smtp_encriptacion", "tls")),
-            "remitente"    => $env["remitente"]    ?? Config::get("smtp_remitente", ""),
-            "nombre"       => Config::get("sitio_nombre", "BiGlobal"),
         ];
     }
 
-    /** ¿Hay un servidor SMTP con usuario configurado? */
-    public static function estaConfigurado(): bool
-    {
-        $d = self::datosSmtp();
-        return $d["host"] !== "" && $d["usuario"] !== "" && $d["clave"] !== "";
-    }
+    /* =========================================================
+       ENVIAR
+    ========================================================= */
 
     /**
-     * Envía un correo. Devuelve true si el servidor lo aceptó.
-     * Los errores se escriben en el log del servidor (nunca la contraseña).
+     * Envía un correo. Devuelve true si el servicio lo aceptó.
+     * Los errores se escriben en el log del servidor (nunca las claves).
      */
     public static function enviar(string $para, string $asunto, string $html, string $texto): bool
     {
@@ -50,16 +98,15 @@ class Correo
     }
 
     /**
-     * Envía el mismo correo a varias personas en una sola conexión.
+     * Envía el mismo correo a varias personas en un solo envío.
      * Nadie ve las direcciones de los demás (van como copia oculta).
      */
     public static function enviarAVarios(array $destinatarios, string $asunto, string $html, string $texto): bool
     {
-        $d = self::datosSmtp();
+        self::$ultimoError = "";
 
         if (!self::estaConfigurado()) {
-            error_log("[BiGlobal][Correo] SMTP no configurado: no se envió el correo.");
-            return false;
+            return self::fallo("El correo no está configurado: falta la clave de Brevo o los datos SMTP, o el remitente.");
         }
 
         $destinatarios = array_values(array_unique(array_filter(
@@ -68,23 +115,112 @@ class Correo
         )));
 
         if (!$destinatarios) {
-            return false;
+            return self::fallo("No hay un destinatario válido.");
         }
+
+        return self::proveedor() === "brevo"
+            ? self::enviarBrevo($destinatarios, $asunto, $html, $texto)
+            : self::enviarSmtp($destinatarios, $asunto, $html, $texto);
+    }
+
+    /** Guarda el motivo, lo deja en el log y devuelve false. */
+    private static function fallo(string $motivo): bool
+    {
+        self::$ultimoError = $motivo;
+        error_log("[BiGlobal][Correo] " . $motivo);
+        return false;
+    }
+
+    /* =========================================================
+       BREVO (API por HTTPS, puerto 443)
+    ========================================================= */
+    private static function enviarBrevo(array $destinatarios, string $asunto, string $html, string $texto): bool
+    {
+        $remitente = self::remitente();
+        $nombre = Config::get("sitio_nombre", "BiGlobal");
+
+        // Con una persona va en "Para"; con varias, todas en copia oculta
+        // y el "Para" es el mismo remitente (Brevo exige al menos un "to").
+        $datos = [
+            "sender"      => ["name" => $nombre, "email" => $remitente],
+            "subject"     => $asunto,
+            "htmlContent" => $html,
+            "textContent" => $texto,
+        ];
+        if (count($destinatarios) === 1) {
+            $datos["to"] = [["email" => $destinatarios[0]]];
+        } else {
+            $datos["to"]  = [["email" => $remitente, "name" => $nombre]];
+            $datos["bcc"] = array_map(fn($c) => ["email" => $c], $destinatarios);
+        }
+
+        if (!function_exists("curl_init")) {
+            return self::fallo("PHP no tiene la extensión curl para hablar con Brevo.");
+        }
+
+        $curl = curl_init(self::BREVO_URL);
+        curl_setopt_array($curl, [
+            CURLOPT_POST           => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_TIMEOUT        => 10,
+            CURLOPT_HTTPHEADER     => [
+                "accept: application/json",
+                "content-type: application/json",
+                "api-key: " . self::claveBrevo(),
+            ],
+            CURLOPT_POSTFIELDS     => json_encode($datos, JSON_UNESCAPED_UNICODE),
+        ]);
+
+        $respuesta = curl_exec($curl);
+        $codigo = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $errorRed = curl_error($curl);
+        curl_close($curl);
+
+        if ($respuesta === false) {
+            return self::fallo("No se pudo conectar con Brevo ({$errorRed}).");
+        }
+
+        if ($codigo === 201 || $codigo === 202) {
+            return true;
+        }
+
+        // Brevo responde {"code": "...", "message": "..."}: lo traducimos lo justo
+        $detalle = json_decode((string) $respuesta, true);
+        $mensaje = is_array($detalle) ? (string) ($detalle["message"] ?? "") : "";
+        $pista = match (true) {
+            $codigo === 401 => "La clave de Brevo (BREVO_API_KEY) no es válida.",
+            $codigo === 400 && stripos($mensaje, "sender") !== false
+                => "El remitente {$remitente} no está verificado en Brevo (Senders, Domains & Dedicated IPs → Senders).",
+            $codigo === 403 => "Brevo rechazó el envío: revisa que la cuenta esté activada para correos transaccionales.",
+            default          => "Brevo respondió {$codigo}.",
+        };
+
+        return self::fallo(trim($pista . ($mensaje !== "" ? " Detalle: " . $mensaje : "")));
+    }
+
+    /* =========================================================
+       SMTP (puertos 587 / 465)
+    ========================================================= */
+    private static function enviarSmtp(array $destinatarios, string $asunto, string $html, string $texto): bool
+    {
+        $d = self::datosSmtp();
+        $nombre = Config::get("sitio_nombre", "BiGlobal");
 
         // Con una sola persona se muestra su correo en "Para"; con varias, ninguno
         $para = count($destinatarios) === 1 ? "<{$destinatarios[0]}>" : "undisclosed-recipients:;";
 
-        $remitente = filter_var($d["remitente"], FILTER_VALIDATE_EMAIL) ? $d["remitente"] : $d["usuario"];
+        $remitente = filter_var(self::remitente(), FILTER_VALIDATE_EMAIL) ? self::remitente() : $d["usuario"];
 
         // SSL directo usa el prefijo ssl://; STARTTLS empieza sin cifrar
         $destino = ($d["encriptacion"] === "ssl" ? "ssl://" : "tcp://") . $d["host"] . ":" . $d["puerto"];
         $contexto = stream_context_create(["ssl" => ["verify_peer" => true, "verify_peer_name" => true]]);
 
-        $socket = @stream_socket_client($destino, $errNum, $errTexto, 15, STREAM_CLIENT_CONNECT, $contexto);
+        $socket = @stream_socket_client($destino, $errNum, $errTexto, 10, STREAM_CLIENT_CONNECT, $contexto);
 
         if (!$socket) {
-            error_log("[BiGlobal][Correo] No se pudo conectar a {$d['host']}:{$d['puerto']} ({$errTexto})");
-            return false;
+            return self::fallo("No se pudo conectar a {$d['host']}:{$d['puerto']} ({$errTexto}). "
+                . "Si estás en Render gratis, el SMTP está bloqueado: usa Brevo.");
         }
 
         stream_set_timeout($socket, 15);
@@ -112,7 +248,7 @@ class Correo
             }
             self::comando($socket, "DATA", 354);
 
-            $mensaje = self::armarMensaje($remitente, $d["nombre"], $para, $asunto, $html, $texto);
+            $mensaje = self::armarMensaje($remitente, $nombre, $para, $asunto, $html, $texto);
             // Una línea que empieza con "." se duplica (regla del protocolo SMTP)
             $mensaje = preg_replace('/^\./m', '..', $mensaje);
 
@@ -124,9 +260,8 @@ class Correo
             return true;
 
         } catch (Throwable $e) {
-            error_log("[BiGlobal][Correo] " . $e->getMessage());
             fclose($socket);
-            return false;
+            return self::fallo($e->getMessage());
         }
     }
 

@@ -808,3 +808,41 @@ select.entrada { cursor: pointer; }
 @media (prefers-reduced-motion: reduce) {
     .pnl-campana__panel { animation: none; }
 }
+
+/* ---------- Configuración → Correo ---------- */
+.pnl-subtitulo {
+    margin: var(--esp-6) 0 var(--esp-1);
+    font-size: var(--texto-base);
+    font-weight: 800;
+}
+
+.pnl-ayuda-brevo {
+    padding: var(--esp-4) var(--esp-5);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio);
+    background: var(--fondo-app);
+}
+
+.pnl-ayuda-brevo summary {
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+    font-family: var(--fuente-titulo);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.pnl-ayuda-brevo ol {
+    margin: var(--esp-3) 0 var(--esp-2);
+    padding-left: var(--esp-5);
+    display: grid;
+    gap: var(--esp-2);
+    line-height: 1.55;
+}
+
+.pnl-ayuda-brevo code {
+    padding: 1px 6px;
+    border-radius: var(--radio-sm);
+    background: var(--neutro-100);
+    font-size: 0.9em;
+}
