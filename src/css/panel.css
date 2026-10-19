@@ -778,6 +778,14 @@ select.entrada { cursor: pointer; }
     overflow: hidden;
 }
 
+/* El resumen semanal se lee completo, una línea por dato */
+.pnl-aviso--resumen_semanal .pnl-aviso__texto span {
+    display: block;
+    -webkit-line-clamp: unset;
+    overflow: visible;
+    white-space: pre-line;
+}
+
 .pnl-aviso__texto time {
     margin-top: 2px;
     color: var(--texto-suave);

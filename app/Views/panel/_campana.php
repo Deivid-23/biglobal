@@ -44,7 +44,7 @@ $etiquetaCampana = $noLeidas > 0
                     $enlace = $aviso["enlace"] ? "../" . ltrim($aviso["enlace"], "/") : "#";
                 ?>
                     <li>
-                        <a class="pnl-aviso <?= $sinLeer ? "es-nueva" : "" ?>" href="<?= e($enlace) ?>"
+                        <a class="pnl-aviso pnl-aviso--<?= e($aviso["tipo"]) ?> <?= $sinLeer ? "es-nueva" : "" ?>" href="<?= e($enlace) ?>"
                            data-aviso-id="<?= (int) $aviso["id"] ?>">
                             <span class="pnl-aviso__icono pnl-aviso__icono--<?= e($aviso["tipo"]) ?>" aria-hidden="true">
                                 <i class="fa-solid <?= e($icono) ?>"></i>
