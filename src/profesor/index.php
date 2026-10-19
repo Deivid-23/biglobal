@@ -190,7 +190,10 @@ if ($cursoActual && !empty($leccionesCurso)) {
 // En el menú, "curso" se marca como "Mis cursos"
 $activa = $pagina === "curso" ? "cursos" : $pagina;
 
+$idiomasActivos = ContenidoModel::idiomasActivos($conexion);
+
 $datosVista = compact(
+    "idiomasActivos",
     "docente", "nombreDocente", "totalCursos", "totalLecciones", "totalActividades",
     "cursosDocente", "leccionesDocente", "actividadesDocente",
     "cursoActual", "leccionesCurso", "actividadesCurso", "labelsLecciones", "valoresLecciones", "csrfToken"

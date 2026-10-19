@@ -37,6 +37,15 @@ if (!isset($titulosEditar[$tipoNuevo])) return;
                     <label class="campo__etiqueta" for="e-descripcion">Descripción</label>
                     <textarea class="entrada" id="e-descripcion" name="descripcion" rows="3"></textarea>
                 </div>
+                <div class="campo">
+                    <label class="campo__etiqueta" for="e-idioma">Idioma</label>
+                    <select class="entrada" id="e-idioma" name="idioma_id">
+                        <option value="">Sin idioma</option>
+                        <?php foreach ($modal["idiomas"] as $idi): ?>
+                            <option value="<?= (int) $idi["id"] ?>"><?= e($idi["nombre"]) ?> (<?= e($idi["codigo"]) ?>)</option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
                 <div class="pnl-form__fila">
                     <div class="campo">
                         <label class="campo__etiqueta" for="e-nivel">Nivel</label>

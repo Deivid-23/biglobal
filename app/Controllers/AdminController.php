@@ -48,6 +48,7 @@ class AdminController
             "cursos"    => AdminModel::opcionesCursos($this->c),
             "lecciones" => AdminModel::opcionesLecciones($this->c),
             "docentes"  => AdminModel::opcionesDocentes($this->c),
+            "idiomas"   => ContenidoModel::idiomasActivos($this->c),
             "reglas"    => Seguridad::reglasPassword(),
         ];
     }
@@ -194,15 +195,20 @@ class AdminController
         if ($nombre === "") {
             Panel::volver($volver, "error", "El nombre del curso es obligatorio.");
         }
+        [$idiomaId, $errorIdioma] = ContenidoModel::idiomaElegido($this->c, $_POST["idioma_id"] ?? "");
+        if ($errorIdioma) {
+            Panel::volver($volver, "error", $errorIdioma);
+        }
 
         $stmt = $this->c->prepare("
-            INSERT INTO cursos (nombre, descripcion, nivel, instructor_id, estado)
-            VALUES (?, ?, ?, ?, 1)
+            INSERT INTO cursos (nombre, descripcion, nivel, idioma_id, instructor_id, estado)
+            VALUES (?, ?, ?, ?, ?, 1)
         ");
         $stmt->execute([
             $nombre,
             trim($_POST["descripcion"] ?? ""),
             trim($_POST["nivel"] ?? "") ?: null,
+            $idiomaId,
             (int) ($_POST["instructor_id"] ?? 0) ?: null,
         ]);
 
@@ -304,6 +310,8 @@ class AdminController
                 case "cursos":
                     $datos = ContenidoModel::datosCurso($_POST);
                     if (is_string($datos)) Panel::volver($volver, "error", $datos);
+                    [$datos["idioma_id"], $errorIdioma] = ContenidoModel::idiomaElegido($this->c, $_POST["idioma_id"] ?? "");
+                    if ($errorIdioma) Panel::volver($volver, "error", $errorIdioma);
                     $docente = (int) ($_POST["instructor_id"] ?? 0);
                     if ($docente > 0 && !in_array($docente, array_map("intval", array_column(AdminModel::opcionesDocentes($this->c), "id")), true)) {
                         Panel::volver($volver, "error", "Elige un docente activo de la lista.");

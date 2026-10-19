@@ -27,7 +27,7 @@ $esNuevo = $leccionesCompletadas === 0;
     <?php if ($continuar): ?>
         <?php
             $pctContinuar = porcentaje((int) $continuar["lecciones_hechas"], (int) $continuar["total_lecciones"]);
-            $idioma = idiomaDeCurso($continuar["nombre"]);
+            $idioma = idiomaDeCurso($continuar["nombre"], $continuar["idioma_codigo"] ?? null);
         ?>
         <div class="continuar">
             <span class="idioma idioma--grande <?= e($idioma["clase"]) ?>" aria-hidden="true"><?= e($idioma["codigo"]) ?></span>

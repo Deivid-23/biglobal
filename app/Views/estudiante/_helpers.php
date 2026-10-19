@@ -4,12 +4,18 @@
  */
 
 /**
- * Adivina el idioma de un curso por su nombre para darle un color.
- * (La tabla cursos todavía no tiene columna idioma_id; cuando exista,
- * esta función debe leer ese dato en vez de adivinar.)
+ * Etiqueta de idioma de un curso (EN, ES, LSC…) y su color.
+ * Usa el idioma guardado en el curso (cursos.idioma_id). Si el curso
+ * todavía no tiene idioma, lo adivina por el nombre.
  */
-function idiomaDeCurso(string $nombre): array
+function idiomaDeCurso(string $nombre, ?string $codigo = null): array
 {
+    if ($codigo !== null && $codigo !== "") {
+        $codigo = mb_strtoupper($codigo);
+        $clases = ["EN" => "idioma--en", "ES" => "idioma--es", "LSC" => "idioma--lsc"];
+        return ["codigo" => $codigo, "clase" => $clases[$codigo] ?? "idioma--otro"];
+    }
+
     $n = mb_strtolower($nombre);
 
     if (str_contains($n, "señas") || str_contains($n, "senas") || str_contains($n, "lsc")) {

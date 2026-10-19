@@ -6,7 +6,7 @@
 $total  = (int) ($curso["total_lecciones"] ?? 0);
 $hechas = (int) ($curso["lecciones_hechas"] ?? 0);
 $pct    = porcentaje($hechas, $total);
-$idioma = idiomaDeCurso($curso["nombre"] ?? "");
+$idioma = idiomaDeCurso($curso["nombre"] ?? "", $curso["idioma_codigo"] ?? null);
 $terminado = $total > 0 && $hechas >= $total;
 ?>
 <article class="curso">

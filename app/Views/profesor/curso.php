@@ -20,7 +20,7 @@ if (!$cursoActual): ?>
         <?php $acciones = [
             "nombre" => $cursoActual["nombre"], "modal" => "modal-editar", "action" => "acciones.php",
             "datos" => ["curso_id" => $cursoActual["id"], "nombre" => $cursoActual["nombre"], "descripcion" => $cursoActual["descripcion"],
-                        "nivel" => $cursoActual["nivel"], "estado" => $cursoActual["estado"]],
+                        "nivel" => $cursoActual["nivel"], "idioma_id" => $cursoActual["idioma_id"] ?? null, "estado" => $cursoActual["estado"]],
             "eliminar" => ["accion" => "eliminar_curso", "campos" => ["curso_id" => $cursoActual["id"]],
                            "confirmar" => "¿Eliminar el curso «" . $cursoActual["nombre"] . "» con todas sus lecciones y actividades? Solo se puede si ningún estudiante ha avanzado."],
         ]; require __DIR__ . "/../panel/_acciones_fila.php"; ?>

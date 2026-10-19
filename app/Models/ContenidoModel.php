@@ -101,6 +101,35 @@ class ContenidoModel
     }
 
     /* =========================================================
+       IDIOMAS (para el campo "Idioma" de los cursos)
+    ========================================================= */
+
+    /** Idiomas activos para los selects: id, nombre, codigo. */
+    public static function idiomasActivos(PDO $c): array
+    {
+        try {
+            return $c->query("SELECT id, nombre, codigo FROM idiomas WHERE estado = 1 ORDER BY nombre")->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("[BiGlobal][ContenidoModel] " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Revisa el idioma elegido en el formulario.
+     * Devuelve [idioma_id o null, error o null]. Vacío = "sin idioma".
+     */
+    public static function idiomaElegido(PDO $c, $valor): array
+    {
+        $id = (int) $valor;
+        if ($id <= 0) {
+            return [null, null];
+        }
+        $ids = array_map("intval", array_column(self::idiomasActivos($c), "id"));
+        return in_array($id, $ids, true) ? [$id, null] : [null, "Elige un idioma activo de la lista."];
+    }
+
+    /* =========================================================
        ¿ES DEL DOCENTE? (devuelven el id del curso, o 0)
     ========================================================= */
 
@@ -165,16 +194,19 @@ class ContenidoModel
        GUARDAR CAMBIOS
     ========================================================= */
 
-    /** $instructorId: false = no cambiarlo (docente); null o un id = asignarlo (admin). */
+    /**
+     * $d trae también "idioma_id" (null = sin idioma).
+     * $instructorId: false = no cambiarlo (docente); null o un id = asignarlo (admin).
+     */
     public static function actualizarCurso(PDO $c, int $id, array $d, $instructorId = false): void
     {
         if ($instructorId === false) {
-            $stmt = $c->prepare("UPDATE cursos SET nombre = ?, descripcion = ?, nivel = ?, estado = ? WHERE id = ?");
-            $stmt->execute([$d["nombre"], $d["descripcion"], $d["nivel"], $d["estado"], $id]);
+            $stmt = $c->prepare("UPDATE cursos SET nombre = ?, descripcion = ?, nivel = ?, idioma_id = ?, estado = ? WHERE id = ?");
+            $stmt->execute([$d["nombre"], $d["descripcion"], $d["nivel"], $d["idioma_id"], $d["estado"], $id]);
             return;
         }
-        $stmt = $c->prepare("UPDATE cursos SET nombre = ?, descripcion = ?, nivel = ?, estado = ?, instructor_id = ? WHERE id = ?");
-        $stmt->execute([$d["nombre"], $d["descripcion"], $d["nivel"], $d["estado"], $instructorId, $id]);
+        $stmt = $c->prepare("UPDATE cursos SET nombre = ?, descripcion = ?, nivel = ?, idioma_id = ?, estado = ?, instructor_id = ? WHERE id = ?");
+        $stmt->execute([$d["nombre"], $d["descripcion"], $d["nivel"], $d["idioma_id"], $d["estado"], $instructorId, $id]);
     }
 
     /** $cursoId: null = dejar la lección en su curso. */

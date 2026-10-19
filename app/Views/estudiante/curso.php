@@ -4,7 +4,7 @@
  * Variables: $curso, $lecciones, $totalLecciones, $leccionesHechas,
  *            $porcentaje, $siguiente, $certificado
  */
-$idioma = idiomaDeCurso($curso["nombre"]);
+$idioma = idiomaDeCurso($curso["nombre"], $curso["idioma_codigo"] ?? null);
 $idSiguiente = $siguiente ? (int) $siguiente["id"] : 0;
 ?>
 

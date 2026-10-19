@@ -40,15 +40,20 @@ try {
             if ($nombre === "" || $nivel === "") {
                 volverCon("error", "Nombre y nivel son obligatorios.");
             }
+            [$idiomaId, $errorIdioma] = ContenidoModel::idiomaElegido($conexion, $_POST["idioma_id"] ?? "");
+            if ($errorIdioma) {
+                volverCon("error", $errorIdioma);
+            }
 
             $stmt = $conexion->prepare("
-                INSERT INTO cursos (nombre, descripcion, nivel, instructor_id, estado)
-                VALUES (:nombre, :descripcion, :nivel, :instructor, 1)
+                INSERT INTO cursos (nombre, descripcion, nivel, idioma_id, instructor_id, estado)
+                VALUES (:nombre, :descripcion, :nivel, :idioma, :instructor, 1)
             ");
             $stmt->execute([
                 ":nombre"      => $nombre,
                 ":descripcion" => $descripcion,
                 ":nivel"       => $nivel,
+                ":idioma"      => $idiomaId,
                 ":instructor"  => $docenteId,
             ]);
 
@@ -221,6 +226,10 @@ try {
             $datos = ContenidoModel::datosCurso($_POST);
             if (is_string($datos)) {
                 volverCon("error", $datos, "index.php?page=curso&id=" . $cursoId);
+            }
+            [$datos["idioma_id"], $errorIdioma] = ContenidoModel::idiomaElegido($conexion, $_POST["idioma_id"] ?? "");
+            if ($errorIdioma) {
+                volverCon("error", $errorIdioma, "index.php?page=curso&id=" . $cursoId);
             }
 
             ContenidoModel::actualizarCurso($conexion, $cursoId, $datos);

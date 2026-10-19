@@ -44,6 +44,15 @@
                 <textarea class="entrada" id="c-desc" name="descripcion" rows="3" placeholder="¿Qué aprenderán tus estudiantes?"></textarea>
             </div>
             <div class="campo">
+                <label class="campo__etiqueta" for="c-idioma">Idioma</label>
+                <select class="entrada" id="c-idioma" name="idioma_id">
+                    <option value="">Sin idioma</option>
+                    <?php foreach ($idiomasActivos as $idi): ?>
+                        <option value="<?= (int) $idi["id"] ?>"><?= e($idi["nombre"]) ?> (<?= e($idi["codigo"]) ?>)</option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="campo">
                 <label class="campo__etiqueta" for="c-nivel">Nivel</label>
                 <select class="entrada" id="c-nivel" name="nivel" required>
                     <option value="">Elige un nivel</option>

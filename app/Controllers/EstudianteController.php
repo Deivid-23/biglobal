@@ -307,9 +307,18 @@ class EstudianteController
     ========================================================= */
     public function cursos(): void
     {
-        $cursos = EstudianteModel::obtenerCursosPublicados($this->conexion, $this->usuarioId);
+        // Filtro por idioma (?idioma=EN): solo se acepta un código de la lista
+        $idiomas = EstudianteModel::idiomasConCursos($this->conexion);
+        $pedido  = mb_strtoupper(trim((string) ($_GET["idioma"] ?? "")));
+        $filtro  = in_array($pedido, array_column($idiomas, "codigo"), true) ? $pedido : null;
 
-        $this->render("cursos", "cursos", "Explorar cursos", ["cursos" => $cursos]);
+        $cursos = EstudianteModel::obtenerCursosPublicados($this->conexion, $this->usuarioId, $filtro);
+
+        $this->render("cursos", "cursos", "Explorar cursos", [
+            "cursos"  => $cursos,
+            "idiomas" => $idiomas,
+            "filtro"  => $filtro,
+        ]);
     }
 
     /* =========================================================

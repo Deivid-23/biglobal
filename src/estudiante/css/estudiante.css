@@ -860,3 +860,49 @@ a.est-perfil.es-activo { background: var(--azul-100); }
     justify-content: space-between;
     gap: var(--esp-2);
 }
+
+/* ---------- Filtros por idioma (Explorar cursos) ---------- */
+.filtros-idioma {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--esp-2);
+    margin-bottom: var(--esp-6);
+}
+
+.filtro-idioma {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--esp-2);
+    min-height: 44px;
+    padding: var(--esp-1) var(--esp-4) var(--esp-1) var(--esp-2);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio-pill);
+    background: var(--superficie);
+    color: var(--texto);
+    font-family: var(--fuente-titulo);
+    font-weight: 700;
+    font-size: var(--texto-sm);
+    text-decoration: none;
+    transition: background-color var(--dur) ease, border-color var(--dur) ease;
+}
+
+.filtro-idioma:first-child { padding-left: var(--esp-4); }
+
+.filtro-idioma[aria-current="page"] {
+    background: var(--azul-100);
+    border-color: var(--azul-300);
+    color: var(--azul-800);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .filtro-idioma:not([aria-current="page"]):hover { background: var(--azul-50); border-color: var(--azul-200); }
+}
+
+.filtro-idioma__total { color: var(--texto-suave); font-weight: 400; }
+
+.idioma--mini {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radio-pill);
+    font-size: 0.68rem;
+}

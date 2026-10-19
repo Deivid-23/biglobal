@@ -118,8 +118,11 @@ class AdminModel
     {
         return self::lista($c, "
             SELECT cu.id, cu.nombre, cu.descripcion, cu.nivel, cu.estado, cu.fecha_creacion, cu.instructor_id,
+                   cu.idioma_id, i.nombre AS idioma,
                    CONCAT(u.nombre, ' ', u.apellido) AS docente
-            FROM cursos cu LEFT JOIN usuarios u ON u.id = cu.instructor_id
+            FROM cursos cu
+            LEFT JOIN usuarios u ON u.id = cu.instructor_id
+            LEFT JOIN idiomas i ON i.id = cu.idioma_id
             ORDER BY cu.id DESC");
     }
 

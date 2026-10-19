@@ -56,6 +56,7 @@ class EstudianteModel
                 c.id,
                 c.nombre,
                 c.nivel,
+                (SELECT i.codigo FROM idiomas i WHERE i.id = c.idioma_id) AS idioma_codigo,
                 (
                     SELECT COUNT(*) FROM lecciones l2
                     WHERE l2.curso_id = c.id AND l2.estado = 1
@@ -77,14 +78,20 @@ class EstudianteModel
         return $stmt->fetchAll();
     }
 
-    public static function obtenerCursosPublicados(PDO $conexion, int $usuarioId): array
+    /** $codigoIdioma: "EN", "ES", "LSC"… para filtrar; null = todos. */
+    public static function obtenerCursosPublicados(PDO $conexion, int $usuarioId, ?string $codigoIdioma = null): array
     {
+        $filtro = $codigoIdioma !== null
+            ? "AND c.idioma_id = (SELECT i2.id FROM idiomas i2 WHERE i2.codigo = :codigo LIMIT 1)"
+            : "";
+
         $stmt = $conexion->prepare("
             SELECT
                 c.id,
                 c.nombre,
                 c.descripcion,
                 c.nivel,
+                (SELECT i.codigo FROM idiomas i WHERE i.id = c.idioma_id) AS idioma_codigo,
                 (
                     SELECT COUNT(*) FROM lecciones l
                     WHERE l.curso_id = c.id AND l.estado = 1
@@ -97,19 +104,44 @@ class EstudianteModel
                       AND p.completado = 1
                 ) AS lecciones_hechas
             FROM cursos c
-            WHERE c.estado = 1
+            WHERE c.estado = 1 {$filtro}
             ORDER BY c.nombre ASC
         ");
-        $stmt->execute([":usuario_id" => $usuarioId]);
+        $parametros = [":usuario_id" => $usuarioId];
+        if ($codigoIdioma !== null) {
+            $parametros[":codigo"] = $codigoIdioma;
+        }
+        $stmt->execute($parametros);
         return $stmt->fetchAll();
+    }
+
+    /**
+     * Idiomas activos que tienen cursos publicados (para los filtros
+     * de "Explorar cursos"): codigo, nombre, total.
+     */
+    public static function idiomasConCursos(PDO $conexion): array
+    {
+        try {
+            return $conexion->query("
+                SELECT i.codigo, i.nombre, COUNT(c.id) AS total
+                FROM idiomas i
+                INNER JOIN cursos c ON c.idioma_id = i.id AND c.estado = 1
+                WHERE i.estado = 1
+                GROUP BY i.id, i.codigo, i.nombre
+                ORDER BY i.nombre
+            ")->fetchAll();
+        } catch (PDOException $e) {
+            error_log("[BiGlobal][idiomasConCursos] " . $e->getMessage());
+            return [];
+        }
     }
 
     public static function obtenerCursoPublicadoPorId(PDO $conexion, int $cursoId)
     {
         $stmt = $conexion->prepare("
-            SELECT id, nombre, descripcion, nivel
-            FROM cursos
-            WHERE id = :id AND estado = 1
+            SELECT c.id, c.nombre, c.descripcion, c.nivel, (SELECT i.codigo FROM idiomas i WHERE i.id = c.idioma_id) AS idioma_codigo
+            FROM cursos c
+            WHERE c.id = :id AND c.estado = 1
             LIMIT 1
         ");
         $stmt->execute([":id" => $cursoId]);
@@ -294,6 +326,7 @@ class EstudianteModel
         $stmt = $conexion->prepare("
             SELECT
                 c.id, c.nombre, c.descripcion, c.nivel,
+                (SELECT i.codigo FROM idiomas i WHERE i.id = c.idioma_id) AS idioma_codigo,
                 (SELECT COUNT(*) FROM lecciones l
                   WHERE l.curso_id = c.id AND l.estado = 1) AS total_lecciones,
                 (SELECT COUNT(*) FROM progreso p
