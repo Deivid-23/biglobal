@@ -189,6 +189,9 @@ class Correo
         $detalle = json_decode((string) $respuesta, true);
         $mensaje = is_array($detalle) ? (string) ($detalle["message"] ?? "") : "";
         $pista = match (true) {
+            // Brevo responde 401 también cuando bloquea la IP del servidor
+            $codigo === 401 && stripos($mensaje, "IP address") !== false
+                => "Brevo bloqueó la IP del servidor. En Brevo → Security → Authorised IPs, desactiva el bloqueo de IP desconocidas o autoriza las IPs de salida de Render.",
             $codigo === 401 => "La clave de Brevo (BREVO_API_KEY) no es válida.",
             $codigo === 400 && stripos($mensaje, "sender") !== false
                 => "El remitente {$remitente} no está verificado en Brevo (Senders, Domains & Dedicated IPs → Senders).",
