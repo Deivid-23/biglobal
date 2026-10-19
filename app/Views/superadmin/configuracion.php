@@ -78,16 +78,32 @@ $g = fn(string $clave, $defecto = "") => Config::get($clave, $defecto);
             </div>
         </fieldset>
         <fieldset class="campo" style="border:0;padding:0;margin:0;">
-            <legend class="campo__etiqueta">Color de acento</legend>
+            <legend class="campo__etiqueta">Color por defecto del sitio</legend>
+            <?php
+                $acentoGuardado = strtolower($g("color_acento", "blue"));
+                $nombresAcento = ["blue", "green", "orange", "purple", "pink"];
+                $esLibre = !in_array($acentoGuardado, $nombresAcento, true) && Panel::esColor($acentoGuardado);
+            ?>
             <div class="pnl-colores">
                 <?php foreach (["blue" => ["#2563EB", "Azul (marca)"], "green" => ["#15803D", "Verde"], "orange" => ["#C2410C", "Naranja"], "purple" => ["#7C3AED", "Morado"], "pink" => ["#DB2777", "Rosa"]] as $valor => [$hex, $txt]): ?>
                     <div class="pnl-color">
-                        <input type="radio" id="acento-<?= $valor ?>" name="color_acento" value="<?= $valor ?>" <?= $g("color_acento", "blue") === $valor ? "checked" : "" ?>>
+                        <input type="radio" id="acento-<?= $valor ?>" name="color_acento" value="<?= $valor ?>" <?= $acentoGuardado === $valor ? "checked" : "" ?>>
                         <label for="acento-<?= $valor ?>"><span style="background: <?= $hex ?>"></span><?= $txt ?></label>
                     </div>
                 <?php endforeach; ?>
+                <div class="pnl-color">
+                    <input type="radio" id="acento-libre" name="color_acento" value="libre" <?= $esLibre ? "checked" : "" ?>>
+                    <label for="acento-libre">
+                        <input type="color" class="pnl-color__selector" name="color_acento_libre" aria-label="Elegir cualquier color"
+                               value="<?= e($esLibre ? $acentoGuardado : "#0d9488") ?>">
+                        Otro color
+                    </label>
+                </div>
             </div>
-            <p class="campo__ayuda">Se usa en los botones principales de los paneles. Recomendado: azul, el color de BiGlobal.</p>
+            <p class="campo__ayuda">
+                Lo ven todas las personas que no han elegido su propio color en «Mi perfil».
+                Cada usuario puede cambiar el suyo. Si el color no se lee bien, se ajusta solo para mantener el contraste.
+            </p>
         </fieldset>
         <div class="pnl-form__acciones"><button class="boton boton--primario" type="submit">Guardar</button></div>
     </form>

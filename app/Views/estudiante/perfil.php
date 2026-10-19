@@ -134,6 +134,10 @@ $textoReglas = "Mínimo {$reglas['minimo']} caracteres"
     </section>
 </div>
 
+<div style="margin-top: var(--esp-5);">
+    <?php $claseTarjeta = "perfil-tarjeta"; require __DIR__ . "/../panel/_personalizacion.php"; ?>
+</div>
+
 <!-- ================= SESIÓN ================= -->
 <section class="perfil-salir" aria-label="Sesión">
     <div>

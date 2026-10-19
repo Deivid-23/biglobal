@@ -46,7 +46,7 @@ if ($activo === 0) {
 $nombre = $_SESSION["nombre"] ?? "Docente";
 ?>
 <!DOCTYPE html>
-<html lang="es" data-tema-usuario="<?= e(Panel::temaGuardado()) ?>">
+<html lang="es"<?= Panel::atributosHtml() ?>>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">

@@ -102,6 +102,39 @@ class CuentaController
         Panel::volver($this->urlPerfil(), "ok", "Contraseña actualizada.");
     }
 
+    /**
+     * Guarda el color de acento personal (#RRGGBB) en usuarios.color_acento.
+     * Un valor vacío lo borra y la persona vuelve al color del sitio.
+     * Lo usan todos los roles desde "Mi perfil". Responde JSON.
+     */
+    public function guardarAcento(): void
+    {
+        header("Content-Type: application/json; charset=utf-8");
+
+        if (!csrfValido($_POST["csrf_token"] ?? "")) {
+            http_response_code(419);
+            echo json_encode(["ok" => false, "mensaje" => "Tu sesión expiró. Recarga la página."]);
+            return;
+        }
+
+        $color = strtolower(trim((string) ($_POST["color"] ?? "")));
+
+        if ($color !== "" && !Panel::esColor($color)) {
+            http_response_code(422);
+            echo json_encode(["ok" => false, "mensaje" => "Ese color no es válido."]);
+            return;
+        }
+
+        try {
+            $this->c->prepare("UPDATE usuarios SET color_acento = ? WHERE id = ?")
+                ->execute([$color !== "" ? $color : null, $this->id]);
+            echo json_encode(["ok" => true]);
+        } catch (PDOException $e) {
+            error_log("[BiGlobal][acento] " . $e->getMessage());
+            echo json_encode(["ok" => false, "mensaje" => "No pudimos guardar el color."]);
+        }
+    }
+
     /** Guarda "claro" u "oscuro" en usuarios.tema. Responde JSON. */
     public function guardarTema(): void
     {

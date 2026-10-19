@@ -63,3 +63,7 @@ $accionPerfil = "../auth/mi_cuenta.php";
         <?php endif; ?>
     </section>
 </div>
+
+<div style="margin-top: var(--esp-5);">
+    <?php $claseTarjeta = "pnl-tarjeta"; require __DIR__ . "/../panel/_personalizacion.php"; ?>
+</div>

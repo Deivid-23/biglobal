@@ -6,10 +6,7 @@
  */
 ?>
 <!DOCTYPE html>
-<html lang="es"
-      data-tema-usuario="<?= e($usuarioPanel["tema"] ?? "") ?>"
-      data-tema-url="../auth/guardar_tema.php"
-      data-csrf="<?= e(generarCsrfToken()) ?>">
+<html lang="es"<?= Panel::atributosHtml() ?>>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -27,20 +24,6 @@
     <link rel="stylesheet" href="../css/tokens.css">
     <link rel="stylesheet" href="../css/componentes.css">
     <link rel="stylesheet" href="../css/panel.css">
-    <?php
-        /* Color de acento elegido en Configuración > Apariencia (por defecto: azul de la marca).
-           Solo cambia los botones principales de los paneles. */
-        $acentos = [
-            "green"  => ["#15803D", "#166534", "#14532D"],
-            "orange" => ["#C2410C", "#9A3412", "#7C2D12"],
-            "purple" => ["#7C3AED", "#6D28D9", "#5B21B6"],
-            "pink"   => ["#DB2777", "#BE185D", "#9D174D"],
-        ];
-        $acento = $acentos[Config::get("color_acento", "blue")] ?? null;
-    ?>
-    <?php if ($acento): ?>
-        <style>.pnl-body { --azul-600: <?= $acento[0] ?>; --azul-hover: <?= $acento[1] ?>; --azul-sombra: <?= $acento[2] ?>; }</style>
-    <?php endif; ?>
 
     <?php if ($conGraficos): ?>
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>

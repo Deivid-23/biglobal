@@ -70,13 +70,22 @@ try {
         case "apariencia":
 
             $tema   = $_POST["tema_default"]  ?? "light";
-            $acento = $_POST["color_acento"]  ?? "blue";
+            $acento = strtolower(trim($_POST["color_acento"] ?? "blue"));
+
+            // "libre" = el color elegido con el selector (#RRGGBB)
+            if ($acento === "libre") {
+                $acento = strtolower(trim($_POST["color_acento_libre"] ?? ""));
+            }
 
             $temasValidos   = ["light", "dark"];
             $acentosValidos = ["purple", "blue", "green", "pink", "orange"];
 
-            if (!in_array($tema, $temasValidos, true))       $tema   = "light";
-            if (!in_array($acento, $acentosValidos, true))   $acento = "blue";
+            if (!in_array($tema, $temasValidos, true)) $tema = "light";
+
+            // Se acepta un nombre de la lista o cualquier color #RRGGBB
+            if (!in_array($acento, $acentosValidos, true) && !Panel::esColor($acento)) {
+                redirigirCon("apariencia", "error", "Ese color no es válido.");
+            }
 
             Config::setMany([
                 "tema_default"  => $tema,

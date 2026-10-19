@@ -160,3 +160,11 @@ document.addEventListener("change", (e) => {
         else if (form) form.reset();
     }
 });
+
+/* "Otro color" en Apariencia: al mover el selector, marcar su opción */
+document.addEventListener("input", (e) => {
+    if (e.target.matches && e.target.matches(".pnl-color__selector")) {
+        const radio = e.target.closest(".pnl-color").querySelector(":scope > input[type=radio]");
+        if (radio) radio.checked = true;
+    }
+});

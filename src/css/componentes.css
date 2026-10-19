@@ -324,3 +324,100 @@ textarea.entrada { min-height: 110px; padding: var(--esp-3) var(--esp-4); resize
     right: var(--esp-4);
     z-index: 50;
 }
+
+/* ---------- Personalización: color de acento (Mi perfil) ---------- */
+.personalizar__cabecera h2 { font-size: var(--texto-lg); font-weight: 800; }
+.personalizar__cabecera p { margin: var(--esp-1) 0 var(--esp-5); color: var(--texto-suave); font-size: var(--texto-sm); }
+
+.personalizar__colores {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+    gap: var(--esp-3);
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.color-opcion {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    gap: var(--esp-2);
+    padding: var(--esp-3) var(--esp-2);
+    border: 1.5px solid var(--borde);
+    border-radius: var(--radio);
+    cursor: pointer;
+    text-align: center;
+    transition: border-color var(--dur) ease, background-color var(--dur) ease;
+}
+
+.color-opcion > input[type="radio"] { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+
+.color-opcion__muestra {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--muestra);
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.35);
+    transition: transform var(--dur-rapida) var(--ease-out);
+}
+
+/* "Del sitio": medio círculo con el color del sitio */
+.color-opcion__muestra--sitio { background: linear-gradient(135deg, var(--muestra) 50%, var(--neutro-100) 50%); }
+
+/* "Otro color": rueda de colores con el selector nativo encima */
+.color-opcion__muestra--libre {
+    background: conic-gradient(#ef4444, #f59e0b, #22c55e, #06b6d4, #3b82f6, #a855f7, #ef4444);
+}
+
+.color-opcion__muestra--libre::after {
+    content: "";
+    position: absolute;
+    inset: 9px;
+    border-radius: 50%;
+    background: var(--muestra);
+    box-shadow: 0 0 0 2px var(--superficie);
+}
+
+.color-opcion__selector {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    border: 0;
+    padding: 0;
+}
+
+.color-opcion__texto { font-size: var(--texto-xs); font-weight: 700; color: var(--texto-suave); }
+
+.color-opcion:has(> input:checked) { border-color: var(--azul-600); background: var(--azul-50); }
+.color-opcion:has(> input:checked) .color-opcion__texto { color: var(--azul-800); }
+.color-opcion:has(> input:checked) .color-opcion__muestra { transform: scale(1.08); }
+.color-opcion:has(> input:focus-visible) { box-shadow: var(--foco); }
+
+@media (hover: hover) and (pointer: fine) {
+    .color-opcion:hover { border-color: var(--borde-fuerte); }
+}
+
+.personalizar__vista {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--esp-3);
+    margin-top: var(--esp-5);
+    padding: var(--esp-4);
+    border-radius: var(--radio);
+    background: var(--azul-50);
+    border: 1px solid var(--azul-100);
+}
+
+.personalizar__vista .boton { pointer-events: none; }
+.personalizar__enlace { color: var(--azul-700); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.personalizar__barra { flex: 1; min-width: 80px; height: 8px; border-radius: var(--radio-pill); background: var(--azul-100); overflow: hidden; }
+.personalizar__barra span { display: block; width: 60%; height: 100%; background: var(--azul-600); border-radius: inherit; }
+
+.personalizar [data-personalizar-nota] { margin-top: var(--esp-3); }
+.personalizar__estado { min-height: 1.4em; margin-top: var(--esp-2); color: var(--verde-700); font-size: var(--texto-sm); font-weight: 700; }

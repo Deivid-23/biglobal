@@ -106,5 +106,139 @@
         actualizarBotones(raiz.getAttribute("data-tema"));
     });
 
-    window.BiGlobalTema = { alternar: alternar, guardarLocal: guardarLocal };
+    /* =====================================================
+       COLOR DE ACENTO PERSONAL
+       A partir de UN color (#RRGGBB) se calculan todos los tonos
+       que usan los paneles (--azul-50 ... --azul-900), para modo
+       claro y oscuro. Si el color no tiene buen contraste, se
+       oscurece o aclara lo justo para cumplir WCAG AA (4.5:1).
+
+       <html data-acento-usuario="#E11D48">  -> el que eligió la persona
+       <html data-acento-sitio="#15803D">    -> el del sitio (super admin)
+       Si ninguno existe, se queda el azul de la marca (tokens.css).
+    ===================================================== */
+    var AZUL_MARCA = "#2563eb";
+
+    function aRgb(hex) {
+        var n = parseInt(hex.slice(1), 16);
+        return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+    }
+
+    function aHex(rgb) {
+        return "#" + rgb.map(function (v) {
+            return Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, "0");
+        }).join("");
+    }
+
+    /* Mezcla el color a con el color b (t = 0 → a, t = 1 → b) */
+    function mezclar(a, b, t) {
+        var x = aRgb(a), y = aRgb(b);
+        return aHex([x[0] + (y[0] - x[0]) * t, x[1] + (y[1] - x[1]) * t, x[2] + (y[2] - x[2]) * t]);
+    }
+
+    function luminancia(hex) {
+        var c = aRgb(hex).map(function (v) {
+            v /= 255;
+            return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        });
+        return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+    }
+
+    function contraste(a, b) {
+        var x = luminancia(a), y = luminancia(b);
+        return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+    }
+
+    /* Acerca "color" hacia "destino" hasta que contraste con "fondo" >= minimo */
+    function hastaContraste(color, destino, fondo, minimo) {
+        for (var t = 0; t <= 1.001; t += 0.04) {
+            var prueba = mezclar(color, destino, t);
+            if (contraste(prueba, fondo) >= minimo) return prueba;
+        }
+        return destino;
+    }
+
+    function esHexValido(h) { return /^#[0-9a-f]{6}$/i.test(h || ""); }
+
+    function cssAcento(base) {
+        base = base.toLowerCase();
+        var BLANCO = "#ffffff", NEGRO = "#000000", FONDO_OSCURO = "#0b1220", SUP_OSCURA = "#111a2e";
+
+        // Botones: el texto es blanco, así que el fondo debe contrastar con blanco
+        var boton = hastaContraste(base, NEGRO, BLANCO, 4.5);
+        var hover = mezclar(boton, NEGRO, 0.14);
+        var sombra = mezclar(boton, NEGRO, 0.32);
+
+        // Modo claro: tintes suaves de fondo y tonos oscuros para texto
+        var c50 = mezclar(base, BLANCO, 0.92), c100 = mezclar(base, BLANCO, 0.82);
+        var c200 = mezclar(base, BLANCO, 0.66), c300 = mezclar(base, BLANCO, 0.45);
+        var c700 = hastaContraste(boton, NEGRO, c50, 4.5);
+        var c800 = hastaContraste(mezclar(c700, NEGRO, 0.2), NEGRO, c100, 6);
+        var c900 = mezclar(c800, NEGRO, 0.3);
+
+        // Modo oscuro: tintes oscuros de fondo y tonos claros para texto
+        var o50 = mezclar(base, FONDO_OSCURO, 0.82), o100 = mezclar(base, FONDO_OSCURO, 0.68);
+        var o200 = mezclar(base, FONDO_OSCURO, 0.56), o300 = mezclar(base, FONDO_OSCURO, 0.38);
+        var o700 = hastaContraste(base, BLANCO, o100, 4.5);
+        var o800 = hastaContraste(mezclar(o700, BLANCO, 0.35), BLANCO, o100, 7);
+        var o900 = mezclar(o800, BLANCO, 0.5);
+        var oMarca = hastaContraste(base, BLANCO, SUP_OSCURA, 4.5);
+
+        var rgb = aRgb(boton).join(", "), rgbO = aRgb(oMarca).join(", ");
+
+        // "html:root" gana a ":root" de tokens.css aunque esta etiqueta <style> esté antes
+        return "html:root{" +
+            "--azul-50:" + c50 + ";--azul-100:" + c100 + ";--azul-200:" + c200 + ";--azul-300:" + c300 + ";" +
+            "--azul-500:" + boton + ";--azul-600:" + boton + ";--azul-700:" + c700 + ";--azul-800:" + c800 + ";--azul-900:" + c900 + ";" +
+            "--azul-hover:" + hover + ";--azul-sombra:" + sombra + ";--marca-texto:" + boton + ";" +
+            "--celeste-50:" + c50 + ";--foco:0 0 0 3px rgba(" + rgb + ",0.35);}" +
+            "html:root[data-tema=\"oscuro\"]{" +
+            "--azul-50:" + o50 + ";--azul-100:" + o100 + ";--azul-200:" + o200 + ";--azul-300:" + o300 + ";" +
+            "--azul-700:" + o700 + ";--azul-800:" + o800 + ";--azul-900:" + o900 + ";" +
+            "--marca-texto:" + oMarca + ";--celeste-50:" + o50 + ";--foco:0 0 0 3px rgba(" + rgbO + ",0.45);}";
+    }
+
+    /* Aplica un color (o el del sitio si es null). Devuelve el color usado. */
+    function aplicarAcento(hex) {
+        var color = esHexValido(hex) ? hex : raiz.getAttribute("data-acento-sitio");
+        var estilo = document.getElementById("estilo-acento");
+
+        if (!esHexValido(color) || color.toLowerCase() === AZUL_MARCA) {
+            if (estilo) estilo.remove();
+            return AZUL_MARCA;
+        }
+
+        if (!estilo) {
+            estilo = document.createElement("style");
+            estilo.id = "estilo-acento";
+            document.head.appendChild(estilo);
+        }
+        estilo.textContent = cssAcento(color);
+        return color;
+    }
+
+    /* Guarda el color en la cuenta (null = volver al color del sitio) */
+    function guardarAcento(hex) {
+        var url = raiz.getAttribute("data-acento-url");
+        var token = raiz.getAttribute("data-csrf");
+        if (!url || !token || !window.fetch) return Promise.resolve(false);
+
+        var datos = new FormData();
+        datos.append("color", esHexValido(hex) ? hex : "");
+        datos.append("csrf_token", token);
+        return fetch(url, { method: "POST", body: datos, credentials: "same-origin" })
+            .then(function (r) { return r.json(); })
+            .then(function (j) { return !!j.ok; })
+            .catch(function () { return false; });
+    }
+
+    aplicarAcento(raiz.getAttribute("data-acento-usuario"));
+
+    window.BiGlobalTema = {
+        alternar: alternar,
+        guardarLocal: guardarLocal,
+        aplicarAcento: aplicarAcento,
+        guardarAcento: guardarAcento,
+        contraste: contraste
+    };
 })();

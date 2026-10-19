@@ -35,6 +35,79 @@ class Panel
         }
     }
 
+    /**
+     * Color de acento elegido por el usuario en "Mi perfil" (#RRGGBB) o "".
+     * Si la columna usuarios.color_acento todavía no existe, devuelve "".
+     */
+    public static function acentoUsuario(): string
+    {
+        if (!isset($_SESSION["usuario_id"])) return "";
+        try {
+            $stmt = Conexion::conectar()->prepare("SELECT color_acento FROM usuarios WHERE id = ? LIMIT 1");
+            $stmt->execute([(int) $_SESSION["usuario_id"]]);
+            $color = (string) $stmt->fetchColumn();
+            return self::esColor($color) ? strtolower($color) : "";
+        } catch (PDOException $e) {
+            return "";
+        }
+    }
+
+    /**
+     * Color por defecto del sitio (Configuración > Apariencia, lo elige el super admin).
+     * Acepta los nombres de antes (blue, green...) o un #RRGGBB.
+     */
+    public static function acentoSitio(): string
+    {
+        $valor = strtolower((string) Config::get("color_acento", "blue"));
+        $nombres = [
+            "blue"   => "",          // "" = azul de la marca (no hace falta calcular nada)
+            "green"  => "#15803d",
+            "orange" => "#c2410c",
+            "purple" => "#7c3aed",
+            "pink"   => "#db2777",
+        ];
+        if (array_key_exists($valor, $nombres)) return $nombres[$valor];
+        return self::esColor($valor) ? $valor : "";
+    }
+
+    public static function esColor(string $valor): bool
+    {
+        return (bool) preg_match("/^#[0-9a-f]{6}$/i", $valor);
+    }
+
+    /** Colores sugeridos en "Mi perfil" (todos cumplen contraste con texto blanco). */
+    public static function coloresSugeridos(): array
+    {
+        return [
+            "#2563eb" => "Azul BiGlobal",
+            "#0284c7" => "Celeste",
+            "#0d9488" => "Turquesa",
+            "#15803d" => "Verde",
+            "#c2410c" => "Naranja",
+            "#e11d48" => "Rojo",
+            "#db2777" => "Rosa",
+            "#7c3aed" => "Morado",
+        ];
+    }
+
+    /** Atributos para <html>: tema y color guardados + direcciones para guardarlos. */
+    public static function atributosHtml(): string
+    {
+        $attrs = [
+            "data-tema-usuario"   => self::temaGuardado(),
+            "data-acento-usuario" => self::acentoUsuario(),
+            "data-acento-sitio"   => self::acentoSitio(),
+            "data-tema-url"       => "../auth/guardar_tema.php",
+            "data-acento-url"     => "../auth/guardar_acento.php",
+            "data-csrf"           => generarCsrfToken(),
+        ];
+        $html = "";
+        foreach ($attrs as $nombre => $valor) {
+            $html .= ' ' . $nombre . '="' . htmlspecialchars($valor, ENT_QUOTES, "UTF-8") . '"';
+        }
+        return $html;
+    }
+
     /** Datos del usuario de la sesión para la barra (nombre, iniciales, rol, tema). */
     public static function usuario(PDO $conexion): array
     {
