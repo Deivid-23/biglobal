@@ -40,8 +40,8 @@ class ConfiguracionController
 
         $config = ConfiguracionModel::obtenerTodo($conexion);
 
-        $nombreSitio = $config["nombre_sitio"] ?? "BiGlobal";
-        $correoContacto = $config["correo_contacto"] ?? "";
+        $nombreSitio = $config["sitio_nombre"] ?? "BiGlobal";
+        $correoContacto = $config["sitio_correo"] ?? "";
         $modoMantenimiento = ($config["modo_mantenimiento"] ?? "0") === "1";
 
         require __DIR__ . "/../../Views/admin/configuracion/index.php";

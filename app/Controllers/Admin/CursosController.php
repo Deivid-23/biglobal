@@ -28,9 +28,9 @@ class CursosController
         $instructores = CursoModel::obtenerInstructoresActivos($conexion);
 
         $totalCursos = count($cursos);
-        $cursosPublicados = count(array_filter($cursos, fn($c) => $c["estado"] === "Publicado"));
-        $cursosBorrador = count(array_filter($cursos, fn($c) => $c["estado"] === "Borrador"));
-        $cursosInactivos = count(array_filter($cursos, fn($c) => $c["estado"] === "Inactivo"));
+        $cursosPublicados = count(array_filter($cursos, fn($c) => (int) $c["estado"] === 1));
+        $cursosBorrador = count(array_filter($cursos, fn($c) => (int) $c["estado"] === 0));
+        $cursosInactivos = count(array_filter($cursos, fn($c) => false /* la BD solo guarda 1/0 */));
 
         require __DIR__ . "/../../Views/admin/cursos/index.php";
     }
@@ -75,7 +75,7 @@ class CursosController
                     "nombre" => $nombre,
                     "descripcion" => $descripcion,
                     "nivel" => $nivel,
-                    "estado" => $estado,
+                    "estado" => $estado === "Publicado" ? 1 : 0, // en la BD: 1 publicado, 0 no publicado
                     "instructorId" => $instructorId,
                 ]);
 
@@ -141,7 +141,7 @@ class CursosController
                 "nombre" => $nombre,
                 "descripcion" => $descripcion,
                 "nivel" => $nivel,
-                "estado" => $estado,
+                "estado" => $estado === "Publicado" ? 1 : 0, // en la BD: 1 publicado, 0 no publicado
                 "instructorId" => $instructorId,
             ]);
 

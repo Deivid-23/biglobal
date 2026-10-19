@@ -1,23 +1,13 @@
 /* ==========================================================================
-   VARIABLES DE COLOR Y CONFIGURACIÓN (Estilo Imagen 1)
+   BiGlobal · PÁGINA PRINCIPAL (index.html)
+   Los colores, fuentes y sombras vienen de tokens.css (se carga antes).
+   Aquí solo van los estilos propios de la página principal.
    ========================================================================== */
-:root {
-    --color-primario: #2563EB;
-    /* Azul vibrante principal */
-    --color-primario-oscuro: #1D4ED8;
-    --color-secundario: #EFF6FF;
-    /* Fondo azul ultra suave */
-    --color-texto: #1E293B;
-    /* Azul oscuro/gris para texto principal */
-    --color-texto-suave: #64748B;
-    /* Gris para párrafos y detalles */
-    --blanco: #FFFFFF;
-}
 
 body {
     background-color: var(--blanco);
     color: var(--color-texto);
-    font-family: 'Lato', sans-serif;
+    font-family: var(--fuente-texto);
     margin: 0;
     padding: 0;
 }
@@ -28,7 +18,7 @@ h3,
 h4,
 h5,
 h6 {
-    font-family: 'Manrope', sans-serif;
+    font-family: var(--fuente-titulo);
     color: var(--color-texto);
     margin: 0;
 }
@@ -62,7 +52,7 @@ h6 {
 }
 
 .logo-texto {
-    font-family: 'Manrope', sans-serif;
+    font-family: var(--fuente-titulo);
     font-weight: 800;
     font-size: 1.5rem;
     color: var(--color-primario);
@@ -100,43 +90,60 @@ h6 {
 /* ==========================================================================
    BOTONES PERSONALIZADOS
    ========================================================================== */
+/* Mismo estilo que .boton--primario / .boton--secundario de componentes.css:
+   radio de 12px y un "borde inferior" que se hunde al presionar (estilo Duolingo). */
+.btn-principal,
+.btn-secundario {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    padding: 0.6rem 1.4rem;
+    border-radius: var(--radio);
+    font-family: var(--fuente-titulo);
+    font-weight: 700;
+    text-decoration: none;
+    text-align: center;
+    transition:
+        background-color var(--dur) ease,
+        border-color var(--dur) ease,
+        box-shadow var(--dur-rapida) var(--ease-out),
+        transform var(--dur-rapida) var(--ease-out);
+}
+
 .btn-principal {
     background-color: var(--color-primario);
     color: var(--blanco) !important;
-    font-family: 'Manrope', sans-serif;
-    font-weight: 700;
-    padding: 0.6rem 1.4rem;
-    border-radius: 8px;
     border: 2px solid var(--color-primario);
-    text-decoration: none;
-    text-align: center;
-    transition: all 0.3s ease;
-    display: inline-block;
-}
-
-.btn-principal:hover {
-    background-color: var(--color-primario-oscuro);
-    border-color: var(--color-primario-oscuro);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    box-shadow: var(--sombra-boton);
 }
 
 .btn-secundario {
-    background-color: transparent;
-    color: var(--color-primario) !important;
-    font-family: 'Manrope', sans-serif;
-    font-weight: 700;
-    padding: 0.6rem 1.4rem;
-    border-radius: 8px;
-    border: 2px solid var(--color-primario);
-    text-decoration: none;
-    text-align: center;
-    transition: all 0.3s ease;
-    display: inline-block;
+    background-color: var(--blanco);
+    color: var(--azul-700) !important;
+    border: 2px solid var(--azul-200);
+    box-shadow: 0 3px 0 var(--azul-200);
 }
 
-.btn-secundario:hover {
-    background-color: var(--color-secundario);
+.btn-principal:active,
+.btn-secundario:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 var(--azul-800);
+}
+
+.btn-secundario:active { box-shadow: 0 1px 0 var(--azul-200); }
+
+@media (hover: hover) and (pointer: fine) {
+    .btn-principal:hover {
+        background-color: var(--color-primario-oscuro);
+        border-color: var(--color-primario-oscuro);
+    }
+
+    .btn-secundario:hover {
+        background-color: var(--color-secundario);
+        border-color: var(--azul-300);
+    }
 }
 
 .btn-grande {
@@ -167,9 +174,9 @@ h6 {
 
 .etiqueta-alerta {
     display: inline-block;
-    background-color: #DBEAFE;
+    background-color: var(--azul-100);
     color: var(--color-primario-oscuro);
-    font-family: 'Manrope', sans-serif;
+    font-family: var(--fuente-titulo);
     font-weight: 700;
     font-size: 0.85rem;
     padding: 0.5rem 1rem;
@@ -179,10 +186,12 @@ h6 {
 
 .titulo-principal {
     font-size: 3.2rem;
-    font-weight: 900;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    text-wrap: balance;
     line-height: 1.15;
     margin-bottom: 1.5rem;
-    color: #0F172A;
+    color: var(--texto);
 }
 
 .descripcion-hero {
@@ -224,7 +233,7 @@ h6 {
     position: absolute;
     width: 380px;
     height: 380px;
-    background: linear-gradient(135deg, #DBEAFE 0%, #FFEDD5 100%);
+    background: linear-gradient(135deg, var(--azul-100) 0%, var(--naranja-100) 100%);
     border-radius: 50%;
     filter: blur(50px);
     z-index: 1;
@@ -243,7 +252,7 @@ h6 {
     transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.imagen-hero-estudiantes:hover {
+.imagen-hero-estudiantes-desactivado {
     transform: scale(1.03);
 }
 
@@ -260,7 +269,7 @@ h6 {
     padding: 0.75rem 1.25rem;
     border-radius: 16px;
     box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1);
-    animation: flotar 4s ease-in-out infinite alternate;
+
 }
 .icono-flotante {
     width: 40px;
@@ -312,7 +321,7 @@ h6 {
     }
     
     .tarjeta-flotante-hero .text-muted {
-        font-size: 0.65rem !important;
+        font-size: 0.75rem !important;
     }
 }
 
@@ -321,8 +330,8 @@ h6 {
    ========================================================================== */
 .barra-caracteristicas {
     background-color: var(--blanco);
-    border-top: 1px solid #F1F5F9;
-    border-bottom: 1px solid #F1F5F9;
+    border-top: 1px solid var(--borde);
+    border-bottom: 1px solid var(--borde);
 }
 
 .fila-caracteristicas {
@@ -358,17 +367,17 @@ h6 {
     ESTILOS PARA LA SECCIÓN DE VENTAJAS ("¿Por qué usar nuestra plataforma?")
    ========================================================================== */
 .seccion-ventajas {
-    background-color: #F8FAFC;
+    background-color: var(--fondo-app);
     padding: 5rem 0;
 }
 
 .tarjeta-ventaja {
     background-color: var(--blanco);
-    border: 1px solid #E2E8F0;
+    border: 1px solid var(--borde);
     border-radius: 16px;
     padding: 2rem 1.5rem;
     height: 100%;
-    transition: all 0.3s ease;
+    transition: transform var(--dur) var(--ease-out), box-shadow var(--dur) ease, border-color var(--dur) ease, background-color var(--dur) ease, color var(--dur) ease;
     display: flex;
     flex-direction: column;
 }
@@ -392,23 +401,23 @@ h6 {
 
 /* Tonos suaves de fondo para los iconos de las ventajas */
 .fondo-verde-suave {
-    background-color: #D1FAE5;
-    color: #059669;
+    background-color: var(--verde-100);
+    color: var(--verde-700);
 }
 
 .fondo-naranja-suave {
-    background-color: #FFEDD5;
-    color: #F97316;
+    background-color: var(--naranja-100);
+    color: var(--naranja-700);
 }
 
 .fondo-azul-suave {
-    background-color: #DBEAFE;
-    color: #2563EB;
+    background-color: var(--azul-100);
+    color: var(--azul-600);
 }
 
 .fondo-celeste-suave {
-    background-color: #E0F2FE;
-    color: #0284C7;
+    background-color: var(--celeste-100);
+    color: var(--celeste-600);
 }
 
 /* ==========================================================================
@@ -416,12 +425,12 @@ h6 {
    ========================================================================== */
 .tarjeta-metodo {
     background-color: var(--blanco);
-    border: 1px solid #E2E8F0;
+    border: 1px solid var(--borde);
     border-radius: 16px;
     padding: 2.5rem 2rem;
     height: 100%;
     position: relative;
-    transition: all 0.3s ease;
+    transition: transform var(--dur) var(--ease-out), box-shadow var(--dur) ease, border-color var(--dur) ease, background-color var(--dur) ease, color var(--dur) ease;
     display: flex;
     flex-direction: column;
 }
@@ -438,8 +447,8 @@ h6 {
     right: 1.5rem;
     font-size: 1.5rem;
     font-weight: 800;
-    color: #E2E8F0;
-    font-family: 'Manrope', sans-serif;
+    color: var(--azul-600);
+    font-family: var(--fuente-titulo);
 }
 
 .icono-metodo {
@@ -457,14 +466,14 @@ h6 {
    ========================================================================== */
 .seccion-cursos {
     padding: 5rem 0;
-    background-color: #F8FAFC;
+    background-color: var(--fondo-app);
 }
 
 .tarjeta-curso {
     background: var(--blanco);
     border-radius: 16px;
     overflow: hidden;
-    border: 1px solid #E2E8F0;
+    border: 1px solid var(--borde);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     height: 100%;
     display: flex;
@@ -488,19 +497,19 @@ h6 {
 }
 
 .fondo-verde {
-    background-color: #059669;
+    background-color: var(--verde-700);
 }
 
 .fondo-verde-claro {
-    background-color: #10B981;
+    background-color: var(--verde-600);
 }
 
 .fondo-azul {
-    background-color: #3B82F6;
+    background-color: var(--azul-600);
 }
 
 .fondo-naranja {
-    background-color: #F97316;
+    background-color: var(--naranja-700);
 }
 
 .fondo-lima {
@@ -512,7 +521,7 @@ h6 {
 }
 
 .etiqueta-curso {
-    background-color: rgba(255, 255, 255, 0.25);
+    background-color: rgba(15, 23, 42, 0.22);
     color: var(--blanco);
     padding: 0.25rem 0.75rem;
     border-radius: 50px;
@@ -542,7 +551,7 @@ h6 {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #059669;
+    color: var(--verde-700);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     border: none;
     transition: transform 0.2s;
@@ -572,7 +581,7 @@ h6 {
     color: var(--color-texto-suave);
     font-size: 0.85rem;
     margin-bottom: 1.5rem;
-    border-bottom: 1px solid #F1F5F9;
+    border-bottom: 1px solid var(--borde);
     padding-bottom: 1rem;
 }
 
@@ -594,7 +603,7 @@ h6 {
 }
 
 .enlace-comenzar {
-    color: #059669;
+    color: var(--azul-700);
     font-weight: 700;
     text-decoration: none;
     font-size: 0.9rem;
@@ -602,7 +611,7 @@ h6 {
 }
 
 .enlace-comenzar:hover {
-    color: #047857;
+    color: var(--azul-800);
 }
 
 /* ==========================================================================
@@ -614,11 +623,11 @@ h6 {
 }
 
 .tarjeta-plan {
-    border: 2px solid #E2E8F0;
+    border: 2px solid var(--borde);
     border-radius: 20px;
     padding: 2.5rem;
     height: 100%;
-    transition: all 0.3s ease;
+    transition: transform var(--dur) var(--ease-out), box-shadow var(--dur) ease, border-color var(--dur) ease, background-color var(--dur) ease, color var(--dur) ease;
     background: var(--blanco);
     position: relative;
     display: flex;
@@ -677,14 +686,14 @@ h6 {
 }
 
 .lista-beneficios i {
-    color: #10B981;
+    color: var(--verde-600);
 }
 
 /* ==========================================================================
     ESTILOS PARA LA SECCIÓN DE PREGUNTAS FRECUENTES (FAQ)
    ========================================================================== */
 .seccion-faq {
-    background-color: #F8FAFC;
+    background-color: var(--fondo-app);
     padding: 5rem 0;
 }
 
@@ -694,14 +703,14 @@ h6 {
 }
 
 .accordion-item {
-    border: 1px solid #E2E8F0 !important;
+    border: 1px solid var(--borde) !important;
     overflow: hidden;
     margin-bottom: 1rem;
     border-radius: 12px !important;
 }
 
 .accordion-button {
-    font-family: 'Manrope', sans-serif;
+    font-family: var(--fuente-titulo);
     color: var(--color-texto);
     background-color: var(--blanco);
     box-shadow: none !important;
@@ -721,8 +730,8 @@ h6 {
     PIE DE PÁGINA (FOOTER)
    ========================================================================== */
 .pie-pagina {
-    background-color: #F8FAFC;
-    border-top: 1px solid #E2E8F0;
+    background-color: var(--fondo-app);
+    border-top: 1px solid var(--borde);
     color: var(--color-texto-suave);
 }
 
@@ -730,14 +739,14 @@ h6 {
     width: 36px;
     height: 36px;
     background-color: var(--blanco);
-    border: 1px solid #E2E8F0;
+    border: 1px solid var(--borde);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--color-texto);
     text-decoration: none;
-    transition: all 0.2s ease;
+    transition: transform var(--dur) var(--ease-out), box-shadow var(--dur) ease, border-color var(--dur) ease, background-color var(--dur) ease, color var(--dur) ease;
 }
 
 .redes-sociales a:hover {
@@ -764,13 +773,13 @@ h6 {
 }
 
 .linea-footer {
-    border-color: #E2E8F0;
+    border-color: var(--borde);
     margin: 2rem 0 1rem;
 }
 
 .campo-boletin {
     border-radius: 8px 0 0 8px;
-    border: 1px solid #CBD5E1;
+    border: 1px solid var(--borde-fuerte);
     padding: 0.6rem 1rem;
 }
 
@@ -799,3 +808,72 @@ h6 {
 .texto-pequeno {
     font-size: 0.75rem;
 }
+
+
+
+
+
+
+/* ==========================================================================
+   AJUSTES NUEVOS (sistema de diseño unificado)
+   ========================================================================== */
+
+html { scroll-behavior: smooth; scroll-padding-top: 88px; }
+
+/* Secciones alternadas con el azul muy claro de la marca */
+.seccion-metodo,
+.seccion-planes { background: var(--azul-50); }
+
+.texto-curso {
+    color: var(--color-texto-suave);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 1.25rem;
+}
+
+.detalle-curso {
+    color: var(--color-texto-suave);
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.titulo-footer {
+    font-size: 1rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+}
+
+.boton-boletin {
+    border-radius: 0 var(--radio) var(--radio) 0 !important;
+    box-shadow: none;
+    min-height: 0;
+}
+
+.boton-boletin:active { transform: none; box-shadow: none; }
+
+.campo-boletin {
+    border-radius: var(--radio) 0 0 var(--radio) !important;
+    font-size: 1rem;
+}
+
+#mensaje-boletin.es-error { color: var(--rojo-700); font-weight: 700; }
+#mensaje-boletin.es-info  { color: var(--azul-800); font-weight: 700; }
+
+/* Tarjetas: hover solo con mouse, sin "saltos" */
+.tarjeta-ventaja:hover,
+.tarjeta-metodo:hover,
+.tarjeta-curso:hover { transform: none; }
+
+@media (hover: hover) and (pointer: fine) {
+    .tarjeta-ventaja:hover,
+    .tarjeta-metodo:hover,
+    .tarjeta-curso:hover {
+        border-color: var(--azul-300);
+        box-shadow: var(--sombra-2);
+    }
+}
+
+/* Foco visible en enlaces del menú y del footer */
+.nav-link:focus-visible,
+.enlaces-footer a:focus-visible,
+.enlace-legal:focus-visible { outline: 2px solid var(--azul-600); outline-offset: 2px; border-radius: 4px; }

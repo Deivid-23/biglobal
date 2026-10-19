@@ -24,14 +24,14 @@ class DashboardModel
             SELECT COUNT(*) AS total
             FROM usuarios u
             INNER JOIN roles r ON u.rol_id = r.id
-            WHERE LOWER(r.nombre) = 'instructor'
-              AND u.estado = 'Activo'
+            WHERE LOWER(r.nombre) = 'docente'
+              AND u.activo = 1
         ")->fetch()["total"];
 
         $usuariosActivosHoy = (int) $conexion->query("
             SELECT COUNT(*) AS total
             FROM usuarios
-            WHERE estado = 'Activo'
+            WHERE activo = 1
               AND DATE(fecha_registro) = CURDATE()
         ")->fetch()["total"];
 

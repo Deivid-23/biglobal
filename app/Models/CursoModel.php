@@ -62,9 +62,10 @@ class CursoModel
             FROM usuarios u
             INNER JOIN roles r
                 ON u.rol_id = r.id
+            /* En la BD el rol se llama 'docente' y la cuenta activa es activo = 1 */
             WHERE
-                r.nombre = 'Instructor'
-                AND u.estado = 'Activo'
+                LOWER(r.nombre) = 'docente'
+                AND u.activo = 1
             ORDER BY u.nombre ASC
         ");
         $stmt->execute();
@@ -81,8 +82,8 @@ class CursoModel
                 ON u.rol_id = r.id
             WHERE
                 u.id = :id
-                AND r.nombre = 'Instructor'
-                AND u.estado = 'Activo'
+                AND LOWER(r.nombre) = 'docente'
+                AND u.activo = 1
             LIMIT 1
         ");
         $stmt->execute([":id" => $instructorId]);

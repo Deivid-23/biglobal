@@ -4,34 +4,27 @@
  * EstudianteModel
  *
  * Todo el acceso a datos del modulo estudiante: progreso, cursos,
- * lecciones y certificados. Cada metodo recibe la conexion PDO ya
- * abierta (la crea el Controller) y devuelve datos planos (int,
- * array), nunca HTML. Las consultas son exactamente las que ya
- * estaban en cada pagina, solo movidas aqui.
+ * lecciones y certificados.
  */
 class EstudianteModel
 {
     public static function contarLeccionesCompletadas(PDO $conexion, int $usuarioId): int
     {
         $stmt = $conexion->prepare("
-            SELECT COUNT(*) AS total
-            FROM progreso
+            SELECT COUNT(*) AS total FROM progreso
             WHERE usuario_id = :usuario_id AND completado = 1
         ");
         $stmt->execute([":usuario_id" => $usuarioId]);
-
         return (int) $stmt->fetch()["total"];
     }
 
     public static function contarCertificados(PDO $conexion, int $usuarioId): int
     {
         $stmt = $conexion->prepare("
-            SELECT COUNT(*) AS total
-            FROM certificados
+            SELECT COUNT(*) AS total FROM certificados
             WHERE usuario_id = :usuario_id
         ");
         $stmt->execute([":usuario_id" => $usuarioId]);
-
         return (int) $stmt->fetch()["total"];
     }
 
@@ -44,17 +37,15 @@ class EstudianteModel
             WHERE p.usuario_id = :usuario_id
         ");
         $stmt->execute([":usuario_id" => $usuarioId]);
-
         return (int) $stmt->fetch()["total"];
     }
 
     public static function contarCursosDisponibles(PDO $conexion): int
     {
         $stmt = $conexion->prepare("
-            SELECT COUNT(*) AS total FROM cursos WHERE estado = 'Publicado'
+            SELECT COUNT(*) AS total FROM cursos WHERE estado = 1
         ");
         $stmt->execute();
-
         return (int) $stmt->fetch()["total"];
     }
 
@@ -67,7 +58,7 @@ class EstudianteModel
                 c.nivel,
                 (
                     SELECT COUNT(*) FROM lecciones l2
-                    WHERE l2.curso_id = c.id AND l2.estado = 'Publicado'
+                    WHERE l2.curso_id = c.id AND l2.estado = 1
                 ) AS total_lecciones,
                 (
                     SELECT COUNT(*) FROM progreso p2
@@ -77,13 +68,12 @@ class EstudianteModel
                       AND p2.completado = 1
                 ) AS lecciones_hechas
             FROM cursos c
-            WHERE c.estado = 'Publicado'
+            WHERE c.estado = 1
             HAVING lecciones_hechas > 0 AND lecciones_hechas < total_lecciones
             ORDER BY c.id DESC
             LIMIT 3
         ");
         $stmt->execute([":usuario_id" => $usuarioId]);
-
         return $stmt->fetchAll();
     }
 
@@ -97,7 +87,7 @@ class EstudianteModel
                 c.nivel,
                 (
                     SELECT COUNT(*) FROM lecciones l
-                    WHERE l.curso_id = c.id AND l.estado = 'Publicado'
+                    WHERE l.curso_id = c.id AND l.estado = 1
                 ) AS total_lecciones,
                 (
                     SELECT COUNT(*) FROM progreso p
@@ -107,11 +97,10 @@ class EstudianteModel
                       AND p.completado = 1
                 ) AS lecciones_hechas
             FROM cursos c
-            WHERE c.estado = 'Publicado'
+            WHERE c.estado = 1
             ORDER BY c.nombre ASC
         ");
         $stmt->execute([":usuario_id" => $usuarioId]);
-
         return $stmt->fetchAll();
     }
 
@@ -120,11 +109,10 @@ class EstudianteModel
         $stmt = $conexion->prepare("
             SELECT id, nombre, descripcion, nivel
             FROM cursos
-            WHERE id = :id AND estado = 'Publicado'
+            WHERE id = :id AND estado = 1
             LIMIT 1
         ");
         $stmt->execute([":id" => $cursoId]);
-
         return $stmt->fetch();
     }
 
@@ -138,7 +126,7 @@ class EstudianteModel
                 l.orden,
                 (
                     SELECT COUNT(*) FROM actividades a
-                    WHERE a.leccion_id = l.id AND a.estado = 'Publicado'
+                    WHERE a.leccion_id = l.id
                 ) AS total_actividades,
                 (
                     SELECT p.completado FROM progreso p
@@ -146,14 +134,13 @@ class EstudianteModel
                     LIMIT 1
                 ) AS completado
             FROM lecciones l
-            WHERE l.curso_id = :curso_id AND l.estado = 'Publicado'
+            WHERE l.curso_id = :curso_id AND l.estado = 1
             ORDER BY l.orden ASC, l.id ASC
         ");
         $stmt->execute([
             ":usuario_id" => $usuarioId,
             ":curso_id" => $cursoId,
         ]);
-
         return $stmt->fetchAll();
     }
 
@@ -168,7 +155,6 @@ class EstudianteModel
             ":usuario_id" => $usuarioId,
             ":curso_id" => $cursoId,
         ]);
-
         return $stmt->fetch();
     }
 
@@ -186,7 +172,6 @@ class EstudianteModel
             ORDER BY cert.fecha_emision DESC
         ");
         $stmt->execute([":usuario_id" => $usuarioId]);
-
         return $stmt->fetchAll();
     }
 
@@ -194,14 +179,13 @@ class EstudianteModel
     {
         $stmt = $conexion->prepare("
             SELECT id FROM lecciones
-            WHERE id = :leccion_id AND curso_id = :curso_id AND estado = 'Publicado'
+            WHERE id = :leccion_id AND curso_id = :curso_id AND estado = 1
             LIMIT 1
         ");
         $stmt->execute([
             ":leccion_id" => $leccionId,
             ":curso_id" => $cursoId,
         ]);
-
         return (bool) $stmt->fetch();
     }
 
@@ -224,7 +208,7 @@ class EstudianteModel
     {
         $stmtTotal = $conexion->prepare("
             SELECT COUNT(*) AS total FROM lecciones
-            WHERE curso_id = :curso_id AND estado = 'Publicado'
+            WHERE curso_id = :curso_id AND estado = 1
         ");
         $stmtTotal->execute([":curso_id" => $cursoId]);
         $total = (int) $stmtTotal->fetch()["total"];
@@ -257,7 +241,6 @@ class EstudianteModel
             ":usuario_id" => $usuarioId,
             ":curso_id" => $cursoId,
         ]);
-
         return (bool) $stmt->fetch();
     }
 
@@ -272,5 +255,147 @@ class EstudianteModel
             ":curso_id" => $cursoId,
             ":codigo" => $codigo,
         ]);
+    }
+
+    /* =========================================================
+       NUEVAS CONSULTAS (panel unificado del estudiante)
+    ========================================================= */
+
+    /** Datos básicos del estudiante para el encabezado del panel. */
+    public static function obtenerDatosUsuario(PDO $conexion, int $usuarioId)
+    {
+        $stmt = $conexion->prepare("
+            SELECT nombre, apellido, correo, google_avatar
+            FROM usuarios
+            WHERE id = :id
+            LIMIT 1
+        ");
+        $stmt->execute([":id" => $usuarioId]);
+        return $stmt->fetch();
+    }
+
+    /** Total de lecciones publicadas en cursos publicados. */
+    public static function contarLeccionesPublicadas(PDO $conexion): int
+    {
+        $stmt = $conexion->query("
+            SELECT COUNT(*) FROM lecciones l
+            INNER JOIN cursos c ON c.id = l.curso_id
+            WHERE l.estado = 1 AND c.estado = 1
+        ");
+        return (int) $stmt->fetchColumn();
+    }
+
+    /**
+     * Cursos en los que el estudiante ya completó al menos una lección
+     * (incluye los terminados), con su avance.
+     */
+    public static function obtenerMisCursos(PDO $conexion, int $usuarioId): array
+    {
+        $stmt = $conexion->prepare("
+            SELECT
+                c.id, c.nombre, c.descripcion, c.nivel,
+                (SELECT COUNT(*) FROM lecciones l
+                  WHERE l.curso_id = c.id AND l.estado = 1) AS total_lecciones,
+                (SELECT COUNT(*) FROM progreso p
+                  INNER JOIN lecciones l2 ON p.leccion_id = l2.id
+                  WHERE l2.curso_id = c.id AND l2.estado = 1
+                    AND p.usuario_id = :usuario_id AND p.completado = 1) AS lecciones_hechas,
+                (SELECT MAX(p3.fecha_completado) FROM progreso p3
+                  INNER JOIN lecciones l3 ON p3.leccion_id = l3.id
+                  WHERE l3.curso_id = c.id AND p3.usuario_id = :usuario_id2) AS ultima_actividad
+            FROM cursos c
+            WHERE c.estado = 1
+            HAVING lecciones_hechas > 0
+            ORDER BY ultima_actividad DESC
+        ");
+        $stmt->execute([":usuario_id" => $usuarioId, ":usuario_id2" => $usuarioId]);
+        return $stmt->fetchAll();
+    }
+
+    /** Primera lección (por orden) que el estudiante aún no completa en un curso. */
+    public static function obtenerSiguienteLeccion(PDO $conexion, int $cursoId, int $usuarioId)
+    {
+        $stmt = $conexion->prepare("
+            SELECT l.id, l.titulo
+            FROM lecciones l
+            LEFT JOIN progreso p
+                   ON p.leccion_id = l.id AND p.usuario_id = :usuario_id AND p.completado = 1
+            WHERE l.curso_id = :curso_id AND l.estado = 1 AND p.id IS NULL
+            ORDER BY l.orden ASC, l.id ASC
+            LIMIT 1
+        ");
+        $stmt->execute([":usuario_id" => $usuarioId, ":curso_id" => $cursoId]);
+        return $stmt->fetch();
+    }
+
+    /** Una lección publicada de un curso publicado, con el estado del estudiante. */
+    public static function obtenerLeccionPublicada(PDO $conexion, int $leccionId, int $usuarioId)
+    {
+        $stmt = $conexion->prepare("
+            SELECT
+                l.id, l.curso_id, l.titulo, l.descripcion, l.contenido, l.orden,
+                c.nombre AS curso_nombre,
+                (SELECT p.completado FROM progreso p
+                  WHERE p.usuario_id = :usuario_id AND p.leccion_id = l.id
+                  LIMIT 1) AS completado,
+                /* Posición real en el curso (1, 2, 3...), aunque dos lecciones
+                   tengan el mismo valor en la columna orden */
+                (SELECT COUNT(*) + 1 FROM lecciones l2
+                  WHERE l2.curso_id = l.curso_id AND l2.estado = 1
+                    AND (l2.orden < l.orden OR (l2.orden = l.orden AND l2.id < l.id))) AS posicion
+            FROM lecciones l
+            INNER JOIN cursos c ON c.id = l.curso_id
+            WHERE l.id = :id AND l.estado = 1 AND c.estado = 1
+            LIMIT 1
+        ");
+        $stmt->execute([":usuario_id" => $usuarioId, ":id" => $leccionId]);
+        return $stmt->fetch();
+    }
+
+    /** ¿El estudiante ya había completado esta lección? */
+    public static function leccionYaCompletada(PDO $conexion, int $usuarioId, int $leccionId): bool
+    {
+        $stmt = $conexion->prepare("
+            SELECT 1 FROM progreso
+            WHERE usuario_id = :usuario_id AND leccion_id = :leccion_id AND completado = 1
+            LIMIT 1
+        ");
+        $stmt->execute([":usuario_id" => $usuarioId, ":leccion_id" => $leccionId]);
+        return (bool) $stmt->fetchColumn();
+    }
+
+    /**
+     * Una lección está desbloqueada cuando todas las lecciones publicadas
+     * que van ANTES en el curso ya están completadas.
+     * ("Antes" = menor orden; si empatan en orden, menor id.)
+     */
+    public static function leccionDesbloqueada(PDO $conexion, int $leccionId, int $usuarioId): bool
+    {
+        $stmt = $conexion->prepare("
+            SELECT COUNT(*)
+            FROM lecciones l
+            INNER JOIN lecciones actual ON actual.id = :leccion_id
+            LEFT JOIN progreso p
+                   ON p.leccion_id = l.id AND p.usuario_id = :usuario_id AND p.completado = 1
+            WHERE l.curso_id = actual.curso_id
+              AND l.estado = 1
+              AND (l.orden < actual.orden OR (l.orden = actual.orden AND l.id < actual.id))
+              AND p.id IS NULL
+        ");
+        $stmt->execute([":leccion_id" => $leccionId, ":usuario_id" => $usuarioId]);
+        return (int) $stmt->fetchColumn() === 0;
+    }
+
+    /** Actividades de una lección (por ahora solo se leen). */
+    public static function obtenerActividadesDeLeccion(PDO $conexion, int $leccionId): array
+    {
+        $stmt = $conexion->prepare("
+            SELECT id, titulo, descripcion, tipo
+            FROM actividades
+            WHERE leccion_id = :leccion_id
+            ORDER BY id ASC
+        ");
+        $stmt->execute([":leccion_id" => $leccionId]);
+        return $stmt->fetchAll();
     }
 }

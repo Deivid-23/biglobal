@@ -1,5 +1,12 @@
-# Configuracion sensible
+# Configuración sensible: NUNCA subir ni meter en un .zip
 .env
+.env.*
+!.env.example
+
+# Logs y archivos de depuración
+*.log
+debug-*.log
+test-*.php
 
 # Sistema
 .DS_Store
@@ -12,3 +19,9 @@ Thumbs.db
 # Dependencias (si se agregan en el futuro)
 /vendor/
 /node_modules/
+
+# Respaldos de la base de datos (tienen datos personales)
+respaldos/
+
+# Imágenes que no usa ninguna página (se guardan solo en local)
+recursos_sin_usar/

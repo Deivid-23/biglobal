@@ -1,20 +1,17 @@
 <?php
 
 /**
- * Protección CSRF ligera para los formularios públicos de
- * autenticación (login y registro).
+ * Protección CSRF (que otro sitio no pueda enviar formularios
+ * en nombre del usuario).
  *
  * Uso:
- *   - GET  /auth/csrf_token.php   -> devuelve un token nuevo
- *   - El frontend lo manda de vuelta como "csrf_token" en el
- *     POST de login/registro.
- *   - login.php / registro.php llaman a verificarCsrf(...)
- *     antes de procesar cualquier dato del formulario.
+ *   - Formularios PHP:   <?= campoCsrf() ?> dentro del <form>
+ *                        y verificarCsrfFormulario($_POST["csrf_token"] ?? "")
+ *   - Login/registro (fetch): GET /auth/csrf_token.php entrega el token
+ *                        y verificarCsrf(...) responde en JSON si falla.
  */
 
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
+require_once __DIR__ . "/sesion.php";
 
 function generarCsrfToken(): string
 {
@@ -25,41 +22,43 @@ function generarCsrfToken(): string
     return $_SESSION["csrf_token"];
 }
 
+/** Devuelve el <input hidden> listo para pegar dentro de un formulario. */
+function campoCsrf(): string
+{
+    return '<input type="hidden" name="csrf_token" value="'
+        . htmlspecialchars(generarCsrfToken(), ENT_QUOTES, "UTF-8") . '">';
+}
+
+/** Compara el token recibido con el de la sesión (en tiempo constante). */
+function csrfValido(string $tokenRecibido): bool
+{
+    $tokenValido = $_SESSION["csrf_token"] ?? "";
+    return $tokenValido !== "" && hash_equals($tokenValido, $tokenRecibido);
+}
+
 /**
- * Verifica el token recibido. Si no coincide, responde con un
- * JSON de error (mismo formato que ya usan login.php/registro.php)
- * y termina la ejecución.
+ * Para peticiones AJAX (login y registro): si el token no coincide
+ * responde JSON con error y termina.
  */
 function verificarCsrf(string $tokenRecibido): void
 {
-    $tokenValido = $_SESSION["csrf_token"] ?? null;
-
-    if (
-        !$tokenValido ||
-        !hash_equals($tokenValido, $tokenRecibido)
-    ) {
-        header('Content-Type: application/json; charset=utf-8');
-
+    if (!csrfValido($tokenRecibido)) {
+        header("Content-Type: application/json; charset=utf-8");
         echo json_encode([
             "success" => false,
             "message" => "Tu sesión de formulario expiró. Recarga la página e inténtalo de nuevo."
         ]);
-
         exit;
     }
 }
 
 /**
- * Verifica el token CSRF de un formulario normal del admin
- * (no AJAX). A diferencia de verificarCsrf(), no responde JSON:
- * corta la ejecución con un mensaje simple, igual que las demás
- * validaciones de los Controllers de admin.
+ * Para formularios normales (no AJAX): corta con un mensaje simple.
  */
 function verificarCsrfFormulario(string $tokenRecibido): void
 {
-    $tokenValido = $_SESSION["csrf_token"] ?? null;
-
-    if (!$tokenValido || !hash_equals($tokenValido, $tokenRecibido)) {
+    if (!csrfValido($tokenRecibido)) {
+        http_response_code(419);
         die("Token de seguridad inválido o expirado. Vuelve atrás y recarga la página.");
     }
 }

@@ -3,23 +3,21 @@
 /**
  * ActividadModel
  *
- * Acceso a datos para el submodulo Actividades (dentro de una
- * leccion). Mismas consultas que ya estaban en actividades.php,
- * editar_actividad.php, guardar_actividad.php y eliminar_actividad.php,
- * movidas aqui.
+ * Acceso a datos para las actividades de una lección.
+ *
+ * La tabla real `actividades` tiene: id, leccion_id, titulo, descripcion,
+ * tipo, fecha_creacion. NO tiene contenido, orden ni estado.
+ * Para no romper las vistas que esperan esos campos:
+ *   - "contenido" se guarda y se lee en la columna descripcion.
+ *   - "orden" y "estado" se devuelven con valores fijos (no existen en la BD).
  */
 class ActividadModel
 {
     public static function obtenerLeccionInfo(PDO $conexion, $leccionId)
     {
         $stmt = $conexion->prepare("
-            SELECT
-                l.id,
-                l.curso_id,
-                l.titulo,
-                l.descripcion,
-                l.estado,
-                c.nombre AS curso_nombre
+            SELECT l.id, l.curso_id, l.titulo, l.descripcion, l.estado,
+                   c.nombre AS curso_nombre
             FROM lecciones l
             INNER JOIN cursos c ON l.curso_id = c.id
             WHERE l.id = :id
@@ -47,10 +45,14 @@ class ActividadModel
     public static function obtenerPorLeccion(PDO $conexion, $leccionId): array
     {
         $stmt = $conexion->prepare("
-            SELECT id, titulo, tipo, contenido, orden, estado, fecha_creacion
+            SELECT id, titulo, tipo,
+                   descripcion AS contenido,
+                   1 AS orden,
+                   'Publicado' AS estado,
+                   fecha_creacion
             FROM actividades
             WHERE leccion_id = :leccion_id
-            ORDER BY orden ASC, id ASC
+            ORDER BY id ASC
         ");
         $stmt->execute([":leccion_id" => $leccionId]);
 
@@ -60,16 +62,12 @@ class ActividadModel
     public static function obtenerPorId(PDO $conexion, int $id)
     {
         $stmt = $conexion->prepare("
-            SELECT
-                a.id,
-                a.leccion_id,
-                a.titulo,
-                a.tipo,
-                a.contenido,
-                a.orden,
-                a.estado,
-                l.titulo AS leccion_titulo,
-                c.nombre AS curso_nombre
+            SELECT a.id, a.leccion_id, a.titulo, a.tipo,
+                   a.descripcion AS contenido,
+                   1 AS orden,
+                   'Publicado' AS estado,
+                   l.titulo AS leccion_titulo,
+                   c.nombre AS curso_nombre
             FROM actividades a
             INNER JOIN lecciones l ON a.leccion_id = l.id
             INNER JOIN cursos c ON l.curso_id = c.id
@@ -89,19 +87,18 @@ class ActividadModel
         return $stmt->fetch();
     }
 
+    /** $datos: leccionId, titulo, tipo, contenido (orden/estado se ignoran). */
     public static function crear(PDO $conexion, array $datos): void
     {
         $stmt = $conexion->prepare("
-            INSERT INTO actividades (leccion_id, titulo, tipo, contenido, orden, estado)
-            VALUES (:leccion_id, :titulo, :tipo, :contenido, :orden, :estado)
+            INSERT INTO actividades (leccion_id, titulo, descripcion, tipo)
+            VALUES (:leccion_id, :titulo, :descripcion, :tipo)
         ");
         $stmt->execute([
-            ":leccion_id" => $datos["leccionId"],
-            ":titulo" => $datos["titulo"],
-            ":tipo" => $datos["tipo"],
-            ":contenido" => $datos["contenido"],
-            ":orden" => $datos["orden"],
-            ":estado" => $datos["estado"],
+            ":leccion_id"  => $datos["leccionId"],
+            ":titulo"      => $datos["titulo"],
+            ":descripcion" => $datos["contenido"] ?? "",
+            ":tipo"        => $datos["tipo"],
         ]);
     }
 
@@ -109,17 +106,14 @@ class ActividadModel
     {
         $stmt = $conexion->prepare("
             UPDATE actividades
-            SET titulo = :titulo, tipo = :tipo, contenido = :contenido,
-                orden = :orden, estado = :estado
+            SET titulo = :titulo, tipo = :tipo, descripcion = :descripcion
             WHERE id = :id
         ");
         $stmt->execute([
-            ":titulo" => $datos["titulo"],
-            ":tipo" => $datos["tipo"],
-            ":contenido" => $datos["contenido"],
-            ":orden" => $datos["orden"],
-            ":estado" => $datos["estado"],
-            ":id" => $id,
+            ":titulo"      => $datos["titulo"],
+            ":tipo"        => $datos["tipo"],
+            ":descripcion" => $datos["contenido"] ?? "",
+            ":id"          => $id,
         ]);
     }
 

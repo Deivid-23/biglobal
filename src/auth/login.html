@@ -2,292 +2,218 @@
 <html lang="es">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BiGlobal - Autenticación</title>
- <link rel="stylesheet" href="../css/login.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#EFF6FF">
+    <title>Inicia sesión | BiGlobal</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Manrope:wght@600;700;800&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <!-- Sistema de diseño BiGlobal -->
+    <link rel="stylesheet" href="../css/tokens.css">
+    <link rel="stylesheet" href="../css/componentes.css">
+    <link rel="stylesheet" href="../css/auth.css">
 </head>
 
-<body>
+<body class="auth-body">
+    <a class="saltar-contenido" href="#contenido">Saltar al formulario</a>
 
-  <div class="auth-container-wrapper">
-    <div class="auth-wrapper">
-      <!-- Encabezado de la Marca -->
-      <div class="brand-header">
-        <div class="logo-container">
-          <img src="../img/logo-Biglobal.png" alt="BiGlobal Logo" class="brand-logo-img">
-        </div>
-        <h1 class="brand-title">BiGlobal</h1>
-        <p class="brand-subtitle">Aprende idiomas y Lengua de Señas sin límites.</p>
-      </div>
+    <div class="auth-layout">
 
-      <!-- PANTALLA DE ELECCIÓN (Iniciar sesión o Registrarse) -->
-      <div id="screen-choice" class="app-screen active">
-        <a href="../" class="back-link">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-          Volver
-        </a>
+        <!-- ================= PANEL DE MARCA (solo escritorio) ================= -->
+        <aside class="auth-marca" aria-label="Sobre BiGlobal">
+            <a class="marca-logo" href="../index.html">
+                <img src="../img/logo-Biglobal.png" alt="" width="44" height="44">
+                BiGlobal
+            </a>
 
-        <div class="auth-card">
-          <div class="choice-buttons">
-            <button type="button" class="btn-primary" onclick="goToForm('login')">Iniciar sesión</button>
-            <button type="button" class="btn-secondary" onclick="goToForm('register')">Registrarse</button>
-          </div>
+            <div class="marca-mensaje">
+                <h2>Aprende inglés, español y <span>Lengua de Señas</span> a tu ritmo.</h2>
+                <p>Lecciones cortas, progreso guardado en tu cuenta y un certificado cuando terminas cada curso.</p>
 
-          <div class="divider">
-            <span>o continúa con</span>
-          </div>
-
-          <button type="button" class="btn-google" onclick="handleGoogleLogin()">
-            <svg class="google-icon" viewBox="0 0 24 24">
-              <path fill="#4285F4"
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-              <path fill="#34A853"
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-              <path fill="#FBBC05"
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-              <path fill="#EA4335"
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-            </svg>
-            Continuar con Google
-          </button>
-        </div>
-      </div>
-
-      <!-- PANTALLA DE FORMULARIOS (Login o Registro) -->
-      <div id="screen-form" class="app-screen">
-        <button type="button" class="back-link" onclick="goToSection('choice')">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-        stroke-linecap="round" stroke-linejoin="round">
-        <path d="M19 12H5M12 19l-7-7 7-7" />
-    </svg>
-    Volver a la selección
-</button>
-
-<!-- ... -->
-
-<div class="form-group">
-    <label class="form-label">Nombre completo</label>
-    <!-- ...existing code... -->
-</div>
-
-
-        <div class="auth-card">
-
-          
-          <!-- FORMULARIO DE REGISTRO -->
-         <form
-    id="form-register"
-    class="form-section"
-    onsubmit="handleAuth(event, 'registro')"
-    novalidate
-    >
-  <h2 class="form-title">Crear cuenta</h2>
-  <div class="form-group form-group-first">
-    <label class="form-label">Nombre completo</label>
-    <div class="input-wrapper">
-      <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-        <circle cx="12" cy="7" r="4" />
-      </svg>
-      <input
-          type="text"
-          id="reg-name"
-          class="form-input"
-          placeholder="Tu nombre"
-          required
-      >
-    </div>
-  </div>
-
-            <div class="form-group">
-              <label class="form-label">Correo electrónico</label>
-              <div class="input-wrapper">
-                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                  <polyline points="22,6 12,13 2,6" />
-                </svg>
-                <input
-                   type="email"
-                   id="reg-email"
-                   class="form-input"
-                   placeholder="tucorreo@ejemplo.com"
-                   required
-                   >
-              </div>
+                <ul class="marca-beneficios">
+                    <li>
+                        <i class="fa-solid fa-language" aria-hidden="true"></i>
+                        <span>Inglés, Español y LSC<small>Un solo lugar para tus idiomas</small></span>
+                    </li>
+                    <li>
+                        <i class="fa-solid fa-chart-line" aria-hidden="true"></i>
+                        <span>Tu avance siempre guardado<small>Sigue desde el celular o el computador</small></span>
+                    </li>
+                    <li>
+                        <i class="fa-solid fa-award" aria-hidden="true"></i>
+                        <span>Certificado al completar<small>Termina todas las lecciones de un curso</small></span>
+                    </li>
+                </ul>
             </div>
 
-            <div class="form-group">
-              <label class="form-label">Contraseña</label>
-              <div class="input-wrapper">
-                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                </svg>
-                <input type="password" id="reg-password" class="form-input" placeholder="••••••••"
-                  oninput="validatePasswordStrength(this.value)" required>
-                <button type="button" class="toggle-password" onclick="togglePassword('reg-password', this)" aria-label="Mostrar u ocultar contraseña">
-                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                       <circle cx="12" cy="12" r="3" />
-                   </svg>
-               </button>
-              </div>
-              <div class="password-strength-container">
-                <div class="strength-bars">
-                  <div class="strength-bar" id="s-bar-1"></div>
-                  <div class="strength-bar" id="s-bar-2"></div>
-                  <div class="strength-bar" id="s-bar-3"></div>
-                  <div class="strength-bar" id="s-bar-4"></div>
+            <p class="marca-pie">© 2026 BiGlobal</p>
+        </aside>
+
+        <!-- ================= FORMULARIOS ================= -->
+        <main id="contenido" class="auth-principal">
+
+            <div class="auth-movil-cabecera">
+                <a class="marca-logo" href="../index.html">
+                    <img src="../img/logo-Biglobal.png" alt="" width="36" height="36">
+                    BiGlobal
+                </a>
+                <a class="enlace-volver" href="../index.html">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Volver al inicio
+                </a>
+            </div>
+
+            <div class="auth-card">
+
+                <!-- Pestañas -->
+                <div class="pestanas" role="tablist" aria-label="Elige una opción" data-activa="login">
+                    <button type="button" class="pestana" role="tab" id="tab-login"
+                            aria-selected="true" aria-controls="form-login">Iniciar sesión</button>
+                    <button type="button" class="pestana" role="tab" id="tab-registro"
+                            aria-selected="false" aria-controls="form-register" tabindex="-1">Crear cuenta</button>
                 </div>
-                <div class="strength-label">Seguridad de contraseña: <span id="strength-text">Débil</span></div>
-              </div>
+
+                <!-- Mensajes de éxito o error (los lee también el lector de pantalla) -->
+                <div id="mensaje-auth" role="status" aria-live="polite"></div>
+
+                <!-- ============ INICIAR SESIÓN ============ -->
+                <form id="form-login" class="form-auth" role="tabpanel" aria-labelledby="tab-login" novalidate>
+                    <h1 class="auth-title">¡Hola de nuevo!</h1>
+                    <p class="auth-text">Entra para seguir con tus lecciones.</p>
+
+                    <div class="campo">
+                        <label class="campo__etiqueta" for="login-email">Correo electrónico</label>
+                        <div class="entrada-con-icono">
+                            <i class="fa-regular fa-envelope" aria-hidden="true"></i>
+                            <input class="entrada" type="email" id="login-email" name="correo"
+                                   autocomplete="email" inputmode="email" placeholder="tucorreo@ejemplo.com" required>
+                        </div>
+                    </div>
+
+                    <div class="campo">
+                        <label class="campo__etiqueta" for="login-password">Contraseña</label>
+                        <div class="entrada-con-icono">
+                            <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                            <input class="entrada entrada--con-boton" type="password" id="login-password" name="password"
+                                   autocomplete="current-password" placeholder="Tu contraseña" required>
+                            <button type="button" class="ver-password" data-ver="login-password" aria-label="Mostrar contraseña">
+                                <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="fila-opciones" style="justify-content: flex-end;">
+                        <a class="enlace-fuerte" href="recuperar.php">¿Olvidaste tu contraseña?</a>
+                    </div>
+
+                    <button type="submit" class="boton boton--primario boton--bloque">Iniciar sesión</button>
+                    <input type="hidden" name="csrf_token" value="">
+                </form>
+
+                <!-- ============ CREAR CUENTA ============ -->
+                <form id="form-register" class="form-auth" role="tabpanel" aria-labelledby="tab-registro" novalidate hidden>
+                    <h1 class="auth-title">Crea tu cuenta gratis</h1>
+                    <p class="auth-text">Tu primera lección está a un minuto.</p>
+
+                    <div class="campo">
+                        <label class="campo__etiqueta" for="reg-name">Nombre completo</label>
+                        <div class="entrada-con-icono">
+                            <i class="fa-regular fa-user" aria-hidden="true"></i>
+                            <input class="entrada" type="text" id="reg-name" name="nombre" maxlength="200"
+                                   autocomplete="name" placeholder="Nombre y apellido" required>
+                        </div>
+                    </div>
+
+                    <div class="campo">
+                        <label class="campo__etiqueta" for="reg-email">Correo electrónico</label>
+                        <div class="entrada-con-icono">
+                            <i class="fa-regular fa-envelope" aria-hidden="true"></i>
+                            <input class="entrada" type="email" id="reg-email" name="correo" maxlength="150"
+                                   autocomplete="email" inputmode="email" placeholder="tucorreo@ejemplo.com" required>
+                        </div>
+                    </div>
+
+                    <div class="campo">
+                        <label class="campo__etiqueta" for="reg-password">Contraseña</label>
+                        <div class="entrada-con-icono">
+                            <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                            <input class="entrada entrada--con-boton" type="password" id="reg-password" name="password"
+                                   autocomplete="new-password" placeholder="Crea una contraseña"
+                                   aria-describedby="reglas-password" required>
+                            <button type="button" class="ver-password" data-ver="reg-password" aria-label="Mostrar contraseña">
+                                <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                        <div class="medidor" id="medidor" data-nivel="0" aria-hidden="true">
+                            <span></span><span></span><span></span><span></span>
+                        </div>
+                        <p class="campo__ayuda" id="reglas-password">Mínimo 6 caracteres.</p>
+                    </div>
+
+                    <div class="campo">
+                        <label class="campo__etiqueta" for="reg-confirm">Confirma la contraseña</label>
+                        <div class="entrada-con-icono">
+                            <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                            <input class="entrada entrada--con-boton" type="password" id="reg-confirm" name="confirm_password"
+                                   autocomplete="new-password" placeholder="Escríbela otra vez"
+                                   aria-describedby="match-error" required>
+                            <button type="button" class="ver-password" data-ver="reg-confirm" aria-label="Mostrar contraseña">
+                                <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                        <p class="campo__error" id="match-error" hidden>Las contraseñas no coinciden.</p>
+                    </div>
+
+                    <fieldset class="roles">
+                        <legend class="campo__etiqueta">Quiero usar BiGlobal como</legend>
+                        <div class="rol-opcion">
+                            <input type="radio" name="reg-role" id="reg-role-estudiante" value="estudiante" checked>
+                            <label for="reg-role-estudiante">Estudiante<small>Tomar cursos</small></label>
+                        </div>
+                        <div class="rol-opcion">
+                            <input type="radio" name="reg-role" id="reg-role-docente" value="docente">
+                            <label for="reg-role-docente">Docente<small>Crear cursos</small></label>
+                        </div>
+                    </fieldset>
+                    <p class="campo__ayuda" id="role-choice-hint" hidden style="margin-top: var(--esp-2);">
+                        Las cuentas de docente quedan pendientes hasta que un administrador las apruebe.
+                    </p>
+
+                    <div class="fila-opciones">
+                        <label class="casilla" for="terms">
+                            <input type="checkbox" id="terms" required>
+                            <span>Acepto los <a href="../terminos.html" target="_blank" rel="noopener">términos</a>
+                                y la <a href="../privacidad.html" target="_blank" rel="noopener">política de privacidad</a>.</span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="boton boton--primario boton--bloque">Crear cuenta</button>
+                    <input type="hidden" name="csrf_token" value="">
+                </form>
+
+                <div class="separador">o continúa con</div>
+
+                <a class="boton boton-google boton--bloque" href="google_login.php">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                    </svg>
+                    Continuar con Google
+                </a>
             </div>
 
-            <div class="form-group">
-              <label class="form-label">Confirmar contraseña</label>
-              <div class="input-wrapper">
-                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                </svg>
-                <input type="password" id="reg-confirm" class="form-input" placeholder="••••••••"
-                  oninput="validatePasswordMatch()" required>
-                <button type="button" class="toggle-password" onclick="togglePassword('reg-confirm', this)" aria-label="Mostrar u ocultar contraseña">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                    <circle cx="12" cy="12" r="3" />
-                  </svg>
-                </button>
-              </div>
-              <div class="error-feedback" id="match-error">Las contraseñas no coinciden.</div>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Quiero registrarme como</label>
-              <div class="role-choice-group">
-                <label class="role-choice">
-                  <input type="radio" name="reg-role" id="reg-role-estudiante" value="estudiante" checked>
-                  <span>Estudiante</span>
-                </label>
-                <label class="role-choice">
-                  <input type="radio" name="reg-role" id="reg-role-profesor" value="profesor">
-                  <span>Profesor</span>
-                </label>
-              </div>
-              <div class="role-choice-hint" id="role-choice-hint" style="display:none;">
-                Las cuentas de profesor quedan pendientes hasta que un administrador las apruebe.
-              </div>
-            </div>
-
-            <div class="checkbox-group">
-              <input type="checkbox" id="terms" required>
-              <label for="terms">Acepto los términos de servicio y la política de privacidad de BiGlobal.</label>
-            </div>
-            <button
-             type="submit"
-             class="btn-primary"
-          >
-             Crear cuenta
-          </button> 
-
-
-
-            
-          </form>
-
-          <!-- FORMULARIO DE INICIO DE SESIÓN -->
-             <form
-    id="form-login"
-    class="form-section"
-    onsubmit="handleAuth(event, 'login')"
-    novalidate
-            >
-            <h2 class="form-title">Iniciar sesión</h2>
-            <div class="form-group form-group-first">
-              <label class="form-label">Correo electrónico</label>
-              <div class="input-wrapper">
-                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                  <polyline points="22,6 12,13 2,6" />
-                </svg>
-                <input type="email" id="login-email" class="form-input" placeholder="tucorreo@ejemplo.com" required>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Contraseña</label>
-              <div class="input-wrapper">
-                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                </svg>
-                <input type="password" id="login-password" class="form-input" placeholder="••••••••" required>
-                <button type="button" class="toggle-password" onclick="togglePassword('login-password', this)" aria-label="Mostrar u ocultar contraseña">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                    <circle cx="12" cy="12" r="3" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-        <div class="form-options">
-    <div class="checkbox-group checkbox-no-margin">
-        <input type="checkbox" id="remember">
-        <label for="remember">Recordarme</label>
+            <p class="nota-legal">
+                ¿Necesitas ayuda? <a href="../contacto.html">Escríbenos</a>
+            </p>
+        </main>
     </div>
 
-    <a href="#" class="forgot-link">
-        ¿Olvidaste tu contraseña?
-    </a>
-</div>
-
-<button
-    type="submit"
-    class="btn-primary btn-primary-margin"
->
-    Iniciar sesión
-</button>
-
-<button
-    type="button"
-    class="btn-secondary btn-secondary-margin"
-    onclick="goToSection('choice')"
->
-    Volver
-</button>    
-
-      <!-- Lista de Beneficios -->
-      <div class="benefits-list">
-        <div class="benefit-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
-            stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-          Acceso a cursos de idiomas y Lengua de Señas
-        </div>
-        <div class="benefit-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
-            stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-          Progreso guardado en todos tus dispositivos
-        </div>
-        <div class="benefit-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
-            stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-          Comunidad y soporte permanente
-        </div>
-      </div>
-    </div>
-  </div>
-
- <script src="../js/login.js"></script>
+    <script src="../js/login.js"></script>
 </body>
+
 </html>

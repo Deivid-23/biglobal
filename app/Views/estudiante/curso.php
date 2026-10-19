@@ -1,116 +1,97 @@
-<!DOCTYPE html>
-<html lang="es">
+<?php
+/**
+ * Detalle de un curso con su lista de lecciones.
+ * Variables: $curso, $lecciones, $totalLecciones, $leccionesHechas,
+ *            $porcentaje, $siguiente, $certificado
+ */
+$idioma = idiomaDeCurso($curso["nombre"]);
+$idSiguiente = $siguiente ? (int) $siguiente["id"] : 0;
+?>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BiGlobal | <?= htmlspecialchars($curso["nombre"]) ?></title>
-    <link rel="stylesheet" href="../admin/css/style.css">
-    <link rel="stylesheet" href="css/estudiante.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&family=Manrope:wght@300;400;600;800&display=swap" rel="stylesheet">
-</head>
+<a class="enlace-atras" href="index.php?page=cursos">
+    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Cursos
+</a>
 
-<body>
+<section class="curso-cabecera">
+    <span class="idioma idioma--grande <?= e($idioma["clase"]) ?>" aria-hidden="true"><?= e($idioma["codigo"]) ?></span>
+    <div class="curso-cabecera__texto">
+        <h1><?= e($curso["nombre"]) ?></h1>
+        <p class="curso__meta"><?= e($curso["nivel"] ?: "Sin nivel") ?> · <?= e(plural($totalLecciones, "lección", "lecciones")) ?></p>
+        <?php if (!empty($curso["descripcion"])): ?>
+            <p class="curso-cabecera__descripcion"><?= e($curso["descripcion"]) ?></p>
+        <?php endif; ?>
+    </div>
 
-<div class="admin-container">
-
-    <main class="main-content" style="width: 100%; margin-left: 0;">
-
-        <header class="topbar">
-            <div class="topbar-left">
-                <a href="cursos.php" class="menu-toggle" style="display:flex; align-items:center; justify-content:center;">
-                    <i class="fa-solid fa-arrow-left"></i>
+    <?php if ($totalLecciones > 0): ?>
+        <div class="curso-cabecera__avance">
+            <div class="curso__avance">
+                <div class="progreso" role="progressbar" aria-valuemin="0" aria-valuemax="100"
+                     aria-valuenow="<?= $porcentaje ?>" aria-label="Avance del curso">
+                    <div class="progreso__relleno" data-valor="<?= $porcentaje ?>" style="width: <?= $porcentaje ?>%"></div>
+                </div>
+                <span class="numeros"><?= $leccionesHechas ?>/<?= $totalLecciones ?></span>
+            </div>
+            <?php if ($siguiente): ?>
+                <a class="boton boton--primario" href="index.php?page=leccion&amp;id=<?= $idSiguiente ?>">
+                    <?= $leccionesHechas > 0 ? "Continuar" : "Empezar curso" ?>
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
                 </a>
-                <div>
-                    <p class="panel-label">Mi aprendizaje</p>
-                    <h1><?= htmlspecialchars($curso["nombre"]) ?></h1>
-                </div>
-            </div>
-        </header>
-
-        <section class="users-page">
-
-            <div class="users-card" style="padding:22px; margin-bottom:20px;">
-
-                <span class="role admin-role"><?= htmlspecialchars($curso["nivel"]) ?></span>
-
-                <p style="color:var(--text-light); margin:10px 0 16px;">
-                    <?= htmlspecialchars($curso["descripcion"] ?: "Sin descripción disponible.") ?>
-                </p>
-
-                <div class="course-progress-track">
-                    <div class="course-progress-fill" style="width: <?= $porcentaje ?>%;"></div>
-                </div>
-                <div class="course-progress-label" style="margin-top:6px;">
-                    <span><?= $leccionesHechas ?>/<?= $totalLecciones ?> lecciones completadas</span>
-                    <span><?= $porcentaje ?>%</span>
-                </div>
-
-                <?php if ($certificado): ?>
-                    <div style="margin-top:16px; background:var(--purple-light); color:var(--purple); padding:12px 16px; border-radius:10px; font-size:13px;">
-                        <i class="fa-solid fa-certificate"></i>
-                        ¡Completaste este curso! Certificado: <strong><?= htmlspecialchars($certificado["codigo"]) ?></strong>
-                        — <a href="certificados.php" style="color:var(--purple); text-decoration:underline;">verlo</a>
-                    </div>
-                <?php endif; ?>
-
-            </div>
-
-            <h3 style="margin-bottom:10px;">Lecciones</h3>
-
-            <?php if (count($lecciones) > 0): ?>
-
-                <?php foreach ($lecciones as $l): ?>
-
-                    <div class="lesson-row">
-
-                        <div class="lesson-row-check <?= (int)$l["completado"] === 1 ? "done" : "pending" ?>">
-                            <i class="fa-solid <?= (int)$l["completado"] === 1 ? "fa-check" : "fa-lock-open" ?>"></i>
-                        </div>
-
-                        <div class="lesson-row-info">
-                            <h4><?= htmlspecialchars($l["titulo"]) ?></h4>
-                            <span>
-                                <?= htmlspecialchars($l["descripcion"] ?: "Sin descripción") ?>
-                                · <?= (int)$l["total_actividades"] ?> actividades
-                            </span>
-                        </div>
-
-                        <?php if ((int)$l["completado"] === 1): ?>
-
-                            <span class="status active-status">Completada</span>
-
-                        <?php else: ?>
-
-                            <form action="completar_leccion.php" method="POST">
-                                <input type="hidden" name="leccion_id" value="<?= $l["id"] ?>">
-                                <input type="hidden" name="curso_id" value="<?= $cursoId ?>">
-                                <button type="submit" class="course-card-btn" style="padding:8px 14px; font-size:12px;">
-                                    Marcar como completada
-                                </button>
-                            </form>
-
-                        <?php endif; ?>
-
-                    </div>
-
-                <?php endforeach; ?>
-
-            <?php else: ?>
-
-                <div class="empty-state-soft">
-                    <i class="fa-solid fa-book-open"></i>
-                    <p>Este curso todavía no tiene lecciones publicadas.</p>
-                </div>
-
             <?php endif; ?>
+        </div>
+    <?php endif; ?>
+</section>
 
-        </section>
+<?php if ($certificado): ?>
+    <div class="aviso aviso--exito logro" role="status">
+        <i class="fa-solid fa-trophy" aria-hidden="true"></i>
+        <span>¡Completaste este curso! Tu certificado <strong><?= e($certificado["codigo"]) ?></strong> está en
+            <a href="index.php?page=certificados">Certificados</a>.</span>
+    </div>
+<?php endif; ?>
 
-    </main>
+<section class="bloque" aria-labelledby="titulo-lecciones">
+    <div class="bloque__cabecera">
+        <h2 id="titulo-lecciones">Lecciones</h2>
+    </div>
 
-</div>
+    <?php if (empty($lecciones)): ?>
+        <div class="vacio">
+            <span class="vacio__icono"><i class="fa-solid fa-pen-ruler" aria-hidden="true"></i></span>
+            <p class="vacio__titulo">Lecciones en preparación</p>
+            <p class="vacio__texto">El docente todavía no publica lecciones en este curso.</p>
+        </div>
+    <?php else: ?>
+        <ol class="ruta">
+            <?php foreach ($lecciones as $i => $l):
+                $hecha = (int) $l["completado"] === 1;
+                $esSiguiente = (int) $l["id"] === $idSiguiente;
+                $bloqueada = !empty($l["bloqueada"]);
+                $estado = $hecha ? "hecha" : ($esSiguiente ? "siguiente" : "bloqueada");
+                $textoActividades = (int) $l["total_actividades"] > 0
+                    ? " · " . plural((int) $l["total_actividades"], "actividad", "actividades") : "";
+            ?>
+                <li class="ruta__paso ruta__paso--<?= $estado ?>">
+                    <span class="ruta__marca" aria-hidden="true">
+                        <?php if ($hecha): ?><i class="fa-solid fa-check"></i>
+                        <?php elseif ($bloqueada): ?><i class="fa-solid fa-lock"></i>
+                        <?php else: ?><?= $i + 1 ?><?php endif; ?>
+                    </span>
 
-</body>
-</html>
+                    <?php if ($bloqueada): ?>
+                        <!-- Bloqueada: no es enlace, se abre al completar la anterior -->
+                        <div class="ruta__enlace" aria-disabled="true">
+                            <span class="ruta__titulo"><?= e($l["titulo"]) ?></span>
+                            <span class="ruta__meta">Bloqueada · completa la lección anterior<?= e($textoActividades) ?></span>
+                        </div>
+                    <?php else: ?>
+                        <a class="ruta__enlace" href="index.php?page=leccion&amp;id=<?= (int) $l["id"] ?>">
+                            <span class="ruta__titulo"><?= e($l["titulo"]) ?></span>
+                            <span class="ruta__meta"><?= $hecha ? "Completada" : "Tu siguiente lección" ?><?= e($textoActividades) ?></span>
+                        </a>
+                        <i class="fa-solid fa-chevron-right ruta__flecha" aria-hidden="true"></i>
+                    <?php endif; ?>
+                </li>
+            <?php endforeach; ?>
+        </ol>
+    <?php endif; ?>
+</section>

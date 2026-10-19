@@ -7,6 +7,8 @@
  * Mismas consultas que ya estaban en usuarios.php, editar_usuario.php,
  * guardar_usuario.php y eliminar_usuario.php, movidas aqui.
  */
+/* Nota: el estado de la cuenta vive en usuarios.activo (0 inactivo, 1 activo, 2 pendiente).
+   La columna "estado" queda en la BD solo por compatibilidad: no se usa. */
 class UsuarioModel
 {
     public static function obtenerTodos(PDO $conexion): array
@@ -17,7 +19,7 @@ class UsuarioModel
                 u.nombre,
                 u.apellido,
                 u.correo,
-                u.estado,
+                u.activo,
                 u.fecha_registro,
                 r.nombre AS rol
             FROM usuarios u
@@ -40,7 +42,7 @@ class UsuarioModel
                 u.nombre,
                 u.apellido,
                 u.correo,
-                u.estado,
+                u.activo,
                 r.nombre AS rol
             FROM usuarios u
 
@@ -81,7 +83,7 @@ class UsuarioModel
     {
         $stmt = $conexion->prepare("
             INSERT INTO usuarios (
-                nombre, apellido, correo, password, rol_id, estado
+                nombre, apellido, correo, password, rol_id, activo
             )
             VALUES (
                 :nombre, :apellido, :correo, :password, :rol_id, :estado
@@ -104,7 +106,7 @@ class UsuarioModel
             $stmt = $conexion->prepare("
                 UPDATE usuarios
                 SET nombre = :nombre, apellido = :apellido, correo = :correo,
-                    password = :password, estado = :estado
+                    password = :password, activo = :estado
                 WHERE id = :id
             ");
             $stmt->execute([
@@ -121,7 +123,7 @@ class UsuarioModel
         $stmt = $conexion->prepare("
             UPDATE usuarios
             SET nombre = :nombre, apellido = :apellido, correo = :correo,
-                estado = :estado
+                activo = :estado
             WHERE id = :id
         ");
         $stmt->execute([

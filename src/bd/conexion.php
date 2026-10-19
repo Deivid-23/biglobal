@@ -2,55 +2,51 @@
 
 require_once __DIR__ . "/../../config/config.php";
 
+/**
+ * Conexión única a la base de datos (patrón "singleton").
+ *
+ * Los datos salen de config/config.php, que a su vez lee el .env
+ * (en tu computador) o las variables de entorno (en Render).
+ * Con DB_SSL=true la conexión va cifrada, que es lo que pide TiDB Cloud.
+ */
 class Conexion
 {
-    private static $conexion = null;
+    private static ?PDO $conexion = null;
 
-    public static function conectar()
+    public static function conectar(): PDO
     {
-        if (self::$conexion === null) {
+        if (self::$conexion !== null) {
+            return self::$conexion;
+        }
 
-            $config = obtenerConfig()["db"];
+        $db = obtenerConfig()["db"];
 
-            $dsn = sprintf(
-                "mysql:host=%s;port=%s;dbname=%s;charset=%s",
-                $config["host"],
-                $config["port"],
-                $config["nombre"],
-                $config["charset"]
-            );
+        $dsn = sprintf(
+            "mysql:host=%s;port=%s;dbname=%s;charset=%s",
+            $db["host"],
+            $db["port"],
+            $db["nombre"],
+            $db["charset"]
+        );
 
-            $opciones = [
-                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            ];
+        $opciones = [
+            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        ];
 
-            // Solo se activa si DB_SSL=true; en local (sin esa variable) el
-            // comportamiento no cambia.
-            if ($config["ssl"]) {
-                if (!empty($config["ssl_ca"])) {
-                    $opciones[PDO::MYSQL_ATTR_SSL_CA] = $config["ssl_ca"];
-                }
-                $opciones[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = !empty($config["ssl_ca"]);
-            }
+        if ($db["ssl"]) {
+            // Activa SSL y verifica el certificado del servidor
+            $opciones[PDO::MYSQL_ATTR_SSL_CA] = $db["ssl_ca"];
+            $opciones[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = true;
+        }
 
-            try {
-
-                self::$conexion = new PDO(
-                    $dsn,
-                    $config["usuario"],
-                    $config["clave"],
-                    $opciones
-                );
-
-            } catch (PDOException $e) {
-
-                $debug = obtenerConfig()["app"]["debug"];
-
-                die($debug
-                    ? "Error de conexión: " . $e->getMessage()
-                    : "No fue posible conectar con la base de datos.");
-            }
+        try {
+            self::$conexion = new PDO($dsn, $db["usuario"], $db["clave"], $opciones);
+        } catch (PDOException $e) {
+            // El detalle real va al log del servidor, nunca al navegador
+            error_log("[BiGlobal][conexion] " . $e->getMessage());
+            http_response_code(503);
+            die("No pudimos conectar con la base de datos. Intenta de nuevo en unos minutos.");
         }
 
         return self::$conexion;

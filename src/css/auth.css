@@ -1,0 +1,485 @@
+/* ==========================================================================
+   BiGlobal · PANTALLAS DE ACCESO
+   Login, registro, elegir rol (Google), recuperar y restablecer contraseña,
+   y la página de acceso denegado.
+   Requiere: tokens.css y componentes.css
+   ========================================================================== */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+.auth-body {
+    margin: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    background: var(--fondo-app);
+    color: var(--texto);
+    font-family: var(--fuente-texto);
+    font-size: var(--texto-base);
+    line-height: 1.5;
+}
+
+h1, h2, h3 { font-family: var(--fuente-titulo); margin: 0; text-wrap: balance; }
+p { margin: 0; }
+a { color: var(--azul-700); text-underline-offset: 3px; }
+
+/* ---------- Distribución: panel de marca + formulario ---------- */
+.auth-layout {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 960px) {
+    .auth-layout { grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr); }
+}
+
+/* Panel de marca (solo escritorio): el azul claro de la página principal */
+.auth-marca {
+    display: none;
+    position: relative;
+    overflow: hidden;
+    padding: var(--esp-12) clamp(2rem, 5vw, 4.5rem);
+    background: linear-gradient(180deg, var(--azul-50) 0%, var(--celeste-50) 100%);
+    border-right: 1px solid var(--borde);
+}
+
+@media (min-width: 960px) {
+    .auth-marca { display: flex; flex-direction: column; justify-content: space-between; gap: var(--esp-10); }
+}
+
+.marca-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--esp-3);
+    text-decoration: none;
+    color: var(--azul-600);
+    font-family: var(--fuente-titulo);
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+}
+
+.marca-logo img { width: 44px; height: 44px; object-fit: contain; }
+
+.marca-mensaje h2 {
+    font-size: clamp(1.9rem, 1.2rem + 1.6vw, 2.6rem);
+    line-height: 1.12;
+    letter-spacing: -0.03em;
+    font-weight: 800;
+    max-width: 16ch;
+}
+
+.marca-mensaje h2 span { color: var(--azul-600); }
+
+.marca-mensaje p {
+    margin-top: var(--esp-4);
+    max-width: 44ch;
+    color: var(--texto-suave);
+    font-size: var(--texto-lg);
+    line-height: 1.6;
+}
+
+.marca-beneficios {
+    list-style: none;
+    margin: var(--esp-8) 0 0;
+    padding: 0;
+    display: grid;
+    gap: var(--esp-4);
+}
+
+.marca-beneficios li {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--esp-3);
+    font-weight: 700;
+    color: var(--texto);
+}
+
+.marca-beneficios i {
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radio-sm);
+    background: var(--superficie);
+    color: var(--azul-600);
+    box-shadow: var(--sombra-1);
+    font-size: 0.9rem;
+}
+
+.marca-beneficios li:nth-child(2) i { color: var(--verde-600); }
+.marca-beneficios li:nth-child(3) i { color: var(--naranja-500); }
+
+.marca-beneficios small {
+    display: block;
+    font-weight: 400;
+    color: var(--texto-suave);
+    font-size: var(--texto-sm);
+}
+
+.marca-pie { color: var(--texto-suave); font-size: var(--texto-sm); }
+
+/* ---------- Columna del formulario ---------- */
+.auth-principal {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--esp-6) var(--esp-4) var(--esp-10);
+}
+
+@media (min-width: 960px) {
+    .auth-principal { justify-content: center; padding: var(--esp-12) var(--esp-8); }
+}
+
+.auth-movil-cabecera {
+    width: 100%;
+    max-width: 440px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--esp-6);
+}
+
+@media (min-width: 960px) { .auth-movil-cabecera .marca-logo { display: none; } .auth-movil-cabecera { justify-content: flex-end; } }
+
+.enlace-volver {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--esp-2);
+    min-height: 40px;
+    padding: 0 var(--esp-2);
+    border-radius: var(--radio-sm);
+    color: var(--texto-suave);
+    font-weight: 700;
+    font-size: var(--texto-sm);
+    text-decoration: none;
+    transition: color var(--dur) ease, background-color var(--dur) ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .enlace-volver:hover { color: var(--azul-700); background: var(--azul-50); }
+}
+
+/* Tarjeta del formulario */
+.auth-card {
+    width: 100%;
+    max-width: 440px;
+    padding: var(--esp-6);
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio-xl);
+    box-shadow: var(--sombra-2);
+}
+
+@media (min-width: 480px) { .auth-card { padding: var(--esp-8); } }
+
+.auth-card--center { text-align: center; }
+
+.auth-title {
+    font-size: var(--texto-2xl);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+}
+
+.auth-text {
+    margin-top: var(--esp-2);
+    color: var(--texto-suave);
+    line-height: 1.6;
+}
+
+.auth-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--esp-3);
+    margin-top: var(--esp-6);
+}
+
+/* Página simple centrada (403, elegir rol, recuperar) */
+.auth-shell {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--esp-6);
+    padding: var(--esp-6) var(--esp-4);
+    background: linear-gradient(180deg, var(--azul-50) 0%, var(--fondo-app) 60%);
+}
+
+/* ---------- Pestañas Iniciar sesión / Crear cuenta ---------- */
+.pestanas {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 4px;
+    margin-bottom: var(--esp-6);
+    border-radius: var(--radio);
+    background: var(--azul-50);
+    border: 1px solid var(--azul-100);
+}
+
+/* Fondo blanco que se desliza bajo la pestaña activa */
+.pestanas::before {
+    content: "";
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    left: 4px;
+    width: calc(50% - 4px);
+    border-radius: calc(var(--radio) - 4px);
+    background: var(--superficie);
+    box-shadow: var(--sombra-1);
+    transition: transform var(--dur-lenta) var(--ease-out);
+}
+
+.pestanas[data-activa="registro"]::before { transform: translateX(100%); }
+
+.pestana {
+    position: relative;
+    z-index: 1;
+    min-height: 40px;
+    border: 0;
+    background: transparent;
+    border-radius: calc(var(--radio) - 4px);
+    font-family: var(--fuente-titulo);
+    font-size: var(--texto-sm);
+    font-weight: 800;
+    color: var(--texto-suave);
+    cursor: pointer;
+    transition: color var(--dur) ease;
+}
+
+.pestana[aria-selected="true"] { color: var(--azul-700); }
+
+/* ---------- Formularios ---------- */
+.form-auth[hidden] { display: none; }
+
+.form-auth .auth-title { margin-bottom: var(--esp-1); }
+.form-auth .auth-text { margin-bottom: var(--esp-6); }
+
+/* Campo con ícono a la izquierda y botón "ver contraseña" a la derecha */
+.entrada-con-icono { position: relative; }
+
+.entrada-con-icono > i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--texto-tenue);
+    font-size: 0.95rem;
+    pointer-events: none;
+}
+
+.entrada-con-icono .entrada { padding-left: 42px; }
+.entrada-con-icono .entrada--con-boton { padding-right: 48px; }
+
+.ver-password {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: var(--radio-sm);
+    background: transparent;
+    color: var(--texto-suave);
+    cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .ver-password:hover { background: var(--azul-50); color: var(--azul-700); }
+}
+
+.fila-opciones {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--esp-3);
+    flex-wrap: wrap;
+    margin: var(--esp-4) 0 var(--esp-6);
+    font-size: var(--texto-sm);
+}
+
+.casilla {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: var(--esp-2);
+    color: var(--texto-suave);
+    font-size: var(--texto-sm);
+    line-height: 1.5;
+    cursor: pointer;
+}
+
+.casilla input { width: 18px; height: 18px; margin: 1px 0 0; flex: 0 0 auto; }
+
+.enlace-fuerte { font-weight: 700; color: var(--azul-700); }
+
+/* Medidor de seguridad de la contraseña */
+.medidor {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-top: var(--esp-1);
+}
+
+.medidor span {
+    height: 5px;
+    border-radius: var(--radio-pill);
+    background: var(--borde);
+    transition: background-color var(--dur) ease;
+}
+
+.medidor[data-nivel="1"] span:nth-child(-n+1) { background: var(--rojo-600); }
+.medidor[data-nivel="2"] span:nth-child(-n+2) { background: var(--naranja-500); }
+.medidor[data-nivel="3"] span:nth-child(-n+3) { background: var(--azul-600); }
+.medidor[data-nivel="4"] span:nth-child(-n+4) { background: var(--verde-600); }
+
+/* Elección de rol (Estudiante / Docente) como tarjetas seleccionables */
+.roles {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--esp-3);
+    border: 0;
+    margin: var(--esp-4) 0 0;
+    padding: 0;
+}
+
+.roles legend { padding: 0; margin-bottom: var(--esp-2); }
+
+.rol-opcion { position: relative; }
+
+.rol-opcion input {
+    position: absolute;
+    opacity: 0;
+    inset: 0;
+    margin: 0;
+    cursor: pointer;
+}
+
+.rol-opcion label {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    height: 100%;
+    padding: var(--esp-3) var(--esp-4);
+    border: 1.5px solid var(--borde-fuerte);
+    border-radius: var(--radio);
+    font-family: var(--fuente-titulo);
+    font-weight: 800;
+    font-size: var(--texto-sm);
+    color: var(--texto);
+    cursor: pointer;
+    transition: border-color var(--dur) ease, background-color var(--dur) ease;
+}
+
+.rol-opcion label small {
+    font-family: var(--fuente-texto);
+    font-weight: 400;
+    font-size: var(--texto-xs);
+    color: var(--texto-suave);
+}
+
+.rol-opcion input:checked + label {
+    border-color: var(--azul-600);
+    background: var(--azul-50);
+    box-shadow: inset 0 0 0 1px var(--azul-600);
+}
+
+.rol-opcion input:focus-visible + label { box-shadow: var(--foco); }
+
+/* Separador "o continúa con" */
+.separador {
+    display: flex;
+    align-items: center;
+    gap: var(--esp-3);
+    margin: var(--esp-6) 0;
+    color: var(--texto-suave);
+    font-size: var(--texto-xs);
+    font-weight: 700;
+}
+
+.separador::before,
+.separador::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--borde);
+}
+
+/* Botón de Google (respeta los colores de su logo) */
+.boton-google {
+    background: var(--superficie);
+    border: 1.5px solid var(--borde-fuerte);
+    color: var(--texto);
+    box-shadow: 0 2px 0 var(--borde-fuerte);
+}
+
+.boton-google svg { width: 18px; height: 18px; }
+
+@media (hover: hover) and (pointer: fine) {
+    .boton-google:hover { background: var(--fondo-app); }
+}
+
+#mensaje-auth:empty { display: none; }
+#mensaje-auth { margin-bottom: var(--esp-4); }
+
+.nota-legal {
+    margin-top: var(--esp-6);
+    text-align: center;
+    color: var(--texto-suave);
+    font-size: var(--texto-xs);
+    line-height: 1.6;
+}
+
+/* Elegir rol después de Google */
+.lista-roles {
+    display: grid;
+    gap: var(--esp-3);
+    margin-top: var(--esp-6);
+}
+
+.opcion-grande {
+    display: flex;
+    align-items: center;
+    gap: var(--esp-4);
+    width: 100%;
+    padding: var(--esp-4);
+    border: 1.5px solid var(--borde-fuerte);
+    border-radius: var(--radio-lg);
+    background: var(--superficie);
+    text-align: left;
+    font: inherit;
+    color: var(--texto);
+    cursor: pointer;
+    transition: border-color var(--dur) ease, background-color var(--dur) ease, transform var(--dur-rapida) var(--ease-out);
+}
+
+.opcion-grande:active { transform: translateY(1px); }
+
+@media (hover: hover) and (pointer: fine) {
+    .opcion-grande:hover { border-color: var(--azul-600); background: var(--azul-50); }
+}
+
+.opcion-grande i {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radio);
+    background: var(--azul-100);
+    color: var(--azul-700);
+}
+
+.opcion-grande:nth-child(2) i { background: var(--naranja-100); color: var(--naranja-700); }
+
+.opcion-grande strong { display: block; font-family: var(--fuente-titulo); }
+.opcion-grande span { color: var(--texto-suave); font-size: var(--texto-sm); }

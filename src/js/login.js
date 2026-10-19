@@ -1,692 +1,325 @@
 /* =========================================================
-   TOKEN CSRF
+   BiGlobal · Login y registro
+   ---------------------------------------------------------
+   - Cambia entre las pestañas "Iniciar sesión" y "Crear cuenta".
+   - Envía los formularios a login.php / registro.php con fetch.
+   - Muestra los mensajes dentro de la tarjeta (sin alert()).
+   - Lee ?error=... que manda el login con Google.
 ========================================================= */
 
-let csrfToken = "";
+/* Mensajes para los errores que devuelve google_callback.php */
+const ERRORES_GOOGLE = {
+    state_invalido:    "La sesión con Google expiró. Inténtalo de nuevo.",
+    acceso_cancelado:  "Cancelaste el inicio con Google.",
+    sin_codigo:        "Google no envió la autorización. Inténtalo de nuevo.",
+    token_invalido:    "No pudimos validar tu cuenta de Google. Inténtalo de nuevo.",
+    sin_access_token:  "No pudimos validar tu cuenta de Google. Inténtalo de nuevo.",
+    userinfo_fallido:  "No pudimos leer los datos de tu cuenta de Google.",
+    datos_incompletos: "Tu cuenta de Google no compartió el correo. Usa otra cuenta.",
+    cuenta_inactiva:   "Tu cuenta está inactiva. Escríbenos para revisarla.",
+    correo_ya_existe:  "Ya existe una cuenta con ese correo. Inicia sesión.",
+    google_no_config:  "El inicio con Google no está disponible en este momento."
+};
 
-async function cargarCsrfToken() {
+const MENSAJES_OK = {
+    password_actualizada: "¡Listo! Tu contraseña se actualizó. Ya puedes iniciar sesión."
+};
 
-    try {
+let reglasPassword = { minimo: 6, mayuscula: false, numero: false };
 
-        const respuesta = await fetch("../auth/csrf_token.php");
-        const datos = await respuesta.json();
+/* ---------------------------------------------------------
+   Mensaje dentro de la tarjeta
+--------------------------------------------------------- */
+function mostrarMensaje(texto, tipo = "error") {
+    const caja = document.getElementById("mensaje-auth");
+    if (!caja) return;
 
-        csrfToken = datos.csrf_token || "";
+    const iconos = { error: "fa-circle-exclamation", exito: "fa-circle-check", info: "fa-circle-info" };
 
-    } catch (error) {
+    caja.innerHTML = "";
+    const aviso = document.createElement("div");
+    aviso.className = "aviso aviso--" + tipo;
+    aviso.setAttribute("data-nuevo", "");
 
-        console.error("No se pudo obtener el token CSRF:", error);
+    const icono = document.createElement("i");
+    icono.className = "fa-solid " + (iconos[tipo] || iconos.info);
+    icono.setAttribute("aria-hidden", "true");
+
+    const parrafo = document.createElement("span");
+    parrafo.textContent = texto; // textContent: nunca interpreta HTML
+
+    aviso.append(icono, parrafo);
+    caja.appendChild(aviso);
+
+    // En celular el mensaje puede quedar arriba, fuera de la vista: lo mostramos
+    const sinMovimiento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const rect = caja.getBoundingClientRect();
+    if (rect.top < 0 || rect.bottom > window.innerHeight) {
+        caja.scrollIntoView({ behavior: sinMovimiento ? "auto" : "smooth", block: "center" });
     }
 }
 
-document.addEventListener("DOMContentLoaded", cargarCsrfToken);
+function limpiarMensaje() {
+    const caja = document.getElementById("mensaje-auth");
+    if (caja) caja.innerHTML = "";
+}
 
-
-/* =========================================================
-   CAMBIO ENTRE PANTALLAS
-========================================================= */
-
-function goToSection(target) {
-
-    const screenChoice = document.getElementById("screen-choice");
-    const screenForm = document.getElementById("screen-form");
-
+/* ---------------------------------------------------------
+   Pestañas
+--------------------------------------------------------- */
+function activarPestana(nombre, enfocar = true) {
+    const pestanas = document.querySelector(".pestanas");
+    const tabLogin = document.getElementById("tab-login");
+    const tabRegistro = document.getElementById("tab-registro");
     const formLogin = document.getElementById("form-login");
-    const formRegister = document.getElementById("form-register");
+    const formRegistro = document.getElementById("form-register");
 
+    const esRegistro = nombre === "registro";
 
-    if (target === "choice") {
+    pestanas.dataset.activa = esRegistro ? "registro" : "login";
+    tabLogin.setAttribute("aria-selected", String(!esRegistro));
+    tabRegistro.setAttribute("aria-selected", String(esRegistro));
+    tabLogin.tabIndex = esRegistro ? -1 : 0;
+    tabRegistro.tabIndex = esRegistro ? 0 : -1;
+    formLogin.hidden = esRegistro;
+    formRegistro.hidden = !esRegistro;
 
-        screenChoice.classList.add("active");
-        screenForm.classList.remove("active");
+    document.title = (esRegistro ? "Crea tu cuenta" : "Inicia sesión") + " | BiGlobal";
+    limpiarMensaje();
 
-        formLogin.classList.remove("active");
-        formRegister.classList.remove("active");
-
-
-        // Limpiar formularios
-        formLogin.reset();
-        formRegister.reset();
-
-
-        // Reiniciar validación de contraseña
-        const strengthText =
-            document.getElementById("strength-text");
-
-        if (strengthText) {
-            strengthText.textContent = "Débil";
-        }
-
-
-        const matchError =
-            document.getElementById("match-error");
-
-        if (matchError) {
-            matchError.style.display = "none";
-        }
-
-
-        const confirmInput =
-            document.getElementById("reg-confirm");
-
-        if (confirmInput) {
-            confirmInput.classList.remove("error");
-        }
-
-
-        document
-            .querySelectorAll(".strength-bar")
-            .forEach(bar => {
-                bar.style.background = "#e2e8f0";
-            });
+    if (enfocar) {
+        const primerCampo = (esRegistro ? formRegistro : formLogin).querySelector("input:not([type=hidden])");
+        if (primerCampo) primerCampo.focus();
     }
 }
 
+/* ---------------------------------------------------------
+   Ver / ocultar contraseña
+--------------------------------------------------------- */
+function alternarPassword(boton) {
+    const input = document.getElementById(boton.dataset.ver);
+    const icono = boton.querySelector("i");
+    if (!input) return;
 
-/* =========================================================
-   ELEGIR LOGIN O REGISTRO
-========================================================= */
-
-function goToForm(type) {
-
-    const screenChoice =
-        document.getElementById("screen-choice");
-
-    const screenForm =
-        document.getElementById("screen-form");
-
-    const formLogin =
-        document.getElementById("form-login");
-
-    const formRegister =
-        document.getElementById("form-register");
-
-
-    screenChoice.classList.remove("active");
-    screenForm.classList.add("active");
-
-
-    if (type === "login") {
-
-        formLogin.classList.add("active");
-        formRegister.classList.remove("active");
-
-
-        setTimeout(() => {
-
-            const input =
-                document.getElementById("login-email");
-
-            if (input) {
-                input.focus();
-            }
-
-        }, 50);
-
-    }
-
-
-    if (type === "register") {
-
-        formRegister.classList.add("active");
-        formLogin.classList.remove("active");
-
-
-        setTimeout(() => {
-
-            const input =
-                document.getElementById("reg-name");
-
-            if (input) {
-                input.focus();
-            }
-
-        }, 50);
-    }
+    const mostrar = input.type === "password";
+    input.type = mostrar ? "text" : "password";
+    icono.className = mostrar ? "fa-regular fa-eye-slash" : "fa-regular fa-eye";
+    boton.setAttribute("aria-label", mostrar ? "Ocultar contraseña" : "Mostrar contraseña");
 }
 
+/* ---------------------------------------------------------
+   Seguridad de la contraseña (solo orientativo)
+--------------------------------------------------------- */
+function medirPassword(password) {
+    let nivel = 0;
+    if (password.length > 0) nivel++;
+    if (password.length >= reglasPassword.minimo) nivel++;
+    if (/[A-Z]/.test(password) && /\d/.test(password)) nivel++;
+    if (password.length >= 10 && /[^A-Za-z0-9]/.test(password)) nivel++;
 
-/* =========================================================
-   MOSTRAR / OCULTAR CONTRASEÑA
-========================================================= */
-
-function togglePassword(id, btn) {
-
-    const input =
-        document.getElementById(id);
-
-    const svg =
-        btn.querySelector("svg");
-
-
-    if (!input || !svg) {
-        return;
-    }
-
-
-    svg.style.transform =
-        "scale(0.7) rotate(20deg)";
-
-    svg.style.opacity = "0.4";
-
-
-    setTimeout(() => {
-
-        if (input.type === "password") {
-
-            input.type = "text";
-
-            svg.innerHTML = `
-                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20
-                c-7 0-11-8-11-8
-                a18.45 18.45 0 0 1 5.06-5.94
-                M9.9 4.24A9.12 9.12 0 0 1 12 4
-                c7 0 11 8 11 8
-                a18.5 18.5 0 0 1-2.16 3.19
-                m-6.72-1.07
-                a3 3 0 1 1-4.24-4.24">
-                </path>
-
-                <line
-                    x1="1"
-                    y1="1"
-                    x2="23"
-                    y2="23">
-                </line>
-            `;
-
-        } else {
-
-            input.type = "password";
-
-            svg.innerHTML = `
-                <path d="M1 12s4-8 11-8
-                11 8 11 8-4 8-11 8-11-8-11-8z">
-                </path>
-
-                <circle
-                    cx="12"
-                    cy="12"
-                    r="3">
-                </circle>
-            `;
-        }
-
-
-        svg.style.transform =
-            "scale(1) rotate(0deg)";
-
-        svg.style.opacity = "1";
-
-    }, 120);
+    document.getElementById("medidor").dataset.nivel = String(nivel);
+    validarCoincidencia();
 }
 
+function validarCoincidencia() {
+    const password = document.getElementById("reg-password");
+    const confirmar = document.getElementById("reg-confirm");
+    const error = document.getElementById("match-error");
 
-/* =========================================================
-   VALIDAR FUERZA DE CONTRASEÑA
-========================================================= */
+    const noCoinciden = confirmar.value.length > 0 && password.value !== confirmar.value;
+    error.hidden = !noCoinciden;
+    confirmar.setAttribute("aria-invalid", String(noCoinciden));
+}
 
-function validatePasswordStrength(password) {
+/* Texto de ayuda con las reglas que definió el administrador */
+function pintarReglas() {
+    const partes = ["Mínimo " + reglasPassword.minimo + " caracteres"];
+    if (reglasPassword.mayuscula) partes.push("una mayúscula");
+    if (reglasPassword.numero) partes.push("un número");
+    document.getElementById("reglas-password").textContent = partes.join(", ") + ".";
+}
 
-    const bars = [
+/* Revisa la contraseña en el navegador antes de enviarla */
+function errorEnPassword(password) {
+    if (password.length < reglasPassword.minimo) return "La contraseña debe tener al menos " + reglasPassword.minimo + " caracteres.";
+    if (reglasPassword.mayuscula && !/[A-ZÁÉÍÓÚÑ]/.test(password)) return "La contraseña debe tener al menos una letra mayúscula.";
+    if (reglasPassword.numero && !/\d/.test(password)) return "La contraseña debe tener al menos un número.";
+    return null;
+}
 
-        document.getElementById("s-bar-1"),
-        document.getElementById("s-bar-2"),
-        document.getElementById("s-bar-3"),
-        document.getElementById("s-bar-4")
+/* ---------------------------------------------------------
+   Token CSRF
+--------------------------------------------------------- */
+async function obtenerCsrf() {
+    const res = await fetch("csrf_token.php", { credentials: "same-origin" });
+    const datos = await res.json();
 
-    ];
-
-
-    const text =
-        document.getElementById("strength-text");
-
-
-    let score = 0;
-
-
-    if (password.length > 0) {
-        score++;
+    if (datos.reglas) {
+        reglasPassword = datos.reglas;
+        pintarReglas();
     }
 
-    if (password.length >= 6) {
-        score++;
-    }
-
-    if (
-        /[A-Z]/.test(password) &&
-        /[0-9]/.test(password)
-    ) {
-        score++;
-    }
-
-    if (
-        password.length >= 8 &&
-        /[^A-Za-z0-9]/.test(password)
-    ) {
-        score++;
-    }
-
-
-    const colors = [
-        "#ef4444",
-        "#f59e0b",
-        "#3b82f6",
-        "#10b981"
-    ];
-
-
-    const labels = [
-        "Débil",
-        "Regular",
-        "Buena",
-        "Fuerte"
-    ];
-
-
-    bars.forEach((bar, index) => {
-
-        if (
-            bar &&
-            index < score &&
-            password.length > 0
-        ) {
-
-            bar.style.background =
-                colors[score - 1];
-
-        } else if (bar) {
-
-            bar.style.background =
-                "#e2e8f0";
-        }
-
+    document.querySelectorAll('input[name="csrf_token"]').forEach(input => {
+        input.value = datos.csrf_token;
     });
 
-
-    if (text) {
-
-        text.textContent =
-            password.length > 0
-                ? labels[score - 1] || "Débil"
-                : "Débil";
-    }
-
-
-    validatePasswordMatch();
+    return datos.csrf_token;
 }
 
+/* ---------------------------------------------------------
+   Enviar login o registro
+--------------------------------------------------------- */
+async function enviarFormulario(evento, tipo) {
+    evento.preventDefault();
+    limpiarMensaje();
 
-/* =========================================================
-   VALIDAR QUE LAS CONTRASEÑAS COINCIDAN
-========================================================= */
+    const form = evento.currentTarget;
+    const boton = form.querySelector('button[type="submit"]');
+    const datos = new FormData();
+    let url;
 
-function validatePasswordMatch() {
+    if (tipo === "registro") {
+        url = "registro.php";
 
-    const passwordInput =
-        document.getElementById("reg-password");
+        const nombre = document.getElementById("reg-name").value.trim();
+        const correo = document.getElementById("reg-email").value.trim();
+        const password = document.getElementById("reg-password").value;
+        const confirmar = document.getElementById("reg-confirm").value;
 
-    const confirmInput =
-        document.getElementById("reg-confirm");
+        if (!nombre || !correo || !password || !confirmar) {
+            return mostrarMensaje("Completa todos los campos para crear tu cuenta.");
+        }
+        if (!document.getElementById("reg-email").checkValidity()) {
+            return mostrarMensaje("Revisa tu correo: parece que le falta algo (ej. nombre@correo.com).");
+        }
+        const errorPassword = errorEnPassword(password);
+        if (errorPassword) return mostrarMensaje(errorPassword);
+        if (password !== confirmar) return mostrarMensaje("Las contraseñas no coinciden.");
+        if (!document.getElementById("terms").checked) {
+            return mostrarMensaje("Para crear tu cuenta acepta los términos y la política de privacidad.");
+        }
 
-    const errorDiv =
-        document.getElementById("match-error");
+        const rol = document.querySelector('input[name="reg-role"]:checked')?.value || "estudiante";
 
-
-    if (
-        !passwordInput ||
-        !confirmInput ||
-        !errorDiv
-    ) {
-        return;
-    }
-
-
-    const password =
-        passwordInput.value;
-
-    const confirm =
-        confirmInput.value;
-
-
-    if (
-        confirm.length > 0 &&
-        password !== confirm
-    ) {
-
-        confirmInput.classList.add("error");
-
-        errorDiv.style.display =
-            "block";
-
+        datos.append("nombre", nombre);
+        datos.append("correo", correo);
+        datos.append("password", password);
+        datos.append("confirm_password", confirmar);
+        datos.append("rol", rol);
     } else {
+        url = "login.php";
 
-        confirmInput.classList.remove("error");
+        const correo = document.getElementById("login-email").value.trim();
+        const password = document.getElementById("login-password").value;
 
-        errorDiv.style.display =
-            "none";
-    }
-}
-
-
-/* =========================================================
-   LOGIN Y REGISTRO
-========================================================= */
-
-async function handleAuth(event, type) {
-
-    event.preventDefault();
-
-
-    let url = "";
-
-    const data =
-        new FormData();
-
-
-    /* =====================================================
-       REGISTRO
-    ===================================================== */
-
-    if (type === "registro") {
-
-        url =
-            "../auth/registro.php";
-
-
-        const nombreInput =
-            document.getElementById("reg-name");
-
-        const correoInput =
-            document.getElementById("reg-email");
-
-        const passwordInput =
-            document.getElementById("reg-password");
-
-        const confirmInput =
-            document.getElementById("reg-confirm");
-
-
-        if (
-            !nombreInput ||
-            !correoInput ||
-            !passwordInput ||
-            !confirmInput
-        ) {
-
-            console.error(
-                "No se encontraron los campos del registro."
-            );
-
-            return;
+        if (!correo || !password) {
+            return mostrarMensaje("Escribe tu correo y tu contraseña.");
         }
 
-
-        const nombre =
-            nombreInput.value.trim();
-
-        const correo =
-            correoInput.value.trim();
-
-        const password =
-            passwordInput.value;
-
-        const confirmPassword =
-            confirmInput.value;
-
-
-        if (
-            !nombre ||
-            !correo ||
-            !password ||
-            !confirmPassword
-        ) {
-
-            alert(
-                "Completa todos los campos."
-            );
-
-            return;
-        }
-
-
-        if (password !== confirmPassword) {
-
-            alert(
-                "Las contraseñas no coinciden."
-            );
-
-            return;
-        }
-
-
-        data.append(
-            "nombre",
-            nombre
-        );
-
-        data.append(
-            "correo",
-            correo
-        );
-
-        data.append(
-            "password",
-            password
-        );
-
-        data.append(
-            "confirm_password",
-            confirmPassword
-        );
-
-        const rolSeleccionado =
-            document.querySelector('input[name="reg-role"]:checked');
-
-        data.append(
-            "rol",
-            rolSeleccionado ? rolSeleccionado.value : "estudiante"
-        );
+        datos.append("correo", correo);
+        datos.append("password", password);
     }
 
-
-    /* =====================================================
-       LOGIN
-    ===================================================== */
-
-    if (type === "login") {
-
-        url =
-            "../auth/login.php";
-
-
-        const correoInput =
-            document.getElementById("login-email");
-
-        const passwordInput =
-            document.getElementById("login-password");
-
-
-        if (
-            !correoInput ||
-            !passwordInput
-        ) {
-
-            console.error(
-                "No se encontraron los campos del login."
-            );
-
-            return;
-        }
-
-
-        const correo =
-            correoInput.value.trim();
-
-        const password =
-            passwordInput.value;
-
-
-        if (
-            !correo ||
-            !password
-        ) {
-
-            alert(
-                "Completa el correo y la contraseña."
-            );
-
-            return;
-        }
-
-
-        data.append(
-            "correo",
-            correo
-        );
-
-        data.append(
-            "password",
-            password
-        );
-    }
-
-
-    data.append("csrf_token", csrfToken);
-
-
-    /* =====================================================
-       ENVIAR INFORMACIÓN A PHP
-    ===================================================== */
+    boton.dataset.cargando = "true";
+    boton.disabled = true;
 
     try {
+        let token = form.querySelector('input[name="csrf_token"]').value;
+        if (!token) token = await obtenerCsrf();
+        datos.append("csrf_token", token);
 
-        const response =
-            await fetch(
-                url,
-                {
-                    method: "POST",
-                    body: data
-                }
-            );
-
-
-        const texto =
-            await response.text();
-
-
-        console.log(
-            "Respuesta del servidor:",
-            texto
-        );
-
+        const respuesta = await fetch(url, { method: "POST", body: datos, credentials: "same-origin" });
+        const texto = await respuesta.text();
 
         let resultado;
-
-
         try {
-
-            resultado =
-                JSON.parse(texto);
-
-        } catch (error) {
-
-            console.error(
-                "PHP no devolvió JSON válido:",
-                texto
-            );
-
-            alert(
-                "El servidor devolvió una respuesta inesperada."
-            );
-
-            return;
+            resultado = JSON.parse(texto);
+        } catch (e) {
+            console.error("Respuesta no válida del servidor:", texto);
+            throw new Error("respuesta");
         }
-
-
-        /* =================================================
-           RESPUESTA NEGATIVA
-        ================================================= */
 
         if (!resultado.success) {
-
-            alert(
-                resultado.message ||
-                "No fue posible completar la operación."
-            );
-
+            mostrarMensaje(resultado.message || "No pudimos completar la operación.");
             return;
         }
 
-
-        /* =================================================
-           REDIRECCIÓN
-        ================================================= */
-
         if (resultado.redirect) {
-
-            window.location.href =
-                resultado.redirect;
-
-        } else {
-
-            alert(
-                resultado.message ||
-                "Operación realizada correctamente."
-            );
+            mostrarMensaje(resultado.message || "¡Listo!", "exito");
+            window.location.href = resultado.redirect;
+            return;
         }
 
+        mostrarMensaje(resultado.message || "¡Listo!", "exito");
 
     } catch (error) {
-
-        console.error(
-            "Error al conectar con el servidor:",
-            error
-        );
-
-
-        alert(
-            "No se pudo conectar con el servidor."
-        );
+        mostrarMensaje("No pudimos conectar con el servidor. Revisa tu internet e inténtalo de nuevo.");
+    } finally {
+        boton.dataset.cargando = "false";
+        boton.disabled = false;
     }
 }
 
-
-/* =========================================================
-   LOGIN CON GOOGLE
-========================================================= */
-
-function handleGoogleLogin() {
-
-    alert(
-        "La autenticación con Google todavía no está configurada."
-    );
-}
-
-/* =========================================================
-   MOSTRAR AVISO SI SE ELIGE "PROFESOR" EN EL REGISTRO
-========================================================= */
-
+/* ---------------------------------------------------------
+   Inicio
+--------------------------------------------------------- */
 document.addEventListener("DOMContentLoaded", () => {
 
-    const opcionesRol =
-        document.querySelectorAll('input[name="reg-role"]');
+    // Pestañas: clic y flechas del teclado
+    const tabLogin = document.getElementById("tab-login");
+    const tabRegistro = document.getElementById("tab-registro");
 
-    const hint =
-        document.getElementById("role-choice-hint");
+    tabLogin.addEventListener("click", () => activarPestana("login"));
+    tabRegistro.addEventListener("click", () => activarPestana("registro"));
 
-    if (!opcionesRol.length || !hint) {
-        return;
+    document.querySelector(".pestanas").addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+            const vaARegistro = document.querySelector(".pestanas").dataset.activa === "login";
+            activarPestana(vaARegistro ? "registro" : "login", false);
+            (vaARegistro ? tabRegistro : tabLogin).focus();
+        }
+    });
+
+    // Botones "ver contraseña"
+    document.querySelectorAll("[data-ver]").forEach(boton => {
+        boton.addEventListener("click", () => alternarPassword(boton));
+    });
+
+    // Medidor y coincidencia de contraseñas
+    document.getElementById("reg-password").addEventListener("input", e => medirPassword(e.target.value));
+    document.getElementById("reg-confirm").addEventListener("input", validarCoincidencia);
+
+    // Aviso cuando se elige Docente
+    document.querySelectorAll('input[name="reg-role"]').forEach(radio => {
+        radio.addEventListener("change", () => {
+            document.getElementById("role-choice-hint").hidden =
+                document.querySelector('input[name="reg-role"]:checked').value !== "docente";
+        });
+    });
+
+    // Envío de formularios
+    document.getElementById("form-login").addEventListener("submit", e => enviarFormulario(e, "login"));
+    document.getElementById("form-register").addEventListener("submit", e => enviarFormulario(e, "registro"));
+
+    // ¿Viene de "Registrarse" (#registro) o de un error de Google?
+    const params = new URLSearchParams(window.location.search);
+    if (window.location.hash === "#registro" || params.get("modo") === "registro") {
+        activarPestana("registro", false);
     }
 
-    opcionesRol.forEach((opcion) => {
+    // Si el enlace cambia solo el #, también cambiamos de pestaña
+    window.addEventListener("hashchange", () => {
+        activarPestana(window.location.hash === "#registro" ? "registro" : "login", false);
+    });
 
-        opcion.addEventListener("change", () => {
+    const error = params.get("error");
+    if (error) mostrarMensaje(ERRORES_GOOGLE[error] || "Algo salió mal. Inténtalo de nuevo.");
 
-            hint.style.display =
-                opcion.value === "profesor" && opcion.checked
-                    ? "block"
-                    : "none";
-        });
+    const ok = params.get("ok");
+    if (ok && MENSAJES_OK[ok]) mostrarMensaje(MENSAJES_OK[ok], "exito");
+
+    // Token CSRF y reglas de contraseña
+    obtenerCsrf().catch(() => {
+        mostrarMensaje("No pudimos preparar el formulario. Recarga la página.");
     });
 });

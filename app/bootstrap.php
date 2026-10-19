@@ -1,25 +1,38 @@
 <?php
 
 /**
- * Bootstrap de la aplicacion.
+ * Bootstrap de la aplicación.
  *
- * Carga lo que cualquier controlador necesita antes de atender un
- * request: sesion/proteccion de rutas (protegerRol, protegerSesion)
- * y la conexion a la base de datos (clase Conexion). No cambia nada
- * de como funcionan esos archivos, solo los deja disponibles desde
- * un solo lugar para no repetir requires en cada Controller.
+ * Carga lo que cualquier controlador necesita antes de atender una
+ * petición: configuración, sesión segura, protección de rutas,
+ * conexión a la base de datos, CSRF y el helper Config.
+ *
+ * OJO: en Linux (Docker/Render) las rutas distinguen mayúsculas.
+ * La carpeta se llama app/Helpers y el archivo Config.php.
  */
 
+require_once __DIR__ . "/../config/config.php";
+require_once __DIR__ . "/../src/auth/sesion.php";
 require_once __DIR__ . "/../src/auth/proteger.php";
 require_once __DIR__ . "/../src/bd/conexion.php";
 require_once __DIR__ . "/../src/auth/csrf.php";
+require_once __DIR__ . "/Helpers/Config.php";
+require_once __DIR__ . "/Helpers/Seguridad.php";
 
 /**
- * Loguea el error real de la BD en el servidor (nunca al navegador)
+ * Loguea el error real en el servidor (nunca al navegador)
  * y corta la ejecución con un mensaje genérico para el usuario.
  */
 function manejarErrorBD(Throwable $e, string $mensaje): void
 {
     error_log("[BiGlobal] " . $e->getMessage());
-    die($mensaje);
+    die(htmlspecialchars($mensaje, ENT_QUOTES, "UTF-8"));
+}
+
+/** Atajo para imprimir texto seguro en HTML. */
+if (!function_exists("e")) {
+    function e($valor): string
+    {
+        return htmlspecialchars((string) $valor, ENT_QUOTES, "UTF-8");
+    }
 }

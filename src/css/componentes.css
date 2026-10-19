@@ -1,0 +1,310 @@
+/* ==========================================================================
+   BiGlobal · COMPONENTES COMPARTIDOS
+   --------------------------------------------------------------------------
+   Botones, campos de formulario, avisos, chips, barras de progreso y
+   estados vacíos. Requiere tokens.css antes.
+   Los nombres van en español con el formato bloque--variante
+   (ej. .boton--primario) para no chocar con las clases de Bootstrap.
+   ========================================================================== */
+
+/* ---------- BOTONES ---------- */
+.boton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--esp-2);
+    min-height: 44px;                  /* tamaño cómodo para el dedo */
+    padding: 0 var(--esp-5);
+    border: 1px solid transparent;
+    border-radius: var(--radio);
+    font-family: var(--fuente-titulo);
+    font-size: var(--texto-sm);
+    font-weight: 700;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+    user-select: none;
+    transition:
+        background-color var(--dur) ease,
+        border-color var(--dur) ease,
+        color var(--dur) ease,
+        box-shadow var(--dur-rapida) var(--ease-out),
+        transform var(--dur-rapida) var(--ease-out);
+}
+
+/* Al presionar, el botón "baja" un poco: confirma que la app escuchó */
+.boton:active:not(:disabled) {
+    transform: translateY(2px);
+}
+
+.boton:disabled,
+.boton[aria-disabled="true"] {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.boton--primario {
+    background: var(--azul-600);
+    color: #fff;
+    box-shadow: var(--sombra-boton);
+}
+
+.boton--primario:active:not(:disabled) {
+    box-shadow: 0 1px 0 var(--azul-800);
+}
+
+.boton--secundario {
+    background: var(--superficie);
+    border-color: var(--borde-fuerte);
+    color: var(--azul-700);
+    box-shadow: 0 2px 0 var(--borde-fuerte);
+}
+
+.boton--fantasma {
+    background: transparent;
+    color: var(--azul-700);
+}
+
+.boton--exito {
+    background: var(--verde-700);
+    color: #fff;
+    box-shadow: 0 3px 0 #14532D;
+}
+
+.boton--peligro {
+    background: var(--superficie);
+    border-color: var(--rojo-100);
+    color: var(--rojo-700);
+}
+
+.boton--bloque { width: 100%; }
+.boton--sm { min-height: 36px; padding: 0 var(--esp-3); font-size: var(--texto-xs); }
+
+/* Hover solo en dispositivos con mouse (en celular el hover se "pega") */
+@media (hover: hover) and (pointer: fine) {
+    .boton--primario:hover:not(:disabled)   { background: var(--azul-700); }
+    .boton--secundario:hover:not(:disabled) { background: var(--azul-50); border-color: var(--azul-300); }
+    .boton--fantasma:hover:not(:disabled)   { background: var(--azul-50); }
+    .boton--exito:hover:not(:disabled)      { background: #166534; }
+    .boton--peligro:hover:not(:disabled)    { background: var(--rojo-50); }
+}
+
+/* Botón cargando: se deshabilita y muestra un spinner */
+.boton[data-cargando="true"] {
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+.boton[data-cargando="true"]::before {
+    content: "";
+    width: 14px;
+    height: 14px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: girar 600ms linear infinite;
+}
+
+@keyframes girar { to { transform: rotate(360deg); } }
+
+/* ---------- CAMPOS DE FORMULARIO ---------- */
+.campo {
+    display: flex;
+    flex-direction: column;
+    gap: var(--esp-2);
+}
+
+.campo + .campo { margin-top: var(--esp-4); }
+
+.campo__etiqueta {
+    font-family: var(--fuente-titulo);
+    font-size: var(--texto-sm);
+    font-weight: 700;
+    color: var(--texto);
+}
+
+.campo__ayuda {
+    font-size: var(--texto-xs);
+    color: var(--texto-suave);
+    line-height: 1.5;
+}
+
+.campo__error {
+    font-size: var(--texto-xs);
+    color: var(--rojo-700);
+    font-weight: 700;
+}
+
+.entrada {
+    width: 100%;
+    min-height: 46px;
+    padding: 0 var(--esp-4);
+    border: 1.5px solid var(--borde-fuerte);
+    border-radius: var(--radio);
+    background: var(--superficie);
+    color: var(--texto);
+    font-family: var(--fuente-texto);
+    font-size: var(--texto-base);   /* 16px: evita el zoom automático en iPhone */
+    transition: border-color var(--dur) ease, box-shadow var(--dur) ease;
+}
+
+textarea.entrada { min-height: 110px; padding: var(--esp-3) var(--esp-4); resize: vertical; }
+
+.entrada::placeholder { color: #64748B; }
+
+.entrada:focus {
+    outline: none;
+    border-color: var(--azul-600);
+    box-shadow: var(--foco);
+}
+
+.entrada[aria-invalid="true"] {
+    border-color: var(--rojo-600);
+}
+
+/* ---------- AVISOS (mensajes de éxito, error, info) ---------- */
+.aviso {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--esp-3);
+    padding: var(--esp-3) var(--esp-4);
+    border-radius: var(--radio);
+    font-size: var(--texto-sm);
+    line-height: 1.5;
+    border: 1px solid transparent;
+}
+
+.aviso i { margin-top: 3px; }
+.aviso--info   { background: var(--azul-50);   border-color: var(--azul-100);  color: var(--azul-800); }
+.aviso--exito  { background: var(--verde-50);  border-color: var(--verde-100); color: var(--verde-700); }
+.aviso--error  { background: var(--rojo-50);   border-color: var(--rojo-100);  color: var(--rojo-700); }
+.aviso--alerta { background: var(--ambar-100); border-color: #FDE68A;          color: var(--ambar-700); }
+
+/* Entrada suave de los avisos que aparecen con JavaScript */
+.aviso[data-nuevo] {
+    animation: aparecer var(--dur-lenta) var(--ease-out);
+}
+
+@keyframes aparecer {
+    from { opacity: 0; transform: translateY(-4px); }
+}
+
+/* ---------- CHIPS / ETIQUETAS ---------- */
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: var(--radio-pill);
+    font-family: var(--fuente-titulo);
+    font-size: var(--texto-xs);
+    font-weight: 700;
+    white-space: nowrap;
+    background: var(--azul-100);
+    color: var(--azul-800);
+}
+
+.chip--exito   { background: var(--verde-100);   color: var(--verde-700); }
+.chip--logro   { background: var(--naranja-100); color: var(--naranja-700); }
+.chip--neutro  { background: #EEF2F7;            color: var(--texto-suave); }
+
+/* ---------- BARRA DE PROGRESO ---------- */
+.progreso {
+    height: 10px;
+    border-radius: var(--radio-pill);
+    background: var(--azul-100);
+    overflow: hidden;
+}
+
+.progreso__relleno {
+    height: 100%;
+    border-radius: inherit;
+    background: var(--verde-500);
+    transform-origin: left;
+    /* La barra crece al cargar: muestra el avance, no adorna */
+    animation: llenar 700ms var(--ease-out) both;
+}
+
+.progreso__relleno[data-valor="0"] { background: transparent; }
+
+@keyframes llenar {
+    from { transform: scaleX(0); }
+}
+
+/* ---------- ESTADO VACÍO ---------- */
+.vacio {
+    display: grid;
+    justify-items: center;
+    gap: var(--esp-3);
+    padding: var(--esp-10) var(--esp-6);
+    text-align: center;
+    background: var(--superficie);
+    border: 1.5px dashed var(--borde-fuerte);
+    border-radius: var(--radio-lg);
+}
+
+.vacio__icono {
+    width: 56px;
+    height: 56px;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radio-lg);
+    background: var(--azul-50);
+    color: var(--azul-600);
+    font-size: 1.4rem;
+}
+
+.vacio__titulo {
+    margin: 0;
+    font-family: var(--fuente-titulo);
+    font-size: var(--texto-lg);
+    font-weight: 800;
+    color: var(--texto);
+}
+
+.vacio__texto {
+    margin: 0;
+    max-width: 42ch;
+    color: var(--texto-suave);
+    font-size: var(--texto-sm);
+    line-height: 1.6;
+}
+
+/* ---------- NOTIFICACIÓN FLOTANTE (toast) ---------- */
+.toast-biglobal {
+    position: fixed;
+    right: var(--esp-4);
+    bottom: var(--esp-4);
+    left: auto;
+    z-index: 3000;
+    max-width: min(420px, calc(100vw - 2rem));
+    display: flex;
+    align-items: center;
+    gap: var(--esp-3);
+    padding: var(--esp-3) var(--esp-4);
+    border-radius: var(--radio);
+    background: var(--texto);
+    color: #fff;
+    font-family: var(--fuente-texto);
+    font-size: var(--texto-sm);
+    font-weight: 700;
+    box-shadow: var(--sombra-3);
+    transition: transform var(--dur-lenta) var(--ease-out), opacity var(--dur) ease;
+}
+
+.toast-biglobal[data-oculto="true"] {
+    opacity: 0;
+    transform: translateY(12px);
+}
+
+.toast-biglobal--exito i { color: #86EFAC; }
+.toast-biglobal--error i { color: #FCA5A5; }
+.toast-biglobal--info  i { color: var(--azul-300); }
+.toast-biglobal--logro i { color: #FDBA74; }   /* naranja claro: rachas y medallas */
+
+/* Entrada del toast: sube un poco y aparece (una sola vez) */
+.toast-biglobal { animation: entrar-toast var(--dur-lenta) var(--ease-out); }
+
+@keyframes entrar-toast {
+    from { opacity: 0; transform: translateY(12px); }
+}

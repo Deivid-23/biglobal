@@ -35,9 +35,9 @@ class LeccionesController
         }
 
         $totalLecciones = count($lecciones);
-        $publicadas = count(array_filter($lecciones, fn($l) => $l["estado"] === "Publicado"));
-        $borradores = count(array_filter($lecciones, fn($l) => $l["estado"] === "Borrador"));
-        $inactivas = count(array_filter($lecciones, fn($l) => $l["estado"] === "Inactivo"));
+        $publicadas = count(array_filter($lecciones, fn($l) => (int) $l["estado"] === 1));
+        $borradores = count(array_filter($lecciones, fn($l) => (int) $l["estado"] === 0));
+        $inactivas = count(array_filter($lecciones, fn($l) => false /* la BD solo guarda 1/0 */));
 
         $totalActividades = 0;
         foreach ($lecciones as $leccion) {
@@ -102,7 +102,7 @@ class LeccionesController
                     "titulo" => $titulo,
                     "descripcion" => $descripcion,
                     "orden" => $orden,
-                    "estado" => $estado,
+                    "estado" => $estado === "Publicado" ? 1 : 0, // en la BD: 1 publicado, 0 no publicado
                 ]);
 
                 header("Location: lecciones.php?curso=" . urlencode($cursoId) . "&editado=1");
@@ -156,7 +156,7 @@ class LeccionesController
                 "titulo" => $titulo,
                 "descripcion" => $descripcion,
                 "orden" => $orden,
-                "estado" => $estado,
+                "estado" => $estado === "Publicado" ? 1 : 0, // en la BD: 1 publicado, 0 no publicado
             ]);
 
             header("Location: lecciones.php?curso=" . urlencode($cursoId) . "&creado=1");

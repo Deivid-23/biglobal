@@ -27,8 +27,8 @@ class IdiomasController
         $idiomas = IdiomaModel::obtenerTodos($conexion);
 
         $totalIdiomas = count($idiomas);
-        $idiomasActivos = count(array_filter($idiomas, fn($i) => $i["estado"] === "Activo"));
-        $idiomasInactivos = count(array_filter($idiomas, fn($i) => $i["estado"] !== "Activo"));
+        $idiomasActivos = count(array_filter($idiomas, fn($i) => (int) $i["estado"] === 1));
+        $idiomasInactivos = count(array_filter($idiomas, fn($i) => (int) $i["estado"] !== 1));
 
         require __DIR__ . "/../../Views/admin/idiomas/index.php";
     }
@@ -76,7 +76,7 @@ class IdiomasController
                 IdiomaModel::actualizar($conexion, $id, [
                     "nombre" => $nombre,
                     "codigo" => $codigo,
-                    "estado" => $estado,
+                    "estado" => $estado === "Activo" ? 1 : 0, // en la BD: 1 activo, 0 inactivo
                 ]);
 
                 header("Location: idiomas.php?editado=1");
@@ -120,7 +120,7 @@ class IdiomasController
             IdiomaModel::crear($conexion, [
                 "nombre" => $nombre,
                 "codigo" => $codigo,
-                "estado" => $estado,
+                "estado" => $estado === "Activo" ? 1 : 0, // en la BD: 1 activo, 0 inactivo
             ]);
 
             header("Location: idiomas.php?creado=1");

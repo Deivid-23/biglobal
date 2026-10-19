@@ -1,220 +1,147 @@
 # BiGlobal
 
-Plataforma para aprender idiomas (inglés, español y lengua de señas),
-inspirada en Open English y Duolingo.
+Plataforma para aprender idiomas (inglés, español) y Lengua de Señas Colombiana (LSC),
+inspirada en Duolingo y Open English.
 
-Este README documenta la parte del proyecto correspondiente a
-**login, panel de administrador, página principal, el rol de
-estudiante, el despliegue en producción y la migración en curso a
-una arquitectura MVC**.
+Este README cubre: **página principal, login/registro, recuperación de contraseña,
+panel de administrador, rol de estudiante y despliegue**. El módulo de profesor
+(`src/profesor/`) lo mantiene otra persona del equipo.
 
-## 1. Instalación
+---
 
-1. Clona el repositorio y copia el archivo de configuración:
-
-   ```bash
-   cp .env.example .env
-   ```
-
-2. Edita `.env` con los datos de tu base de datos (local o externa):
-
-   ```
-   DB_HOST=localhost
-   DB_PORT=3306
-   DB_NAME=biglobal
-   DB_USER=root
-   DB_PASS=
-   ```
-
-3. Crea el esquema y los datos base (roles e idiomas):
-
-   ```bash
-   mysql -u root -p < database/schema.sql
-   ```
-
-4. Genera el primer usuario administrador. Primero crea el hash de la
-   contraseña:
-
-   ```bash
-   php tools/generar_hash.php "TuContraseñaSegura"
-   ```
-
-   Copia el hash que imprime y créate como administrador:
-
-   ```sql
-   INSERT INTO usuarios (nombre, apellido, correo, password, rol_id, estado)
-   VALUES ('Admin', 'BiGlobal', 'admin@biglobal.com', '<hash generado>', 1, 'Activo');
-   ```
-
-5. Sirve la carpeta `src/` con PHP (por ejemplo `php -S localhost:8000 -t src`)
-   y abre `index.html`.
-
-## 2. Qué se corrigió respecto a la versión anterior
-
-- **Base de datos externa por configuración**: las credenciales ya no
-  están escritas en el código (`src/bd/conexion.php`); se leen de
-  `.env` mediante `config/config.php`.
-- **Modelo de roles inconsistente (bug crítico)**: el login usaba
-  `usuarios.rol_id` + `usuarios.activo`, mientras que el panel de
-  usuarios usaba una tabla `usuario_roles` + `usuarios.estado`. Un
-  usuario creado desde el panel nunca podía iniciar sesión. Ahora todo
-  el proyecto usa un único modelo: `usuarios.rol_id` (FK a `roles`) y
-  `usuarios.estado` (`'Activo'` / `'Inactivo'`).
-- **Rutas de administrador sin protección**: 14 archivos del panel
-  (`guardar_*.php`, `editar_*.php`, `eliminar_*.php`, `lecciones.php`,
-  `actividades.php`) no verificaban sesión de administrador y podían
-  ejecutarse sin haber iniciado sesión. Todos llaman ahora a
-  `protegerRol("admin")`.
-- **Enlaces rotos del panel**: `reportes.php`, `moderacion.php`,
-  `certificados.php` y `configuracion.php` estaban enlazados en el
-  menú pero no existían. Ahora son páginas reales y funcionales.
-  `errores.php` se consolidó dentro de `reportes.php`.
-- **Módulo de actividades incompleto**: `actividades.php` enlazaba a
-  `guardar_actividad.php`, `editar_actividad.php` y
-  `eliminar_actividad.php`, que tampoco existían. Ya están creados.
-- **Archivos de depuración expuestos**: se eliminó `prueba_bd.php` y
-  se movió `generar_hash.php` a `tools/` como script de línea de
-  comandos (ya no trae una contraseña en texto plano dentro del
-  código).
-- **CSRF y límite de intentos** en login y registro
-  (`src/auth/csrf.php`, `csrf_token.php`), para mitigar ataques CSRF
-  y fuerza bruta en los formularios públicos.
-- **Endpoint de logout**: no existía; se agregó `src/auth/logout.php`.
-- **Enlaces "Volver al inicio" rotos** en `usuarios.php`, `cursos.php`
-  e `idiomas.php` (apuntaban a `../index.php`, que no existe; el
-  archivo real es `index.html`).
-- **Ícono roto en la página principal**: el archivo del ícono de
-  "Lengua de señas" tenía un nombre corrupto en disco
-  (`icono-lenguaje-se#U00f1as.png`) que no coincidía con el `<img>`
-  del HTML. Se renombró y el ícono ya carga correctamente.
-- **Enlaces absolutos hardcodeados**: `index.html` tenía 3 enlaces a
-  `/BiGlobal/src/html/login.html` (ruta absoluta local) mezclados con
-  enlaces relativos al mismo destino. Esos enlaces solo funcionaban en
-  un entorno local con esa carpeta exacta y se rompían en cualquier
-  otro hosting. Ya son todos relativos.
-- **Carpeta `src/html/` eliminada**: solo contenía `login.html`
-  (login + registro en una sola pantalla). Se movió a `src/auth/`,
-  junto con el resto de la lógica de autenticación
-  (`login.php`, `registro.php`, `logout.php`, `proteger.php`), en vez
-  de tener una carpeta genérica "html" separada de su propia lógica.
-
-## 3. Rol de estudiante
-
-En `src/estudiante/`:
-
-- `index.php` — panel de bienvenida con estadísticas y cursos en progreso.
-- `cursos.php` — catálogo de cursos publicados, con barra de progreso.
-- `curso.php` — lecciones de un curso, con botón para marcarlas como completadas.
-- `completar_leccion.php` — registra el progreso y **emite un certificado
-  automáticamente** cuando se completan todas las lecciones publicadas de un curso.
-- `certificados.php` — certificados obtenidos por el estudiante.
-
-Estos 5 archivos son ahora "front controllers" delgados: la lógica real
-vive en `app/Controllers/EstudianteController.php` y
-`app/Models/EstudianteModel.php` (ver sección 4).
-
-Reutiliza la misma paleta de colores y tipografía del panel de
-administrador (`src/admin/css/style.css`) más un archivo adicional
-(`src/estudiante/css/estudiante.css`) con los componentes nuevos
-(tarjetas de curso, barra de progreso, tarjeta de certificado).
-
-### Registro como profesor (solicitud pendiente de aprobación)
-
-El registro público (`src/auth/registro.php`) deja elegir entre
-**Estudiante** y **Profesor**. Estudiante se activa al instante
-(`rol_id=2`, `estado='Activo'`). Profesor queda en espera (`rol_id=3`,
-`estado='Pendiente'`) y no puede iniciar sesión hasta que un
-administrador lo apruebe cambiándole el estado a Activo desde
-**Usuarios y roles**.
-
-## 4. Arquitectura: migración a MVC (en curso)
-
-El proyecto se está reestructurando de "un archivo PHP por página" a
-Modelo-Vista-Controlador, módulo por módulo:
+## 1. Estructura
 
 ```
-app/
-├── bootstrap.php              # carga auth/proteger.php + bd/conexion.php
-├── Controllers/
-│   ├── EstudianteController.php
-│   └── Admin/
-│       └── UsuariosController.php
-├── Models/
-│   ├── EstudianteModel.php
-│   └── UsuarioModel.php
-└── Views/
-    ├── partials/
-    │   ├── admin_sidebar.php   # compartido entre páginas admin, recibe $paginaActiva
-    │   └── admin_topbar.php    # compartido, recibe $tituloPagina
-    ├── estudiante/
-    └── admin/usuarios/
+BiGlobal/
+├── app/                      # Lógica (NO es pública)
+│   ├── bootstrap.php         # carga config, sesión, conexión, CSRF y helpers
+│   ├── Controllers/          # AuthController, EstudianteController, RecuperacionController, Admin/*
+│   ├── Models/               # consultas a la BD (siempre con PDO preparado)
+│   ├── Helpers/              # Config.php, Seguridad.php, Correo.php   (¡"Helpers" con H mayúscula!)
+│   └── Views/                # HTML de estudiante, auth y admin (MVC)
+├── config/config.php         # lee .env / variables de entorno
+├── database/
+│   ├── schema.sql                     # estructura real (instalación nueva)
+│   ├── cambios_2026-10.sql            # ejecutar en la BD actual
+│   └── propuesta_siguiente_version.sql# NO ejecutar todavía (plan)
+├── src/                      # ÚNICA carpeta pública (DocumentRoot)
+│   ├── index.html            # página principal
+│   ├── privacidad.html, terminos.html, contacto.html
+│   ├── css/tokens.css        # ★ sistema de diseño: colores, fuentes, sombras
+│   ├── css/componentes.css   # botones, campos, avisos, progreso, estados vacíos
+│   ├── css/style.css · auth.css · paginas.css
+│   ├── auth/                 # login, registro, Google, recuperar/restablecer contraseña
+│   ├── estudiante/           # panel del estudiante (rutas delgadas → controlador)
+│   ├── admin/                # panel admin (index.php + css/admin.css compilado)
+│   └── profesor/             # módulo del otro integrante (no se modificó)
+├── tools/                    # scripts de terminal (hash de contraseña, Tailwind)
+└── recursos_sin_usar/        # imágenes que no usa ninguna página (no se despliegan)
 ```
 
-Los archivos en `src/estudiante/` y en `src/admin/` de los módulos ya
-migrados solo instancian su Controller correspondiente; las URLs no
-cambiaron.
+## 2. Modelo de datos real (manda `biglobal.sql`)
 
-**Migrado:** `estudiante/` completo · `admin/usuarios.php` +
-`editar_usuario.php` + `guardar_usuario.php` + `eliminar_usuario.php`.
+| Dato | Dónde | Valores |
+|---|---|---|
+| Rol | `usuarios.rol_id` → `roles` | 1 `admin`, 2 `estudiante`, 3 `docente` |
+| Estado de la cuenta | `usuarios.activo` | 0 inactivo/rechazado · 1 activo · 2 docente pendiente |
+| Publicado | `cursos.estado`, `lecciones.estado`, `idiomas.estado` | 1 sí · 0 no |
+| Progreso | `progreso` | una fila por lección completada |
+| Recuperar contraseña | `recuperacion_password` | el token se guarda como huella SHA-256 |
 
-**Pendiente:** el resto de `admin/` (`index.php`, `cursos.php`,
-`idiomas.php`, `lecciones.php`, `reportes.php`, `errores.php`,
-`moderacion.php`, `certificados.php`, `configuracion.php`) sigue con la
-estructura original de un archivo por página. Al migrarlos, reusar
-`admin_sidebar.php` / `admin_topbar.php` en vez de duplicar ese HTML.
+`usuarios.estado` y `usuario_roles` existen en la BD pero **el código no los usa**.
 
-`src/profesor/` está vacío (módulo externo a cargo de otra persona/equipo,
-ver sección 6) — no se toca ni se migra por ahora.
+## 3. Instalación local (XAMPP)
 
-## 5. Despliegue en producción
+1. Copia `.env.example` como `.env` y llena tus datos (nunca subas ni comprimas el `.env`).
+2. Importa tu base: `mysql -u root biglobal < biglobal.sql`
+   (o para una base vacía: `mysql -u root < database/schema.sql`).
+3. Ejecuta los cambios: `mysql -u root biglobal < database/cambios_2026-10.sql`
+4. Abre `http://localhost/BiGlobal/src/index.html`.
 
-El proyecto está desplegado con la app y la base de datos separadas:
+Para crear un admin a mano: `php tools/generar_hash.php "TuClave"` y luego el `INSERT`
+que aparece al final de `database/schema.sql`.
 
-- **App:** [Render](https://render.com), Web Service con Docker
-  (`Dockerfile` en la raíz), plan Free.
-  - Imagen base `php:8.2-apache`; `DocumentRoot` apunta a `src/` (no a la
-    raíz del repo), así que `config/`, `app/` y `database/` no quedan
-    expuestos públicamente aunque viajen dentro del contenedor.
-  - El `Dockerfile` copia `config/`, `app/` y `src/` a la imagen — si se
-    agrega una carpeta nueva en la raíz del proyecto, hay que sumar su
-    `COPY` ahí también.
-- **Base de datos:** [TiDB Cloud Serverless](https://tidbcloud.com)
-  (compatible con MySQL), conexión con SSL obligatorio.
-  `src/bd/conexion.php` activa SSL de forma condicional según la variable
-  `DB_SSL`, así que en local (XAMPP/WAMP, sin SSL) no hay que cambiar
-  nada.
+## 4. Sistema de diseño
 
-Variables de entorno que se configuran en el panel de Render (no en
-`.env`, que solo se usa en local):
+- **Un solo archivo de tokens**: `src/css/tokens.css`. Azul de marca `#2563EB` (hover `#1D4ED8`),
+  fondo azul claro `#EFF6FF`, acentos `#DBEAFE` / `#E0F2FE`. Verde solo para éxito y progreso,
+  naranja para logros. Texto `#1E293B`; el gris secundario quedó en `#5E6E85`
+  (un tono más oscuro que `#64748B` para cumplir contraste AA sobre el azul claro).
+- **Fuentes**: Manrope (títulos) y Lato (texto). **Íconos**: solo Font Awesome 6.5.2.
+- **Componentes compartidos** (`componentes.css`): `.boton--primario`, `.entrada`, `.aviso--exito`,
+  `.progreso`, `.vacio`, `.toast-biglobal`… Los usan login, estudiante, páginas legales y admin.
+- **Movimiento**: todo por debajo de 300 ms, curva `--ease-out`, y se apaga con
+  `prefers-reduced-motion`.
+- **Admin**: Tailwind ya no corre en el navegador. Se compila a `src/admin/css/admin.css`
+  (ver `tools/tailwind/LEEME.md`). El color de acento se guarda en `configuracion.color_acento`
+  y por defecto es `blue`.
+- **Página principal**: sigue usando Bootstrap 5 para la rejilla, el menú y el acordeón,
+  pero los colores, botones y fuentes salen de los tokens.
+
+## 5. Rol de estudiante
+
+`src/estudiante/index.php?page=…` → `EstudianteController` → vistas en `app/Views/estudiante/`.
+
+| Página | Qué hace |
+|---|---|
+| `inicio` | saludo, "continuar donde lo dejaste", resumen y primeros pasos si es nuevo |
+| `cursos` | catálogo de cursos publicados |
+| `mis-cursos` | cursos con al menos una lección completada |
+| `curso&id=N` | ruta de lecciones (hecha / siguiente / pendiente) |
+| `leccion&id=N` | contenido de la lección, actividades y botón "Terminé esta lección" |
+| `certificados` | certificados emitidos (se generan solos al terminar un curso) |
+
+`cursos.php`, `curso.php`, `certificados.php` y `completar_leccion.php` siguen funcionando.
+En celular hay barra inferior de navegación; en escritorio, barra lateral.
+
+## 6. Recuperación de contraseña
+
+`auth/recuperar.php` → correo con enlace → `auth/restablecer.php?token=…`
+
+- El enlace vence en 60 min, sirve una sola vez y se responde igual exista o no el correo.
+- Máximo 3 enlaces por hora por usuario.
+- El correo sale por SMTP (sin librerías). Datos: variables `SMTP_*` del entorno o, si no
+  están, la pestaña Configuración > Correo del admin.
+- En local sin SMTP (`APP_ENV=local`) la pantalla muestra el enlace de prueba.
+- En producción **es obligatorio `APP_URL`** para armar el enlace.
+
+## 7. Seguridad
+
+- Consultas preparadas (PDO) en todo el código propio; `htmlspecialchars` al imprimir.
+- CSRF en login, registro, elegir rol, recuperar/restablecer, completar lección y todos los
+  formularios del admin (incluido el modal "Nuevo").
+- Cookies de sesión `HttpOnly`, `SameSite=Lax` y `Secure` en HTTPS.
+- Contraseñas con `password_hash`; las reglas (largo, mayúscula, número) salen de
+  Configuración > Seguridad y se aplican en registro, admin y recuperación.
+- Sin credenciales en el código: todo en `.env` / variables de Render.
+- Docker: PHP en modo producción (errores al log), sin listado de carpetas y con cabeceras
+  `nosniff`, `X-Frame-Options` y `Referrer-Policy`.
+
+## 8. Despliegue (Render + TiDB Cloud)
+
+Variables en Render > Environment:
 
 ```
-DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASS
-DB_SSL=true
-DB_SSL_CA=/etc/ssl/certs/ca-certificates.crt
-DB_CHARSET=utf8mb4
 APP_ENV=production
 APP_DEBUG=false
+APP_URL=https://<tu-servicio>.onrender.com
+DB_HOST=<host de TiDB>   DB_PORT=4000   DB_NAME=biglobal
+DB_USER=<usuario TiDB>   DB_PASS=<clave TiDB>
+DB_SSL=true
+DB_SSL_CA=/etc/ssl/certs/ca-certificates.crt
+GOOGLE_CLIENT_ID=…  GOOGLE_CLIENT_SECRET=…
+GOOGLE_REDIRECT_URI=https://<tu-servicio>.onrender.com/auth/google_callback.php
+SMTP_HOST=…  SMTP_PORT=587  SMTP_USER=…  SMTP_PASS=…  SMTP_ENCRYPTION=tls  SMTP_FROM=…
 ```
 
-Flujo de trabajo: los commits son locales hasta hacer `git push` a
-`main`; Render redespliega automáticamente al detectar el push.
+En Linux las rutas distinguen mayúsculas: `app/Helpers/Config.php` (no `helpers/config.php`),
+`img/icono-lengua-senas.png` (sin ñ).
 
-## 6. Próximos pasos sugeridos
+## 9. Pendiente (siguiente versión)
 
-- Terminar la migración a MVC del resto de `admin/` (sección 4).
-- Agregar una columna `idioma_id` en `cursos` para vincular cada curso
-  a un idioma de forma explícita (hoy son dos catálogos independientes).
-- Extender la protección CSRF ya creada para login/registro a los
-  formularios del panel de administrador.
-- Reemplazar las tablas simples de `reportes_contenido` con un flujo
-  real de reportes generado por usuarios (hoy no hay una pantalla
-  pública para reportar contenido).
-- Construir el panel del rol de **instructor/profesor**
-  (`src/profesor/`, actualmente vacío) — a cargo de otro integrante del
-  equipo; el registro y la aprobación de la cuenta ya funcionan, falta
-  el panel en sí.
-- Un motor real de actividades interactivas (quizzes evaluables, audio,
-  etc.); hoy `actividades` son de solo lectura para el estudiante.
-- Unificar la librería de íconos del panel admin: el dashboard
-  (`admin/index.php`) usa Bootstrap Icons, el resto de `admin/` todavía
-  usa Font Awesome.
+Ver `database/propuesta_siguiente_version.sql` para las tablas:
+gamificación (racha, XP, medallas, lecciones desbloqueables), actividades que se puedan
+resolver (quiz), página principal desde la BD (`cursos.idioma_id`, LSC como idioma),
+boletín y contacto reales, testimonios aprobados, perfil del estudiante y terminar de
+dividir `src/admin/index.php` usando los controladores de `app/Controllers/Admin/`
+(hoy esos controladores **no tienen ruta**; quedaron corregidos para la BD real pero sin usar).

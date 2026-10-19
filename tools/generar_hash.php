@@ -1,28 +1,21 @@
 <?php
 
 /**
- * Genera el hash de una contraseña para insertar manualmente
- * un usuario (por ejemplo, el primer administrador) en la
- * base de datos.
+ * Genera el hash de una contraseña para crear un admin a mano en la BD.
+ * Solo se usa desde la terminal (no está en la carpeta pública).
  *
- * Uso (línea de comandos):
+ * Uso:
  *   php tools/generar_hash.php "TuContraseñaSegura"
- *
- * A diferencia de la versión anterior de este script, la
- * contraseña ya NO queda escrita en el código: se recibe como
- * argumento y no se guarda en ningún archivo.
  */
 
-if (php_sapi_name() !== "cli") {
-    http_response_code(403);
-    die("Esta herramienta solo puede ejecutarse desde la línea de comandos.");
+if (PHP_SAPI !== "cli") {
+    exit("Este script solo funciona desde la terminal.\n");
 }
 
-$password = $argv[1] ?? null;
+$password = $argv[1] ?? "";
 
-if (!$password) {
-    echo "Uso: php tools/generar_hash.php \"TuContraseñaSegura\"\n";
-    exit(1);
+if ($password === "") {
+    exit("Uso: php tools/generar_hash.php \"TuContraseñaSegura\"\n");
 }
 
-echo password_hash($password, PASSWORD_DEFAULT) . "\n";
+echo password_hash($password, PASSWORD_DEFAULT) . PHP_EOL;

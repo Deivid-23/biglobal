@@ -1,23 +1,19 @@
 -- =============================================================
--- BiGlobal - Esquema de base de datos
+-- BiGlobal - Esquema de base de datos (instalación nueva)
 -- =============================================================
--- Este esquema documenta y corrige el modelo de datos que ya
--- usaba el proyecto. Principales correcciones respecto al
--- código original:
+-- Esta estructura es IGUAL a la base real (biglobal.sql, oct. 2026).
+-- Úsala solo para crear una base VACÍA (por ejemplo en TiDB Cloud
+-- la primera vez). Si ya tienes datos, importa tu volcado .sql.
 --
---   1. Se elimina la tabla "usuario_roles" (rol múltiple) y se
---      deja un único "rol_id" en "usuarios", que es el modelo
---      que en realidad usan login.php y el dashboard del admin.
---      Antes existían dos modelos de roles incompatibles entre
---      sí (uno rompía el login de cualquier usuario creado
---      desde el panel de administrador).
---   2. Se usa una sola columna de estado: "estado" ENUM
---      ('Activo','Inactivo'), en vez de mezclar "activo" (entero)
---      y "estado" (texto) como pasaba antes.
---   3. Se agregan las tablas nuevas que ahora respaldan el
---      panel de administrador (reportes, moderación,
---      certificados, configuración) y el nuevo rol de
---      estudiante (progreso, certificados).
+-- Modelo real que usa el código:
+--   - Roles (tabla roles): admin (1), estudiante (2), docente (3).
+--   - Estado de la cuenta: usuarios.activo
+--       0 = inactivo / rechazado
+--       1 = activo
+--       2 = docente pendiente de aprobación
+--     La columna usuarios.estado existe pero NO se usa (compatibilidad).
+--   - cursos.estado, lecciones.estado, idiomas.estado: 1 = activo/publicado, 0 = no.
+--   - usuario_roles existe en la BD pero el código no la usa.
 -- =============================================================
 
 CREATE DATABASE IF NOT EXISTS biglobal
@@ -26,182 +22,177 @@ CREATE DATABASE IF NOT EXISTS biglobal
 
 USE biglobal;
 
--- -------------------------------------------------------------
--- Roles
--- -------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS roles (
-    id     INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(50) NOT NULL UNIQUE
-) ENGINE=InnoDB;
+-- Las tablas se crean en orden alfabético: apagamos la revisión de llaves
+-- foráneas mientras se crean y la volvemos a encender al final.
+SET FOREIGN_KEY_CHECKS = 0;
 
+CREATE TABLE `actividades` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `leccion_id` int(11) NOT NULL,
+  `titulo` varchar(150) NOT NULL,
+  `descripcion` text DEFAULT NULL,
+  `tipo` varchar(50) DEFAULT NULL,
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `fk_actividad_leccion` (`leccion_id`),
+  CONSTRAINT `fk_actividad_leccion` FOREIGN KEY (`leccion_id`) REFERENCES `lecciones` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE `certificados` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `usuario_id` int(11) NOT NULL,
+  `curso_id` int(11) NOT NULL,
+  `codigo` varchar(50) NOT NULL,
+  `fecha_emision` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `codigo` (`codigo`),
+  UNIQUE KEY `unico_certificado` (`usuario_id`,`curso_id`),
+  KEY `curso_id` (`curso_id`),
+  CONSTRAINT `certificados_ibfk_1` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `certificados_ibfk_2` FOREIGN KEY (`curso_id`) REFERENCES `cursos` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE `configuracion` (
+  `clave` varchar(100) NOT NULL,
+  `valor` text DEFAULT NULL,
+  `tipo` varchar(20) DEFAULT 'text',
+  `actualizado` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`clave`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE `cursos` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(150) NOT NULL,
+  `descripcion` text DEFAULT NULL,
+  `estado` tinyint(1) NOT NULL DEFAULT 1,
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp(),
+  `nivel` varchar(50) DEFAULT NULL,
+  `instructor_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_curso_instructor` (`instructor_id`),
+  CONSTRAINT `fk_curso_instructor` FOREIGN KEY (`instructor_id`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE `idiomas` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(50) NOT NULL,
+  `codigo` varchar(10) NOT NULL,
+  `estado` tinyint(1) NOT NULL DEFAULT 1,
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `nombre` (`nombre`),
+  UNIQUE KEY `codigo` (`codigo`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE `lecciones` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `curso_id` int(11) NOT NULL,
+  `titulo` varchar(150) NOT NULL,
+  `descripcion` text DEFAULT NULL,
+  `contenido` text DEFAULT NULL,
+  `estado` tinyint(1) NOT NULL DEFAULT 1,
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp(),
+  `orden` int(11) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id`),
+  KEY `fk_leccion_curso` (`curso_id`),
+  CONSTRAINT `fk_leccion_curso` FOREIGN KEY (`curso_id`) REFERENCES `cursos` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE `progreso` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `usuario_id` int(11) NOT NULL,
+  `leccion_id` int(11) NOT NULL,
+  `completado` tinyint(1) DEFAULT 0,
+  `fecha_completado` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unico_progreso` (`usuario_id`,`leccion_id`),
+  KEY `leccion_id` (`leccion_id`),
+  CONSTRAINT `progreso_ibfk_1` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `progreso_ibfk_2` FOREIGN KEY (`leccion_id`) REFERENCES `lecciones` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE `recuperacion_password` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `usuario_id` int(11) NOT NULL,
+  `token` varchar(255) NOT NULL,
+  `expiracion` datetime NOT NULL,
+  `usado` tinyint(1) NOT NULL DEFAULT 0,
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `token` (`token`),
+  KEY `fk_recuperacion_usuario` (`usuario_id`),
+  CONSTRAINT `fk_recuperacion_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE `roles` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(50) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `nombre` (`nombre`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE `usuario_roles` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `usuario_id` int(11) NOT NULL,
+  `rol_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `usuario_id` (`usuario_id`),
+  KEY `rol_id` (`rol_id`),
+  CONSTRAINT `usuario_roles_ibfk_1` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `usuario_roles_ibfk_2` FOREIGN KEY (`rol_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE `usuarios` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(100) NOT NULL,
+  `apellido` varchar(100) NOT NULL,
+  `correo` varchar(150) NOT NULL,
+  `password` varchar(255) DEFAULT NULL,
+  `google_id` varchar(50) DEFAULT NULL,
+  `google_avatar` varchar(255) DEFAULT NULL,
+  `rol_id` int(11) NOT NULL DEFAULT 2,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
+  `fecha_registro` timestamp NOT NULL DEFAULT current_timestamp(),
+  `estado` tinyint(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `correo` (`correo`),
+  UNIQUE KEY `google_id` (`google_id`),
+  KEY `fk_usuario_rol` (`rol_id`),
+  CONSTRAINT `fk_usuario_rol` FOREIGN KEY (`rol_id`) REFERENCES `roles` (`id`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- =============================================================
+-- Datos base
+-- =============================================================
 INSERT INTO roles (id, nombre) VALUES
-    (1, 'Administrador'),
-    (2, 'Estudiante'),
-    (3, 'Instructor')
-ON DUPLICATE KEY UPDATE nombre = VALUES(nombre);
-
--- -------------------------------------------------------------
--- Usuarios
--- -------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS usuarios (
-    id             INT AUTO_INCREMENT PRIMARY KEY,
-    nombre         VARCHAR(100) NOT NULL,
-    apellido       VARCHAR(100) NOT NULL,
-    correo         VARCHAR(150) NOT NULL UNIQUE,
-    password       VARCHAR(255) NOT NULL,
-    rol_id         INT NOT NULL,
-    estado         ENUM('Activo', 'Inactivo', 'Pendiente') NOT NULL DEFAULT 'Activo',
-    fecha_registro DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT fk_usuarios_rol
-        FOREIGN KEY (rol_id) REFERENCES roles(id)
-) ENGINE=InnoDB;
-
--- Nota: para crear el primer administrador, genera un hash con
--- `php tools/generar_hash.php "TuContraseñaSegura"` y luego
--- inserta el usuario manualmente, por ejemplo:
---
--- INSERT INTO usuarios (nombre, apellido, correo, password, rol_id, estado)
--- VALUES ('Admin', 'BiGlobal', 'admin@biglobal.com', '<hash generado>', 1, 'Activo');
-
--- -------------------------------------------------------------
--- Idiomas
--- -------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS idiomas (
-    id              INT AUTO_INCREMENT PRIMARY KEY,
-    nombre          VARCHAR(100) NOT NULL UNIQUE,
-    codigo          VARCHAR(10) NOT NULL UNIQUE,
-    estado          ENUM('Activo', 'Inactivo') NOT NULL DEFAULT 'Activo',
-    fecha_creacion  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+    (1, 'admin'),
+    (2, 'estudiante'),
+    (3, 'docente');
 
 INSERT INTO idiomas (nombre, codigo, estado) VALUES
-    ('Inglés', 'EN', 'Activo'),
-    ('Español', 'ES', 'Activo'),
-    ('Lengua de Señas', 'LSC', 'Activo')
-ON DUPLICATE KEY UPDATE estado = VALUES(estado);
+    ('Español', 'es', 1),
+    ('Inglés', 'en', 1);
 
--- -------------------------------------------------------------
--- Cursos
--- -------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS cursos (
-    id             INT AUTO_INCREMENT PRIMARY KEY,
-    nombre         VARCHAR(150) NOT NULL,
-    descripcion    TEXT NULL,
-    nivel          ENUM('Básico', 'Intermedio', 'Avanzado') NOT NULL,
-    estado         ENUM('Borrador', 'Publicado', 'Inactivo') NOT NULL DEFAULT 'Borrador',
-    instructor_id  INT NULL,
-    fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+INSERT INTO configuracion (clave, valor, tipo) VALUES
+    ('color_acento', 'blue', 'text'),
+    ('tema_default', 'light', 'text'),
+    ('notif_nuevo_curso', '1', 'bool'),
+    ('notif_nuevo_reporte', '1', 'bool'),
+    ('notif_nuevo_usuario', '1', 'bool'),
+    ('notif_resumen_semanal', '0', 'bool'),
+    ('seg_bloqueo_minutos', '1', 'int'),
+    ('seg_intentos_login', '5', 'int'),
+    ('seg_min_password', '6', 'int'),
+    ('seg_requiere_mayuscula', '1', 'bool'),
+    ('seg_requiere_numero', '0', 'bool'),
+    ('sitio_correo', 'contacto@biglobal.com', 'text'),
+    ('sitio_descripcion', 'Plataforma de aprendizaje de idiomas', 'text'),
+    ('sitio_idioma', 'es', 'text'),
+    ('sitio_nombre', 'BiGlobal', 'text'),
+    ('sitio_zona', 'America/Bogota', 'text'),
+    ('smtp_encriptacion', 'tls', 'text'),
+    ('smtp_host', 'smtp.gmail.com', 'text'),
+    ('smtp_password', '', 'text'),
+    ('smtp_puerto', '587', 'int'),
+    ('smtp_remitente', 'no-reply@biglobal.com', 'text'),
+    ('smtp_usuario', '', 'text');
 
-    CONSTRAINT fk_cursos_instructor
-        FOREIGN KEY (instructor_id) REFERENCES usuarios(id)
-        ON DELETE SET NULL
-) ENGINE=InnoDB;
-
--- -------------------------------------------------------------
--- Lecciones
--- -------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS lecciones (
-    id             INT AUTO_INCREMENT PRIMARY KEY,
-    curso_id       INT NOT NULL,
-    titulo         VARCHAR(150) NOT NULL,
-    descripcion    TEXT NULL,
-    orden          INT NOT NULL DEFAULT 1,
-    estado         ENUM('Borrador', 'Publicado', 'Inactivo') NOT NULL DEFAULT 'Borrador',
-    fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT fk_lecciones_curso
-        FOREIGN KEY (curso_id) REFERENCES cursos(id)
-        ON DELETE CASCADE
-) ENGINE=InnoDB;
-
--- -------------------------------------------------------------
--- Actividades
--- -------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS actividades (
-    id             INT AUTO_INCREMENT PRIMARY KEY,
-    leccion_id     INT NOT NULL,
-    titulo         VARCHAR(150) NOT NULL,
-    tipo           VARCHAR(50) NOT NULL DEFAULT 'General',
-    contenido      TEXT NULL,
-    orden          INT NOT NULL DEFAULT 1,
-    estado         ENUM('Borrador', 'Publicado', 'Inactivo') NOT NULL DEFAULT 'Borrador',
-    fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT fk_actividades_leccion
-        FOREIGN KEY (leccion_id) REFERENCES lecciones(id)
-        ON DELETE CASCADE
-) ENGINE=InnoDB;
-
--- -------------------------------------------------------------
--- Progreso del estudiante (nuevo, para el rol estudiante)
--- -------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS progreso (
-    id                INT AUTO_INCREMENT PRIMARY KEY,
-    usuario_id        INT NOT NULL,
-    leccion_id        INT NOT NULL,
-    completado        TINYINT(1) NOT NULL DEFAULT 0,
-    fecha_completado  DATETIME NULL,
-
-    CONSTRAINT fk_progreso_usuario
-        FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
-        ON DELETE CASCADE,
-
-    CONSTRAINT fk_progreso_leccion
-        FOREIGN KEY (leccion_id) REFERENCES lecciones(id)
-        ON DELETE CASCADE,
-
-    UNIQUE KEY uq_progreso_usuario_leccion (usuario_id, leccion_id)
-) ENGINE=InnoDB;
-
--- -------------------------------------------------------------
--- Certificados (emitidos al completar un curso)
--- -------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS certificados (
-    id             INT AUTO_INCREMENT PRIMARY KEY,
-    usuario_id     INT NOT NULL,
-    curso_id       INT NOT NULL,
-    codigo         VARCHAR(50) NOT NULL UNIQUE,
-    fecha_emision  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT fk_certificados_usuario
-        FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
-        ON DELETE CASCADE,
-
-    CONSTRAINT fk_certificados_curso
-        FOREIGN KEY (curso_id) REFERENCES cursos(id)
-        ON DELETE CASCADE,
-
-    UNIQUE KEY uq_certificado_usuario_curso (usuario_id, curso_id)
-) ENGINE=InnoDB;
-
--- -------------------------------------------------------------
--- Reportes de contenido (moderación)
--- -------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS reportes_contenido (
-    id             INT AUTO_INCREMENT PRIMARY KEY,
-    tipo           VARCHAR(50) NOT NULL,
-    referencia     VARCHAR(255) NULL,
-    motivo         TEXT NOT NULL,
-    estado         ENUM('Pendiente', 'Revisado', 'Descartado') NOT NULL DEFAULT 'Pendiente',
-    creado_por     INT NULL,
-    fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT fk_reportes_usuario
-        FOREIGN KEY (creado_por) REFERENCES usuarios(id)
-        ON DELETE SET NULL
-) ENGINE=InnoDB;
-
--- -------------------------------------------------------------
--- Configuración general de la plataforma (clave / valor)
--- -------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS configuracion (
-    clave VARCHAR(100) PRIMARY KEY,
-    valor TEXT NULL
-) ENGINE=InnoDB;
-
-INSERT INTO configuracion (clave, valor) VALUES
-    ('nombre_sitio', 'BiGlobal'),
-    ('correo_contacto', 'contacto@biglobal.com'),
-    ('modo_mantenimiento', '0')
-ON DUPLICATE KEY UPDATE valor = VALUES(valor);
+-- Primer administrador: genera el hash con
+--   php tools/generar_hash.php "TuContraseñaSegura"
+-- y luego:
+-- INSERT INTO usuarios (nombre, apellido, correo, password, rol_id, activo, estado)
+-- VALUES ('Admin', 'BiGlobal', 'admin@tudominio.com', '<hash generado>', 1, 1, 1);

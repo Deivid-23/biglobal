@@ -1,48 +1,40 @@
 <?php
 
 /**
- * Carga la configuración de la aplicación desde un archivo .env
- * ubicado en la raíz del proyecto (fuera de /src, para que nunca
- * quede accesible desde el navegador).
+ * Carga la configuración de la aplicación.
  *
- * No usamos ninguna librería externa: para un proyecto de este
- * tamaño, un parser simple es suficiente y evita depender de
- * Composer solo para esto.
+ * Orden de prioridad para cada valor:
+ *   1. Variable de entorno real (la que pones en Render > Environment).
+ *   2. Archivo .env en la raíz del proyecto (solo para tu computador).
+ *   3. Valor por defecto de este archivo (nunca contraseñas ni secretos).
+ *
+ * El .env está fuera de /src, así que nunca se puede abrir desde el
+ * navegador. No usamos librerías externas: un lector simple basta.
  */
 
 function cargarEnv(string $rutaArchivo): void
 {
     if (!file_exists($rutaArchivo)) {
-        // Si no existe .env, seguimos con los valores por defecto
-        // definidos en obtenerConfig(). Esto permite que el
-        // proyecto funcione igual que antes en un entorno local
-        // recién clonado, sin romper nada.
+        // Sin .env (por ejemplo en Render) se usan las variables de
+        // entorno del servidor o los valores por defecto.
         return;
     }
 
     $lineas = file($rutaArchivo, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 
     foreach ($lineas as $linea) {
-
         $linea = trim($linea);
 
-        // Ignorar comentarios
-        if ($linea === "" || $linea[0] === "#") {
-            continue;
-        }
-
-        if (!str_contains($linea, "=")) {
+        // Ignorar líneas vacías y comentarios
+        if ($linea === "" || $linea[0] === "#" || !str_contains($linea, "=")) {
             continue;
         }
 
         [$clave, $valor] = explode("=", $linea, 2);
-
         $clave = trim($clave);
-        $valor = trim($valor);
+        $valor = trim(trim($valor), "\"'"); // quitar comillas envolventes
 
-        // Quitar comillas envolventes si las hay
-        $valor = trim($valor, "\"'");
-
+        // Si la variable ya existe en el servidor, gana la del servidor
         if ($clave !== "" && getenv($clave) === false) {
             putenv("{$clave}={$valor}");
             $_ENV[$clave] = $valor;
@@ -51,10 +43,16 @@ function cargarEnv(string $rutaArchivo): void
 }
 
 /**
- * Devuelve la configuración completa de la aplicación,
- * combinando variables de entorno con valores por defecto
- * (los mismos que ya traía el proyecto, para no romper
- * el entorno local de nadie del equipo).
+ * Lee una variable de entorno. Devuelve $porDefecto si no existe o está vacía.
+ */
+function env(string $clave, ?string $porDefecto = null): ?string
+{
+    $valor = getenv($clave);
+    return ($valor === false || $valor === "") ? $porDefecto : $valor;
+}
+
+/**
+ * Devuelve la configuración completa de la aplicación (se calcula una vez).
  */
 function obtenerConfig(): array
 {
@@ -66,20 +64,43 @@ function obtenerConfig(): array
 
     cargarEnv(__DIR__ . "/../.env");
 
+    $entorno = env("APP_ENV", "local");
+
     $config = [
         "db" => [
-            "host"    => getenv("DB_HOST") ?: "localhost",
-            "port"    => getenv("DB_PORT") ?: "3306",
-            "nombre"  => getenv("DB_NAME") ?: "biglobal",
-            "usuario" => getenv("DB_USER") ?: "root",
-            "clave"   => getenv("DB_PASS") ?: "",
-            "charset" => getenv("DB_CHARSET") ?: "utf8mb4",
-            "ssl"     => filter_var(getenv("DB_SSL") ?: "false", FILTER_VALIDATE_BOOLEAN),
-            "ssl_ca"  => getenv("DB_SSL_CA") ?: null,
+            "host"    => env("DB_HOST", "localhost"),
+            "port"    => env("DB_PORT", "3306"),
+            "nombre"  => env("DB_NAME", "biglobal"),
+            "usuario" => env("DB_USER", "root"),
+            "clave"   => env("DB_PASS", ""),
+            "charset" => env("DB_CHARSET", "utf8mb4"),
+            // TiDB Cloud exige SSL: en Render pon DB_SSL=true
+            "ssl"     => filter_var(env("DB_SSL", "false"), FILTER_VALIDATE_BOOLEAN),
+            // Certificados de la imagen Docker (paquete ca-certificates)
+            "ssl_ca"  => env("DB_SSL_CA", "/etc/ssl/certs/ca-certificates.crt"),
         ],
         "app" => [
-            "entorno" => getenv("APP_ENV") ?: "local",
-            "debug"   => filter_var(getenv("APP_DEBUG") ?: "true", FILTER_VALIDATE_BOOLEAN),
+            "entorno" => $entorno,
+            // En producción el modo depuración queda apagado por defecto
+            "debug"   => filter_var(env("APP_DEBUG", $entorno === "local" ? "true" : "false"), FILTER_VALIDATE_BOOLEAN),
+            // URL pública, se usa para armar enlaces de los correos
+            // (ej. https://biglobal.onrender.com). Sin barra al final.
+            "url"     => rtrim((string) env("APP_URL", ""), "/"),
+        ],
+        "google" => [
+            // Nunca escribas estos valores aquí: van en .env o en Render
+            "client_id"     => env("GOOGLE_CLIENT_ID", ""),
+            "client_secret" => env("GOOGLE_CLIENT_SECRET", ""),
+            "redirect_uri"  => env("GOOGLE_REDIRECT_URI", "http://localhost/BiGlobal/src/auth/google_callback.php"),
+        ],
+        "smtp" => [
+            // Si están vacías se usan las de la tabla configuracion (panel admin)
+            "host"        => env("SMTP_HOST"),
+            "puerto"      => env("SMTP_PORT"),
+            "usuario"     => env("SMTP_USER"),
+            "clave"       => env("SMTP_PASS"),
+            "encriptacion"=> env("SMTP_ENCRYPTION"),
+            "remitente"   => env("SMTP_FROM"),
         ],
     ];
 

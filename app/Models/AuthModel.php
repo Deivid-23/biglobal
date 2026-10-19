@@ -3,9 +3,7 @@
 /**
  * AuthModel
  *
- * Acceso a datos para autenticación (login y registro). Mismas
- * consultas que ya estaban en login.php y registro.php, movidas
- * aquí.
+ * Acceso a datos para autenticación (login y registro).
  */
 class AuthModel
 {
@@ -14,7 +12,7 @@ class AuthModel
         $stmt = $conexion->prepare("
             SELECT
                 u.id, u.nombre, u.apellido, u.correo, u.password,
-                u.rol_id, u.estado, r.nombre AS rol
+                u.rol_id, u.activo, r.nombre AS rol
             FROM usuarios u
             INNER JOIN roles r ON u.rol_id = r.id
             WHERE u.correo = :correo
@@ -33,19 +31,22 @@ class AuthModel
         return (bool) $stmt->fetch();
     }
 
-    public static function crear(PDO $conexion, array $datos): void
-    {
-        $stmt = $conexion->prepare("
-            INSERT INTO usuarios (nombre, apellido, correo, password, rol_id, estado)
-            VALUES (:nombre, :apellido, :correo, :password, :rol_id, :estado)
-        ");
-        $stmt->execute([
-            ":nombre" => $datos["nombre"],
-            ":apellido" => $datos["apellido"],
-            ":correo" => $datos["correo"],
-            ":password" => $datos["password"],
-            ":rol_id" => $datos["rolId"],
-            ":estado" => $datos["estado"],
-        ]);
-    }
+    public static function crear(PDO $conexion, array $datos): int
+{
+    $stmt = $conexion->prepare("
+        INSERT INTO usuarios (nombre, apellido, correo, password, rol_id, activo)
+        VALUES (:nombre, :apellido, :correo, :password, :rol_id, :activo)
+    ");
+    $stmt->execute([
+        ":nombre"   => $datos["nombre"],
+        ":apellido" => $datos["apellido"],
+        ":correo"   => $datos["correo"],
+        ":password" => $datos["password"],
+        ":rol_id"   => $datos["rolId"],
+        ":activo"   => $datos["activo"],
+    ]);
+
+    /* Devolver el ID del nuevo usuario */
+    return (int) $conexion->lastInsertId();
+}
 }

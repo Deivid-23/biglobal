@@ -11,21 +11,23 @@
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 
     <!-- FontAwesome para los iconos -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
     <!-- Google Fonts -->
     <link
-        href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&family=Manrope:wght@300;400;600;800&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Manrope:wght@600;700;800&display=swap"
         rel="stylesheet">
 
     <!-- CSS -->
+    <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/style.css">
 
-    <!-- JS de Progreso -->
-    <script src="Progreso.js" defer></script>
+    <!-- JS de la página principal (boletín y menú en celular) -->
+    <script src="js/inicio.js" defer></script>
 </head>
 
 <body>
+    <a class="saltar-contenido" href="#contenido">Saltar al contenido</a>
     <header>
         <nav class="navbar navbar-expand-lg barra-navegacion">
             <div class="container">
@@ -48,14 +50,14 @@
                     </ul>
                     <div class="botones-acceso">
                         <a href="auth/login.html" class="btn-secundario">Iniciar sesión</a>
-                        <a href="auth/login.html" class="btn-principal">Registrarse</a>
+                        <a href="auth/login.html#registro" class="btn-principal">Registrarse</a>
                     </div>
                 </div>
             </div>
         </nav>
     </header>
 
-    <main>
+    <main id="contenido">
         <!-- Sección Principal (Hero) -->
         <section class="seccion-hero d-flex align-items-center">
             <div class="container">
@@ -85,7 +87,7 @@
                         <div class="fondo-resplandor-hero"></div>
 
                         <!-- Imagen principal -->
-                        <img src="img/Img_principal.png" alt="Estudiantes bilingües y de LSC en BiGlobal"
+                        <img src="img/img-hero.png" alt="Estudiantes bilingües y de LSC en BiGlobal"
                             class="imagen-hero-estudiantes img-fluid position-relative">
 
                         <!-- Tarjeta flotante decorativa -->
@@ -108,33 +110,33 @@
             <div class="container">
                 <div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-4 fila-caracteristicas text-center">
                     <div class="col d-flex flex-column align-items-center">
-                        <img src="img/icono-cursos.png" alt="Icono cursos" class="icono-caracteristica mb-3">
-                        <h6 class="fw-bold mb-1">Cursos</h6>
+                        <img src="img/icono-cursos.png" alt="" class="icono-caracteristica mb-3">
+                        <h2 class="h6 fw-bold mb-1">Cursos</h2>
                         <p class="small text-muted mb-0">Lecciones interactivas</p>
                     </div>
 
                     <div class="col d-flex flex-column align-items-center">
-                        <img src="img/icono-comunidad.png" alt="Icono de comunidad" class="icono-caracteristica mb-3">
-                        <h6 class="fw-bold mb-1">Comunidad</h6>
+                        <img src="img/icono-comunidad.png" alt="" class="icono-caracteristica mb-3">
+                        <h2 class="h6 fw-bold mb-1">Comunidad</h2>
                         <p class="small text-muted mb-0">Conecta con estudiantes</p>
                     </div>
 
                     <div class="col d-flex flex-column align-items-center">
-                        <img src="img/icono-lenguaje-señas.png" alt="Icono lenguaje señas"
+                        <img src="img/icono-lengua-senas.png" alt=""
                             class="icono-caracteristica mb-3">
-                        <h6 class="fw-bold mb-1">LSC</h6>
+                        <h2 class="h6 fw-bold mb-1">LSC</h2>
                         <p class="small text-muted mb-0">Contenido inclusivo</p>
                     </div>
 
                     <div class="col d-flex flex-column align-items-center">
-                        <img src="img/icono-recursos.png" alt="Icono de recursos" class="icono-caracteristica mb-3">
-                        <h6 class="fw-bold mb-1">Recursos</h6>
+                        <img src="img/icono-recursos.png" alt="" class="icono-caracteristica mb-3">
+                        <h2 class="h6 fw-bold mb-1">Recursos</h2>
                         <p class="small text-muted mb-0">Material descargable</p>
                     </div>
 
                     <div class="col d-flex flex-column align-items-center">
-                        <img src="img/icono-soporte.png" alt="Icono de soporte" class="icono-caracteristica mb-3">
-                        <h6 class="fw-bold mb-1">Soporte</h6>
+                        <img src="img/icono-soporte.png" alt="" class="icono-caracteristica mb-3">
+                        <h2 class="h6 fw-bold mb-1">Soporte</h2>
                         <p class="small text-muted mb-0">Estamos para ayudarte</p>
                     </div>
                 </div>
@@ -259,7 +261,10 @@
             </div>
         </section>
 
-        <!-- Sección de Cursos (Exclusivo: Inglés, Español y LSC) -->
+        <!-- Sección de Cursos (Inglés, Español y LSC)
+             OJO: no mostramos cifras (lecciones, horas, estrellas) porque
+             todavía no vienen de la base de datos. Cuando la página se
+             alimente desde la BD, aquí irán los datos reales. -->
         <section class="seccion-cursos" id="cursos">
             <div class="container">
                 <div class="text-center mb-5">
@@ -271,80 +276,59 @@
 
                     <!-- Tarjeta 1: Inglés -->
                     <div class="col">
-                        <div class="tarjeta-curso">
-                            <div class="cabecera-curso fondo-verde">
+                        <article class="tarjeta-curso">
+                            <div class="cabecera-curso fondo-azul">
                                 <span class="etiqueta-curso">INGLÉS</span>
-                                <span class="etiqueta-nivel">A1 - C1</span>
-                                <button class="boton-reproducir" aria-label="Ver introducción">
-                                    <i class="fa-solid fa-play"></i>
-                                </button>
+                                <span class="etiqueta-nivel">Desde nivel básico</span>
                             </div>
                             <div class="cuerpo-curso">
                                 <h3 class="titulo-curso">Inglés para el mundo real</h3>
-                                <div class="detalles-curso">
-                                    <span><i class="fa-solid fa-book-open me-2"></i>84 lecciones</span>
-                                    <span><i class="fa-solid fa-clock me-2"></i>32 h</span>
-                                </div>
+                                <p class="texto-curso">Vocabulario y frases útiles para estudiar, trabajar y viajar, lección por lección.</p>
                                 <div class="pie-curso">
-                                    <span class="calificacion"><i class="fa-solid fa-star me-1"></i>4.9 <small
-                                            class="text-muted">(1.2k)</small></span>
-                                    <a href="auth/login.html" class="enlace-comenzar">Comenzar <i
-                                            class="fa-solid fa-arrow-right ms-1"></i></a>
+                                    <span class="detalle-curso"><i class="fa-solid fa-award me-1" aria-hidden="true"></i>Con certificado</span>
+                                    <a href="auth/login.html#registro" class="enlace-comenzar">Comenzar <i
+                                            class="fa-solid fa-arrow-right ms-1" aria-hidden="true"></i></a>
                                 </div>
                             </div>
-                        </div>
+                        </article>
                     </div>
 
                     <!-- Tarjeta 2: Español -->
                     <div class="col">
-                        <div class="tarjeta-curso">
-                            <div class="cabecera-curso fondo-azul">
+                        <article class="tarjeta-curso">
+                            <div class="cabecera-curso fondo-naranja">
                                 <span class="etiqueta-curso">ESPAÑOL</span>
-                                <span class="etiqueta-nivel">A1 - B2</span>
-                                <button class="boton-reproducir" aria-label="Ver introducción">
-                                    <i class="fa-solid fa-play"></i>
-                                </button>
+                                <span class="etiqueta-nivel">Desde nivel básico</span>
                             </div>
                             <div class="cuerpo-curso">
                                 <h3 class="titulo-curso">Español conversacional</h3>
-                                <div class="detalles-curso">
-                                    <span><i class="fa-solid fa-book-open me-2"></i>72 lecciones</span>
-                                    <span><i class="fa-solid fa-clock me-2"></i>28 h</span>
-                                </div>
+                                <p class="texto-curso">Para quienes empiezan con el español: saludos, frases del día a día y conversación.</p>
                                 <div class="pie-curso">
-                                    <span class="calificacion"><i class="fa-solid fa-star me-1"></i>4.9 <small
-                                            class="text-muted">(980)</small></span>
-                                    <a href="auth/login.html" class="enlace-comenzar">Comenzar <i
-                                            class="fa-solid fa-arrow-right ms-1"></i></a>
+                                    <span class="detalle-curso"><i class="fa-solid fa-award me-1" aria-hidden="true"></i>Con certificado</span>
+                                    <a href="auth/login.html#registro" class="enlace-comenzar">Comenzar <i
+                                            class="fa-solid fa-arrow-right ms-1" aria-hidden="true"></i></a>
                                 </div>
                             </div>
-                        </div>
+                        </article>
                     </div>
 
-                    <!-- Tarjeta 3: LSC (Lengua de Señas Colombiana) -->
+                    <!-- Tarjeta 3: LSC (todavía no existe en la BD) -->
                     <div class="col">
-                        <div class="tarjeta-curso">
-                            <div class="cabecera-curso fondo-naranja">
+                        <article class="tarjeta-curso">
+                            <div class="cabecera-curso fondo-verde">
                                 <span class="etiqueta-curso">LSC</span>
-                                <span class="etiqueta-nivel">Básico - Intermedio</span>
-                                <button class="boton-reproducir" aria-label="Ver introducción">
-                                    <i class="fa-solid fa-play"></i>
-                                </button>
+                                <span class="etiqueta-nivel">Próximamente</span>
                             </div>
                             <div class="cuerpo-curso">
                                 <h3 class="titulo-curso">Lengua de Señas Colombiana</h3>
-                                <div class="detalles-curso">
-                                    <span><i class="fa-solid fa-book-open me-2"></i>60 lecciones</span>
-                                    <span><i class="fa-solid fa-clock me-2"></i>24 h</span>
-                                </div>
+                                <p class="texto-curso">Estamos preparando el curso de LSC. Crea tu cuenta y te avisamos cuando abra.</p>
                                 <div class="pie-curso">
-                                    <span class="calificacion"><i class="fa-solid fa-star me-1"></i>4.9 <small
-                                            class="text-muted">(1.1k)</small></span>
-                                    <a href="auth/login.html" class="enlace-comenzar">Comenzar <i
-                                            class="fa-solid fa-arrow-right ms-1"></i></a>
+                                    <span class="detalle-curso"><i class="fa-solid fa-hands-asl-interpreting me-1" aria-hidden="true"></i>Inclusión real</span>
+                                    <a href="auth/login.html#registro" class="enlace-comenzar">Crear cuenta <i
+                                            class="fa-solid fa-arrow-right ms-1" aria-hidden="true"></i></a>
                                 </div>
                             </div>
-                        </div>
+                        </article>
                     </div>
 
                 </div>
@@ -372,7 +356,7 @@
                                 <li><i class="fa-solid fa-check"></i> Ejercicios prácticos básicos</li>
                                 <li><i class="fa-solid fa-check"></i> Comunidad general</li>
                             </ul>
-                            <a href="auth.html" class="btn-secundario w-100 mt-3">Comenzar gratis</a>
+                            <a href="auth/login.html" class="btn-secundario w-100 mt-3">Comenzar gratis</a>
                         </div>
                     </div>
 
@@ -389,7 +373,7 @@
                                 <li><i class="fa-solid fa-check"></i> Certificados de finalización</li>
                                 <li><i class="fa-solid fa-check"></i> Sin publicidad</li>
                             </ul>
-                            <a href="auth.html" class="btn-principal w-100 mt-3">Obtener Pro</a>
+                            <a href="auth/login.html" class="btn-principal w-100 mt-3">Obtener Pro</a>
                         </div>
                     </div>
 
@@ -405,16 +389,15 @@
                                 <li><i class="fa-solid fa-check"></i> Material descargable offline</li>
                                 <li><i class="fa-solid fa-check"></i> Soporte prioritario 24/7</li>
                             </ul>
-                            <a href="auth.html" class="btn-secundario w-100 mt-3">Ser Global</a>
+                            <a href="auth/login.html" class="btn-secundario w-100 mt-3">Ser Global</a>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
-    </main>
 
     <!-- Sección de Preguntas Frecuentes -->
-    <section class="seccion-faq py-5 bg-light">
+    <section class="seccion-faq py-5" id="preguntas">
         <div class="container container-faq">
             <div class="text-center mb-5">
                 <span class="etiqueta-alerta mb-2 d-inline-block">Resolvemos tus dudas</span>
@@ -478,57 +461,57 @@
         </div>
     </section>
 
+    </main>
+
     <!-- Pie de página (Footer) -->
     <footer class="pie-pagina py-5" id="info-contac">
         <div class="container">
             <div class="row g-4 justify-content-between mb-4">
                 <div class="col-lg-4">
                     <a class="navbar-brand contenedor-logo mb-3 d-inline-flex" href="#">
-                        <img src="img/logo-Biglobal.png" alt="Icono BiGlobal" class="logo-img">
+                        <img src="img/logo-Biglobal.png" alt="" class="logo-img">
                         <span class="logo-texto">BiGlobal</span>
                     </a>
                     <p class="text-muted small mb-3">
                         Conectamos al mundo a través del bilingüismo y la inclusión con la Lengua de Señas Colombiana.
                         Aprende a tu ritmo, en cualquier lugar.
                     </p>
-                    <div class="redes-sociales d-flex gap-3">
-                        <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
-                        <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
-                        <a href="#" aria-label="Twitter"><i class="fa-brands fa-x-twitter"></i></a>
-                        <a href="#" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>
-                    </div>
+                    <!-- Redes sociales: se ocultaron porque todavía no hay enlaces reales.
+                         Cuando existan, agrega aquí <a href="https://..."> con su ícono fa-brands. -->
                 </div>
 
                 <div class="col-6 col-lg-2">
-                    <h6 class="fw-bold mb-3">Plataforma</h6>
+                    <h2 class="titulo-footer">Plataforma</h2>
                     <ul class="list-unstyled enlaces-footer">
-                        <li><a href="#">Inglés</a></li>
-                        <li><a href="#">Español</a></li>
-                        <li><a href="#">Lengua de Señas (LSC)</a></li>
-                        <li><a href="#">Certificaciones</a></li>
+                        <li><a href="#cursos">Cursos</a></li>
+                        <li><a href="#comoFunciona">Cómo funciona</a></li>
+                        <li><a href="#Planes-big">Membresías</a></li>
+                        <li><a href="#preguntas">Preguntas frecuentes</a></li>
                     </ul>
                 </div>
 
                 <div class="col-6 col-lg-2">
-                    <h6 class="fw-bold mb-3">Empresa</h6>
+                    <h2 class="titulo-footer">Ayuda</h2>
                     <ul class="list-unstyled enlaces-footer">
-                        <li><a href="#">Sobre nosotros</a></li>
-                        <li><a href="#">Método BiGlobal</a></li>
-                        <li><a href="#">Blog</a></li>
-                        <li><a href="#">Contacto</a></li>
+                        <li><a href="contacto.html">Contacto</a></li>
+                        <li><a href="auth/login.html">Iniciar sesión</a></li>
+                        <li><a href="auth/recuperar.php">Recuperar contraseña</a></li>
                     </ul>
                 </div>
 
                 <div class="col-lg-3">
-                    <h6 class="fw-bold mb-3">Únete al boletín</h6>
-                    <p class="text-muted small">Recibe consejos gratuitos de aprendizaje cada semana.</p>
-                    <div class="input-group mb-3">
-                        <input type="email" class="form-control campo-boletin" placeholder="Tu correo electrónico">
-                        <button class="btn btn-principal m-0" type="button">
-                         <i class="fa-solid fa-paper-plane"></i>
-                         Enviar
-                         button>
-                    </div>
+                    <h2 class="titulo-footer">Únete al boletín</h2>
+                    <p class="text-muted small">Recibe consejos gratuitos de aprendizaje.</p>
+                    <form class="input-group mb-2" id="form-boletin" novalidate>
+                        <label for="campo-boletin" class="sr-only">Tu correo electrónico</label>
+                        <input type="email" id="campo-boletin" class="form-control campo-boletin"
+                               placeholder="Tu correo electrónico" autocomplete="email" required>
+                        <button class="btn-principal boton-boletin" type="submit">
+                            <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                            Enviar
+                        </button>
+                    </form>
+                    <p class="small mb-0" id="mensaje-boletin" role="status" aria-live="polite"></p>
                 </div>
             </div>
 
@@ -538,9 +521,9 @@
                 class="d-flex flex-column flex-md-row justify-content-between align-items-center text-muted small pt-2">
                 <p class="mb-2 mb-md-0">© 2026 BiGlobal. Todos los derechos reservados.</p>
                 <div class="d-flex gap-4">
-                    <a href="#" class="enlace-legal">Privacidad</a>
-                    <a href="#" class="enlace-legal">Términos</a>
-                    <a href="#" class="enlace-legal">Cookies</a>
+                    <a href="privacidad.html" class="enlace-legal">Privacidad</a>
+                    <a href="terminos.html" class="enlace-legal">Términos</a>
+                    <a href="contacto.html" class="enlace-legal">Contacto</a>
                 </div>
             </div>
         </div>

@@ -24,14 +24,16 @@ class ConfiguracionModel
 
     public static function guardar(PDO $conexion, string $nombreSitio, string $correoContacto, string $modoMantenimiento): void
     {
+        /* Claves reales de la tabla configuracion: sitio_nombre, sitio_correo.
+           VALUES(valor) evita repetir el mismo parámetro dos veces. */
         $stmt = $conexion->prepare("
             INSERT INTO configuracion (clave, valor)
             VALUES (:clave, :valor)
-            ON DUPLICATE KEY UPDATE valor = :valor
+            ON DUPLICATE KEY UPDATE valor = VALUES(valor)
         ");
 
-        $stmt->execute([":clave" => "nombre_sitio", ":valor" => $nombreSitio]);
-        $stmt->execute([":clave" => "correo_contacto", ":valor" => $correoContacto]);
+        $stmt->execute([":clave" => "sitio_nombre", ":valor" => $nombreSitio]);
+        $stmt->execute([":clave" => "sitio_correo", ":valor" => $correoContacto]);
         $stmt->execute([":clave" => "modo_mantenimiento", ":valor" => $modoMantenimiento]);
     }
 }

@@ -21,15 +21,25 @@ class UsuariosController
         $this->conexion = Conexion::conectar();
     }
 
+    /**
+     * Convierte el estado que llega del formulario al número que guarda la BD
+     * en usuarios.activo: 1 = activo, 0 = inactivo, 2 = pendiente.
+     */
+    private static function estadoANumero(string $estado): int
+    {
+        $mapa = ["activo" => 1, "inactivo" => 0, "pendiente" => 2, "1" => 1, "0" => 0, "2" => 2];
+        return $mapa[strtolower(trim($estado))] ?? 1;
+    }
+
     public function index(): void
     {
         $conexion = $this->conexion;
 
         $usuarios = UsuarioModel::obtenerTodos($conexion);
 
-        $totalUsuariosActivos = count(array_filter($usuarios, fn($u) => $u["estado"] === "Activo"));
-        $totalInstructores = count(array_filter($usuarios, fn($u) => $u["rol"] === "Instructor"));
-        $totalPendientes = count(array_filter($usuarios, fn($u) => $u["estado"] === "Pendiente"));
+        $totalUsuariosActivos = count(array_filter($usuarios, fn($u) => (int) $u["activo"] === 1));
+        $totalInstructores = count(array_filter($usuarios, fn($u) => strtolower((string) $u["rol"]) === "docente"));
+        $totalPendientes = count(array_filter($usuarios, fn($u) => (int) $u["activo"] === 2));
 
         require __DIR__ . "/../../Views/admin/usuarios/index.php";
     }
@@ -61,7 +71,7 @@ class UsuariosController
             $apellido = trim($_POST["apellido"] ?? "");
             $correo = trim($_POST["correo"] ?? "");
             $rol = $_POST["rol"] ?? "";
-            $estado = $_POST["estado"] ?? "Activo";
+            $estado = self::estadoANumero($_POST["estado"] ?? "1");
             $password = $_POST["password"] ?? "";
 
             if (empty($nombre) || empty($apellido) || empty($correo) || empty($rol)) {
@@ -128,7 +138,7 @@ class UsuariosController
         $correo = trim($_POST["correo"] ?? "");
         $password = $_POST["password"] ?? "";
         $rol = $_POST["rol"] ?? "";
-        $estado = $_POST["estado"] ?? "Activo";
+        $estado = self::estadoANumero($_POST["estado"] ?? "1");
 
         if (empty($nombre) || empty($apellido) || empty($correo) || empty($password) || empty($rol)) {
             die("Todos los campos son obligatorios.");

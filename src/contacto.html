@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contacto | BiGlobal</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Manrope:wght@700;800&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="css/tokens.css">
+    <link rel="stylesheet" href="css/componentes.css">
+    <link rel="stylesheet" href="css/paginas.css">
+</head>
+<!--
+    El correo es el mismo de configuracion.sitio_correo (contacto@biglobal.com).
+    Cuando exista el formulario de contacto con BD, va en esta página.
+-->
+<body class="pagina-body">
+<a class="saltar-contenido" href="#contenido">Saltar al contenido</a>
+
+<header class="pagina-cabecera">
+    <div class="pagina-cabecera__barra">
+        <a class="pagina-logo" href="index.html"><img src="img/logo-Biglobal.png" alt="" width="34" height="34"> BiGlobal</a>
+        <a class="boton boton--secundario boton--sm" href="index.html">Volver al inicio</a>
+    </div>
+    <div class="pagina-titulo">
+        <h1>¿En qué te ayudamos?</h1>
+        <p>Escríbenos y te respondemos lo antes posible.</p>
+    </div>
+</header>
+
+<main id="contenido" class="pagina-contenido">
+    <div class="contacto-rejilla">
+        <section class="contacto-opcion">
+            <i class="fa-regular fa-envelope" aria-hidden="true"></i>
+            <h2>Escríbenos un correo</h2>
+            <p>Dudas sobre cursos, tu cuenta o certificados.</p>
+            <a class="boton boton--primario" href="mailto:contacto@biglobal.com">contacto@biglobal.com</a>
+        </section>
+
+        <section class="contacto-opcion">
+            <i class="fa-solid fa-key" aria-hidden="true"></i>
+            <h2>¿No puedes entrar?</h2>
+            <p>Crea una nueva contraseña con tu correo en un par de minutos.</p>
+            <a class="boton boton--secundario" href="auth/recuperar.php">Recuperar contraseña</a>
+        </section>
+    </div>
+</main>
+
+<footer class="pagina-pie">
+    © 2026 BiGlobal ·
+    <a href="privacidad.html">Privacidad</a>
+    <a href="terminos.html">Términos</a>
+</footer>
+</body>
+</html>

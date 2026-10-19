@@ -5,10 +5,10 @@ require_once __DIR__ . "/../Models/AuthModel.php";
 /**
  * AuthController
  *
- * login()     -> autenticar usuario, responde JSON (antes login.php)
- * registro()  -> crear cuenta nueva, responde JSON (antes registro.php)
- * logout()    -> cerrar sesión y redirigir (antes logout.php)
- * csrfToken() -> entregar token CSRF, responde JSON (antes csrf_token.php)
+ * login()     -> autenticar usuario, responde JSON
+ * registro()  -> crear cuenta nueva, responde JSON
+ * logout()    -> cerrar sesión y redirigir
+ * csrfToken() -> entregar token CSRF, responde JSON
  */
 class AuthController
 {
@@ -18,8 +18,9 @@ class AuthController
 
         verificarCsrf($_POST["csrf_token"] ?? "");
 
-        $maxIntentos = 5;
-        $tiempoBloqueoSegundos = 60;
+        /* Valores definidos por el admin en Configuración > Seguridad */
+        $maxIntentos = max(1, Config::getInt("seg_intentos_login", 5));
+        $tiempoBloqueoSegundos = max(1, Config::getInt("seg_bloqueo_minutos", 1)) * 60;
 
         if (!isset($_SESSION["login_intentos"])) {
             $_SESSION["login_intentos"] = 0;
@@ -62,13 +63,44 @@ class AuthController
                 exit;
             }
 
-            if (($usuario["estado"] ?? "") !== "Activo") {
+            $activo = (int) ($usuario["activo"] ?? 0);
 
-                $mensajeEstado = ($usuario["estado"] ?? "") === "Pendiente"
-                    ? "Tu solicitud como profesor todavía está pendiente de aprobación por un administrador."
-                    : "Tu cuenta está inactiva. Contacta al administrador.";
+            /* activo = 2 → docente pendiente de aprobación */
+            if ($activo === 2) {
+                session_regenerate_id(true);
 
-                echo json_encode(["success" => false, "message" => $mensajeEstado]);
+                $_SESSION["usuario_id"] = $usuario["id"];
+                $_SESSION["nombre"]     = $usuario["nombre"];
+                $_SESSION["apellido"]   = $usuario["apellido"];
+                $_SESSION["correo"]     = $usuario["correo"];
+                $_SESSION["rol_id"]     = $usuario["rol_id"];
+                $_SESSION["rol"]        = $usuario["rol"];
+
+                echo json_encode([
+                    "success"  => true,
+                    "message"  => "Tu cuenta está pendiente de aprobación.",
+                    "redirect" => "../profesor/pendiente.php"
+                ]);
+                exit;
+            }
+
+            /* activo = 0 → cuenta inactiva/bloqueada */
+            if ($activo === 0) {
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Tu cuenta está inactiva. Contacta al administrador."
+                ]);
+                exit;
+            }
+
+            /* activo = 1 → login normal */
+
+            /* Cuenta creada con Google: no tiene contraseña guardada */
+            if (empty($usuario["password"])) {
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Esta cuenta se creó con Google. Usa «Continuar con Google» o crea una contraseña con «¿Olvidaste tu contraseña?»."
+                ]);
                 exit;
             }
 
@@ -91,11 +123,11 @@ class AuthController
             session_regenerate_id(true);
 
             $_SESSION["usuario_id"] = $usuario["id"];
-            $_SESSION["nombre"] = $usuario["nombre"];
-            $_SESSION["apellido"] = $usuario["apellido"];
-            $_SESSION["correo"] = $usuario["correo"];
-            $_SESSION["rol_id"] = $usuario["rol_id"];
-            $_SESSION["rol"] = $usuario["rol"];
+            $_SESSION["nombre"]     = $usuario["nombre"];
+            $_SESSION["apellido"]   = $usuario["apellido"];
+            $_SESSION["correo"]     = $usuario["correo"];
+            $_SESSION["rol_id"]     = $usuario["rol_id"];
+            $_SESSION["rol"]        = $usuario["rol"];
 
             $redireccion = "../index.html";
 
@@ -104,6 +136,7 @@ class AuthController
                 case "administrador":
                     $redireccion = "../admin/index.php";
                     break;
+                case "docente":
                 case "instructor":
                     $redireccion = "../profesor/index.php";
                     break;
@@ -123,14 +156,6 @@ class AuthController
             ]);
             exit;
 
-
-
-            echo json_encode([
-                "success" => false,
-                "message" => "Error de conexión con la base de datos.",
-                "error" => $e->getMessage()
-            ]);
-            exit;
         } catch (PDOException $e) {
 
             error_log("[BiGlobal] " . $e->getMessage());
@@ -153,13 +178,14 @@ class AuthController
 
             $conexion = Conexion::conectar();
 
-            $nombreCompleto = trim($_POST["nombre"] ?? "");
-            $correo = trim($_POST["correo"] ?? "");
-            $password = $_POST["password"] ?? "";
+            $nombreCompleto  = trim($_POST["nombre"] ?? "");
+            $correo          = trim($_POST["correo"] ?? "");
+            $password        = $_POST["password"] ?? "";
             $confirmPassword = $_POST["confirm_password"] ?? "";
-            $rolSolicitado = $_POST["rol"] ?? "estudiante";
+            $rolSolicitado   = $_POST["rol"] ?? "estudiante";
 
-            if ($rolSolicitado !== "profesor") {
+            /* Solo se aceptan "estudiante" o "docente" */
+            if (!in_array($rolSolicitado, ["estudiante", "docente"], true)) {
                 $rolSolicitado = "estudiante";
             }
 
@@ -178,13 +204,25 @@ class AuthController
                 exit;
             }
 
-            if (strlen($password) < 6) {
-                echo json_encode(["success" => false, "message" => "La contraseña debe tener al menos 6 caracteres."]);
+            /* Reglas de Configuración > Seguridad (largo, mayúscula, número) */
+            $errorPassword = Seguridad::validarPassword($password);
+            if ($errorPassword !== null) {
+                echo json_encode(["success" => false, "message" => $errorPassword]);
+                exit;
+            }
+
+            if (!mb_check_encoding($nombreCompleto, "UTF-8")) {
+                echo json_encode(["success" => false, "message" => "El nombre tiene caracteres no válidos."]);
+                exit;
+            }
+
+            if (mb_strlen($nombreCompleto) > 200) {
+                echo json_encode(["success" => false, "message" => "El nombre es demasiado largo."]);
                 exit;
             }
 
             $partesNombre = preg_split('/\s+/', $nombreCompleto, 2);
-            $nombre = $partesNombre[0];
+            $nombre   = $partesNombre[0];
             $apellido = $partesNombre[1] ?? "No especificado";
 
             if (AuthModel::correoExiste($conexion, $correo)) {
@@ -194,38 +232,103 @@ class AuthController
 
             $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
-            if ($rolSolicitado === "profesor") {
-                $rolId = 3;
-                $estadoInicial = "Pendiente";
+            /* ---------------------------------------------------
+               Rol y estado inicial
+               ---------------------------------------------------
+               Roles en BD:
+                 1 = admin
+                 2 = estudiante
+                 3 = docente
+
+               activo en BD:
+                 0 = inactivo/bloqueado
+                 1 = activo
+                 2 = pendiente de aprobación (solo docentes)
+            --------------------------------------------------- */
+            if ($rolSolicitado === "docente") {
+                $rolId         = 3;
+                $activoInicial = 2;
             } else {
-                $rolId = 2;
-                $estadoInicial = "Activo";
+                $rolId         = 2;
+                $activoInicial = 1;
             }
 
-            AuthModel::crear($conexion, [
-                "nombre" => $nombre,
+            $nuevoId = AuthModel::crear($conexion, [
+                "nombre"   => $nombre,
                 "apellido" => $apellido,
-                "correo" => $correo,
+                "correo"   => $correo,
                 "password" => $passwordHash,
-                "rolId" => $rolId,
-                "estado" => $estadoInicial,
+                "rolId"    => $rolId,
+                "activo"   => $activoInicial,
             ]);
 
-            if ($estadoInicial === "Pendiente") {
+            /* =========================================================
+               DOCENTE (activo = 2, pendiente)
+            ========================================================= */
+            if ($activoInicial === 2) {
+
+                $hayAdminLogueado = isset($_SESSION["usuario_id"])
+                    && in_array(strtolower($_SESSION["rol"] ?? ""), ["admin", "administrador"], true);
+
+                if ($hayAdminLogueado) {
+                    echo json_encode([
+                        "success"  => true,
+                        "message"  => "Docente creado. Queda pendiente de aprobación.",
+                        "redirect" => "../admin/index.php?page=solicitudes"
+                    ]);
+                    exit;
+                }
+
+                /* Visitante → iniciar sesión como docente pendiente */
+                session_regenerate_id(true);
+
+                $_SESSION["usuario_id"] = $nuevoId;
+                $_SESSION["nombre"]     = $nombre;
+                $_SESSION["apellido"]   = $apellido;
+                $_SESSION["correo"]     = $correo;
+                $_SESSION["rol_id"]     = $rolId;
+                $_SESSION["rol"]        = "docente";
+
                 echo json_encode([
-                    "success" => true,
-                    "message" => "Tu solicitud como profesor fue enviada. Un administrador debe aprobarla antes de que puedas iniciar sesión."
+                    "success"  => true,
+                    "message"  => "Tu solicitud como docente fue enviada. Un administrador debe aprobarla antes de que puedas acceder al panel.",
+                    "redirect" => "../profesor/pendiente.php"
                 ]);
                 exit;
             }
 
+            /* =========================================================
+               ESTUDIANTE (activo = 1)
+            ========================================================= */
+            $hayAdminLogueado = isset($_SESSION["usuario_id"])
+                && in_array(strtolower($_SESSION["rol"] ?? ""), ["admin", "administrador"], true);
+
+            if ($hayAdminLogueado) {
+                echo json_encode([
+                    "success"  => true,
+                    "message"  => "Estudiante creado correctamente.",
+                    "redirect" => "../admin/index.php?page=usuarios"
+                ]);
+                exit;
+            }
+
+            /* Visitante → iniciar sesión como estudiante */
+            session_regenerate_id(true);
+
+            $_SESSION["usuario_id"] = $nuevoId;
+            $_SESSION["nombre"]     = $nombre;
+            $_SESSION["apellido"]   = $apellido;
+            $_SESSION["correo"]     = $correo;
+            $_SESSION["rol_id"]     = $rolId;
+            $_SESSION["rol"]        = "estudiante";
+
             echo json_encode([
-                "success" => true,
-                "message" => "Cuenta creada correctamente.",
-                "redirect" => "login.html"
+                "success"  => true,
+                "message"  => "Cuenta creada correctamente. ¡Bienvenido!",
+                "redirect" => "../estudiante/index.php"
             ]);
             exit;
-            
+
         } catch (PDOException $e) {
 
             error_log("[BiGlobal] " . $e->getMessage());
@@ -257,7 +360,7 @@ class AuthController
 
         session_destroy();
 
-        header("Location: login.html");
+        header("Location: ../index.html");
         exit;
     }
 
@@ -265,8 +368,13 @@ class AuthController
     {
         header('Content-Type: application/json; charset=utf-8');
 
+        /* No guardar en caché: cada sesión tiene su propio token */
+        header("Cache-Control: no-store");
+
         echo json_encode([
-            "csrf_token" => generarCsrfToken()
+            "csrf_token" => generarCsrfToken(),
+            // Reglas de Configuración > Seguridad, para mostrarlas en el registro
+            "reglas"     => Seguridad::reglasPassword(),
         ]);
     }
 }

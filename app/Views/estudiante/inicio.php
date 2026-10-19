@@ -1,254 +1,111 @@
-<!DOCTYPE html>
-<html lang="es">
+<?php
+/**
+ * Inicio del estudiante.
+ * Variables: $estudiante, $leccionesCompletadas, $totalCertificados,
+ *            $cursosEnProgreso, $misCursos, $continuar, $sugeridos,
+ *            $gamificacion (racha, XP, nivel y medallas; null si no hay tablas)
+ */
+$esNuevo = $leccionesCompletadas === 0;
+?>
 
-<head>
+<section class="saludo" aria-labelledby="titulo-saludo">
+    <div class="saludo__texto">
+        <h1 id="titulo-saludo">
+            <?= $esNuevo ? "¡Bienvenido, " . e($estudiante["primerNombre"]) . "!" : "¡Hola de nuevo, " . e($estudiante["primerNombre"]) . "!" ?>
+        </h1>
+        <p>
+            <?php if ($esNuevo): ?>
+                Elige un curso y completa tu primera lección. Toma solo unos minutos.
+            <?php elseif ($continuar): ?>
+                Llevas <?= e(plural($leccionesCompletadas, "lección completada", "lecciones completadas")) ?>. ¡Sigue así!
+            <?php else: ?>
+                Terminaste todo lo que empezaste. ¿Qué tal un curso nuevo?
+            <?php endif; ?>
+        </p>
+    </div>
 
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>BiGlobal | Inicio</title>
-
-    <link rel="stylesheet" href="../admin/css/style.css">
-    <link rel="stylesheet" href="css/estudiante.css">
-
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-
-    <link
-        href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&family=Manrope:wght@300;400;600;800&display=swap"
-        rel="stylesheet"
-    >
-
-</head>
-
-<body>
-
-<div class="admin-container">
-
-
-    <!-- =========================
-         SIDEBAR
-    ========================== -->
-
-    <aside class="sidebar">
-
-        <div class="sidebar-header">
-
-            <div class="logo">
-
-                <span class="logo-icon">
-                    <i class="fa-solid fa-language"></i>
-                </span>
-
-                <span class="logo-text">
-                    BiGlobal
-                </span>
-
+    <?php if ($continuar): ?>
+        <?php
+            $pctContinuar = porcentaje((int) $continuar["lecciones_hechas"], (int) $continuar["total_lecciones"]);
+            $idioma = idiomaDeCurso($continuar["nombre"]);
+        ?>
+        <div class="continuar">
+            <span class="idioma idioma--grande <?= e($idioma["clase"]) ?>" aria-hidden="true"><?= e($idioma["codigo"]) ?></span>
+            <div class="continuar__cuerpo">
+                <p class="continuar__curso"><?= e($continuar["nombre"]) ?></p>
+                <p class="continuar__leccion">
+                    <?= $continuar["siguiente"] ? "Sigue: " . e($continuar["siguiente"]["titulo"]) : "Revisa tus lecciones" ?>
+                </p>
+                <div class="curso__avance">
+                    <div class="progreso" role="progressbar" aria-valuemin="0" aria-valuemax="100"
+                         aria-valuenow="<?= $pctContinuar ?>" aria-label="Avance del curso">
+                        <div class="progreso__relleno" style="width: <?= $pctContinuar ?>%"></div>
+                    </div>
+                    <span class="numeros"><?= $pctContinuar ?>%</span>
+                </div>
             </div>
-
+            <a class="boton boton--primario"
+               href="<?= $continuar["siguiente"]
+                    ? "index.php?page=leccion&amp;id=" . (int) $continuar["siguiente"]["id"]
+                    : "index.php?page=curso&amp;id=" . (int) $continuar["id"] ?>">
+                Continuar <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+            </a>
         </div>
+    <?php else: ?>
+        <a class="boton boton--primario" href="index.php?page=cursos">
+            <?= $esNuevo ? "Elegir mi primer curso" : "Explorar cursos" ?>
+            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+        </a>
+    <?php endif; ?>
+</section>
 
+<?php if ($gamificacion) { require __DIR__ . "/_gamificacion.php"; } ?>
 
-        <nav class="sidebar-menu">
-
-            <p class="menu-title">
-                MI APRENDIZAJE
-            </p>
-
-            <a href="index.php" class="menu-item active">
-                <i class="fa-solid fa-house"></i>
-                <span>Inicio</span>
-            </a>
-
-            <a href="cursos.php" class="menu-item">
-                <i class="fa-solid fa-book"></i>
-                <span>Mis cursos</span>
-            </a>
-
-            <a href="certificados.php" class="menu-item">
-                <i class="fa-solid fa-certificate"></i>
-                <span>Certificados</span>
-            </a>
-
-        </nav>
-
-
-        <div class="sidebar-footer">
-
-            <a href="../index.html" class="back-home">
-                <i class="fa-solid fa-arrow-left"></i>
-                Volver al inicio
-            </a>
-
-            <a href="../auth/logout.php" class="back-home" style="margin-top:6px;">
-                <i class="fa-solid fa-right-from-bracket"></i>
-                Cerrar sesión
-            </a>
-
+<?php if (!$esNuevo): ?>
+    <section class="resumen" aria-label="Tu resumen">
+        <div class="resumen__dato">
+            <i class="fa-solid fa-circle-check resumen__icono resumen__icono--verde" aria-hidden="true"></i>
+            <span><strong class="numeros"><?= $leccionesCompletadas ?></strong> <?= $leccionesCompletadas === 1 ? "lección completada" : "lecciones completadas" ?></span>
         </div>
+        <div class="resumen__dato">
+            <i class="fa-solid fa-book-open resumen__icono" aria-hidden="true"></i>
+            <span><strong class="numeros"><?= $cursosEnProgreso ?></strong> <?= $cursosEnProgreso === 1 ? "curso en progreso" : "cursos en progreso" ?></span>
+        </div>
+        <div class="resumen__dato">
+            <i class="fa-solid fa-award resumen__icono resumen__icono--naranja" aria-hidden="true"></i>
+            <span><strong class="numeros"><?= $totalCertificados ?></strong> <?= $totalCertificados === 1 ? "certificado" : "certificados" ?></span>
+        </div>
+    </section>
+<?php endif; ?>
 
-    </aside>
+<?php if (!empty($misCursos)): ?>
+    <section class="bloque" aria-labelledby="titulo-mis-cursos">
+        <div class="bloque__cabecera">
+            <h2 id="titulo-mis-cursos">Tus cursos</h2>
+            <a class="enlace-ver" href="index.php?page=mis-cursos">Ver todos</a>
+        </div>
+        <div class="rejilla-cursos">
+            <?php foreach ($misCursos as $curso) { require __DIR__ . "/_tarjeta_curso.php"; } ?>
+        </div>
+    </section>
+<?php endif; ?>
 
+<?php if (!empty($sugeridos)): ?>
+    <section class="bloque" aria-labelledby="titulo-sugeridos">
+        <div class="bloque__cabecera">
+            <h2 id="titulo-sugeridos">Cursos para empezar</h2>
+            <a class="enlace-ver" href="index.php?page=cursos">Ver catálogo</a>
+        </div>
+        <div class="rejilla-cursos">
+            <?php $mostrarDescripcion = true; foreach ($sugeridos as $curso) { require __DIR__ . "/_tarjeta_curso.php"; } ?>
+        </div>
+    </section>
+<?php elseif ($esNuevo): ?>
+    <div class="vacio">
+        <span class="vacio__icono"><i class="fa-solid fa-seedling" aria-hidden="true"></i></span>
+        <p class="vacio__titulo">Muy pronto habrá cursos aquí</p>
+        <p class="vacio__texto">Nuestros docentes están preparando las lecciones. Vuelve en unos días.</p>
+    </div>
+<?php endif; ?>
 
-    <!-- =========================
-         CONTENIDO
-    ========================== -->
-
-    <main class="main-content">
-
-        <header class="topbar">
-
-            <div class="topbar-left">
-
-                <button class="menu-toggle" id="menuToggle">
-                    <i class="fa-solid fa-bars"></i>
-                </button>
-
-                <div>
-                    <p class="panel-label">Mi aprendizaje</p>
-                    <h1>Inicio</h1>
-                </div>
-
-            </div>
-
-            <div class="topbar-right">
-
-                <div class="admin-profile">
-                    <div class="profile-avatar"><?= strtoupper(substr($_SESSION["nombre"] ?? "E", 0, 1)) ?></div>
-                    <div class="profile-info">
-                        <strong><?= htmlspecialchars(($_SESSION["nombre"] ?? "") . " " . ($_SESSION["apellido"] ?? "")) ?></strong>
-                        <span>Estudiante</span>
-                    </div>
-                </div>
-
-            </div>
-
-        </header>
-
-
-        <section class="users-page">
-
-            <div class="users-heading">
-                <div>
-                    <span class="section-label">Bienvenido</span>
-                    <h2><?= htmlspecialchars($_SESSION["nombre"] ?? "") ?>, sigue aprendiendo</h2>
-                    <p>Este es tu progreso en BiGlobal.</p>
-                </div>
-                <a href="cursos.php" class="add-user-btn">
-                    <i class="fa-solid fa-book"></i>
-                    Ver todos los cursos
-                </a>
-            </div>
-
-            <div class="user-stats">
-
-                <div class="user-stat-card">
-                    <div class="user-stat-icon blue"><i class="fa-solid fa-book"></i></div>
-                    <div>
-                        <span>Cursos disponibles</span>
-                        <strong><?= $totalCursosDisponibles ?></strong>
-                    </div>
-                </div>
-
-                <div class="user-stat-card">
-                    <div class="user-stat-icon orange"><i class="fa-solid fa-spinner"></i></div>
-                    <div>
-                        <span>Cursos en progreso</span>
-                        <strong><?= $cursosEnProgreso ?></strong>
-                    </div>
-                </div>
-
-                <div class="user-stat-card">
-                    <div class="user-stat-icon green"><i class="fa-solid fa-list-check"></i></div>
-                    <div>
-                        <span>Lecciones completadas</span>
-                        <strong><?= $leccionesCompletadas ?></strong>
-                    </div>
-                </div>
-
-                <div class="user-stat-card">
-                    <div class="user-stat-icon purple"><i class="fa-solid fa-certificate"></i></div>
-                    <div>
-                        <span>Certificados obtenidos</span>
-                        <strong><?= $totalCertificados ?></strong>
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="users-card" style="padding:22px;">
-
-                <h3 style="margin-top:0;">Continúa donde lo dejaste</h3>
-
-                <?php if (count($cursosContinuar) > 0): ?>
-
-                    <div class="course-grid">
-
-                        <?php foreach ($cursosContinuar as $c): ?>
-
-                            <?php $porcentaje = $c["total_lecciones"] > 0
-                                ? round(($c["lecciones_hechas"] / $c["total_lecciones"]) * 100)
-                                : 0; ?>
-
-                            <div class="course-card">
-                                <div class="course-card-top">
-                                    <div class="course-card-icon"><i class="fa-solid fa-book"></i></div>
-                                    <span class="role admin-role"><?= htmlspecialchars($c["nivel"]) ?></span>
-                                </div>
-                                <h3><?= htmlspecialchars($c["nombre"]) ?></h3>
-                                <div class="course-progress-track">
-                                    <div class="course-progress-fill" style="width: <?= $porcentaje ?>%;"></div>
-                                </div>
-                                <div class="course-progress-label">
-                                    <span><?= $c["lecciones_hechas"] ?>/<?= $c["total_lecciones"] ?> lecciones</span>
-                                    <span><?= $porcentaje ?>%</span>
-                                </div>
-                                <a href="curso.php?id=<?= $c["id"] ?>" class="course-card-btn">
-                                    Continuar <i class="fa-solid fa-arrow-right"></i>
-                                </a>
-                            </div>
-
-                        <?php endforeach; ?>
-
-                    </div>
-
-                <?php else: ?>
-
-                    <div class="empty-state-soft">
-                        <i class="fa-solid fa-graduation-cap"></i>
-                        <p>Todavía no has empezado ningún curso. ¡Explora el catálogo y comienza hoy!</p>
-                        <a href="cursos.php" class="course-card-btn" style="display:inline-flex;">Explorar cursos</a>
-                    </div>
-
-                <?php endif; ?>
-
-            </div>
-
-        </section>
-
-    </main>
-
-</div>
-
-
-<script>
-
-    const menuToggle = document.getElementById("menuToggle");
-    const sidebar = document.querySelector(".sidebar");
-
-    if (menuToggle) {
-
-        menuToggle.addEventListener("click", () => {
-
-            sidebar.classList.toggle("show");
-
-        });
-
-    }
-
-</script>
-
-</body>
-
-</html>
-
+<?php if ($gamificacion) { require __DIR__ . "/_medallas.php"; } ?>
