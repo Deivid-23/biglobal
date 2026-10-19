@@ -18,9 +18,55 @@ require_once __DIR__ . "/sesion.php";
 function protegerSesion(): void
 {
     if (!isset($_SESSION["usuario_id"])) {
-        header("Location: ../auth/login.html");
+        // Si la sesión se cerró porque desactivaron la cuenta, se lo decimos
+        $aviso = !empty($GLOBALS["biglobal_cuenta_cerrada"]) ? "?error=cuenta_inactiva" : "";
+        header("Location: ../auth/login.html" . $aviso);
         exit;
     }
+}
+
+/* =========================================================
+   REFRESCAR LA SESIÓN CON LA BASE DE DATOS
+   El rol y el estado se guardan en la sesión al iniciar. Si después
+   un super admin cambia el rol o desactiva la cuenta, la sesión
+   abierta seguía con los permisos viejos. Por eso, en cada petición
+   con sesión, se vuelven a leer de la BD (una consulta pequeña).
+   Lo llama app/bootstrap.php.
+========================================================= */
+function refrescarSesionUsuario(): void
+{
+    static $hecho = false;
+    if ($hecho || empty($_SESSION["usuario_id"]) || !class_exists("Conexion")) {
+        return;
+    }
+    $hecho = true;
+
+    try {
+        $stmt = Conexion::conectar()->prepare("
+            SELECT u.activo, u.rol_id, r.nombre AS rol
+            FROM usuarios u
+            INNER JOIN roles r ON r.id = u.rol_id
+            WHERE u.id = ?
+            LIMIT 1
+        ");
+        $stmt->execute([(int) $_SESSION["usuario_id"]]);
+        $fila = $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        // Si la BD falla un momento, no sacamos a nadie: la página dará su propio error
+        error_log("[BiGlobal][refrescarSesion] " . $e->getMessage());
+        return;
+    }
+
+    // Cuenta borrada o desactivada: se cierra la sesión en este mismo momento
+    if (!$fila || (int) $fila["activo"] === 0) {
+        $_SESSION = [];
+        session_regenerate_id(true);
+        $GLOBALS["biglobal_cuenta_cerrada"] = true;
+        return;
+    }
+
+    $_SESSION["rol"]    = $fila["rol"];
+    $_SESSION["rol_id"] = (int) $fila["rol_id"];
 }
 
 /* =========================================================

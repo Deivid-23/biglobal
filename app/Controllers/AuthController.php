@@ -22,48 +22,73 @@ class AuthController
         $maxIntentos = max(1, Config::getInt("seg_intentos_login", 5));
         $tiempoBloqueoSegundos = max(1, Config::getInt("seg_bloqueo_minutos", 1)) * 60;
 
-        if (!isset($_SESSION["login_intentos"])) {
-            $_SESSION["login_intentos"] = 0;
+        $correo = mb_strtolower(trim($_POST["correo"] ?? ""));
+        $password = $_POST["password"] ?? "";
+
+        if ($correo === "" || $password === "") {
+            echo json_encode(["success" => false, "message" => "Correo y contraseña son obligatorios."]);
+            exit;
         }
 
-        if (
-            isset($_SESSION["login_bloqueado_hasta"]) &&
-            time() < $_SESSION["login_bloqueado_hasta"]
-        ) {
-            $segundosRestantes = $_SESSION["login_bloqueado_hasta"] - time();
+        if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+            echo json_encode(["success" => false, "message" => "El correo electrónico no es válido."]);
+            exit;
+        }
 
+        /* Límite de intentos guardado en el servidor (ya no en la sesión,
+           que se reiniciaba con solo borrar la cookie):
+             - por cuenta: los fallos de ese correo, venga de donde venga
+             - por IP: un tope más amplio para quien prueba muchos correos */
+        $claveCuenta = "login:correo:" . $correo;
+        $claveIp     = "login:ip:" . LimiteIntentos::ipCliente();
+
+        $espera = max(LimiteIntentos::espera($claveCuenta), LimiteIntentos::espera($claveIp));
+        if ($espera > 0) {
             echo json_encode([
                 "success" => false,
-                "message" => "Demasiados intentos. Inténtalo de nuevo en {$segundosRestantes} segundos."
+                "message" => "Demasiados intentos. Inténtalo de nuevo en {$espera} segundos."
             ]);
             exit;
         }
+
+        /* Mismo mensaje para todo fallo: así nadie averigua qué correos
+           existen, cuáles están inactivos o cuáles se crearon con Google. */
+        $mensajeFallo = "El correo o la contraseña son incorrectos. Si creaste tu cuenta con Google, usa «Continuar con Google».";
 
         try {
 
             $conexion = Conexion::conectar();
 
-            $correo = trim($_POST["correo"] ?? "");
-            $password = $_POST["password"] ?? "";
-
-            if (empty($correo) || empty($password)) {
-                echo json_encode(["success" => false, "message" => "Correo y contraseña son obligatorios."]);
-                exit;
-            }
-
-            if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
-                echo json_encode(["success" => false, "message" => "El correo electrónico no es válido."]);
-                exit;
-            }
-
             $usuario = AuthModel::buscarPorCorreo($conexion, $correo);
 
-            if (!$usuario) {
-                echo json_encode(["success" => false, "message" => "El correo o la contraseña son incorrectos."]);
+            /* Siempre se compara un hash (aunque el correo no exista o la cuenta
+               sea de Google) para que el tiempo de respuesta no delate nada. */
+            $hash = ($usuario && !empty($usuario["password"]))
+                ? $usuario["password"]
+                : '$2y$10$x1Evr22uJowPvyjQpleQQ.KpPzbz.jVgwBs7FHmOw2bnxpMDKYbfW';
+            $passwordCorrecta = password_verify($password, $hash) && $usuario && !empty($usuario["password"]);
+
+            if (!$passwordCorrecta) {
+                LimiteIntentos::fallo($claveCuenta, $maxIntentos, $tiempoBloqueoSegundos);
+                LimiteIntentos::fallo($claveIp, $maxIntentos * 4, $tiempoBloqueoSegundos);
+
+                echo json_encode(["success" => false, "message" => $mensajeFallo]);
                 exit;
             }
 
+            /* Desde aquí la contraseña ya es correcta */
+            LimiteIntentos::limpiar($claveCuenta);
+
             $activo = (int) ($usuario["activo"] ?? 0);
+
+            /* activo = 0 → cuenta inactiva/bloqueada */
+            if ($activo === 0) {
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Tu cuenta está inactiva. Contacta al administrador."
+                ]);
+                exit;
+            }
 
             /* activo = 2 → docente pendiente de aprobación */
             if ($activo === 2) {
@@ -84,42 +109,7 @@ class AuthController
                 exit;
             }
 
-            /* activo = 0 → cuenta inactiva/bloqueada */
-            if ($activo === 0) {
-                echo json_encode([
-                    "success" => false,
-                    "message" => "Tu cuenta está inactiva. Contacta al administrador."
-                ]);
-                exit;
-            }
-
             /* activo = 1 → login normal */
-
-            /* Cuenta creada con Google: no tiene contraseña guardada */
-            if (empty($usuario["password"])) {
-                echo json_encode([
-                    "success" => false,
-                    "message" => "Esta cuenta se creó con Google. Usa «Continuar con Google» o crea una contraseña con «¿Olvidaste tu contraseña?»."
-                ]);
-                exit;
-            }
-
-            if (!password_verify($password, $usuario["password"])) {
-
-                $_SESSION["login_intentos"]++;
-
-                if ($_SESSION["login_intentos"] >= $maxIntentos) {
-                    $_SESSION["login_bloqueado_hasta"] = time() + $tiempoBloqueoSegundos;
-                    $_SESSION["login_intentos"] = 0;
-                }
-
-                echo json_encode(["success" => false, "message" => "El correo o la contraseña son incorrectos."]);
-                exit;
-            }
-
-            $_SESSION["login_intentos"] = 0;
-            unset($_SESSION["login_bloqueado_hasta"]);
-
             session_regenerate_id(true);
 
             $_SESSION["usuario_id"] = $usuario["id"];
@@ -210,6 +200,15 @@ class AuthController
 
             if (AuthModel::correoExiste($conexion, $correo)) {
                 echo json_encode(["success" => false, "message" => "Ya existe una cuenta con ese correo."]);
+                exit;
+            }
+
+            /* Tope de registros: protege la BD y el cupo diario de correos
+               (cada registro avisa al equipo). Por IP y en total por hora. */
+            if (!LimiteIntentos::permitir("registro:ip:" . LimiteIntentos::ipCliente(), 5, 3600)
+                || !LimiteIntentos::permitir("registro:global", 40, 3600)) {
+                error_log("[BiGlobal][registro] Tope de registros alcanzado.");
+                echo json_encode(["success" => false, "message" => "Hay demasiados registros en este momento. Inténtalo de nuevo en un rato."]);
                 exit;
             }
 

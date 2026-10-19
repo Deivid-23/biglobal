@@ -21,6 +21,10 @@ require_once __DIR__ . "/Helpers/Seguridad.php";
 require_once __DIR__ . "/Helpers/Panel.php";
 require_once __DIR__ . "/Helpers/Correo.php";
 require_once __DIR__ . "/Helpers/Notificador.php";
+require_once __DIR__ . "/Helpers/LimiteIntentos.php";
+
+// Rol y estado de la cuenta siempre al día (ver src/auth/proteger.php)
+refrescarSesionUsuario();
 
 /**
  * Loguea el error real en el servidor (nunca al navegador)

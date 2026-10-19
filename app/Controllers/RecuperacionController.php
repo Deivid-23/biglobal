@@ -36,6 +36,11 @@ class RecuperacionController
                 $error = "Escribe un correo válido, por ejemplo nombre@correo.com.";
             } elseif (time() - ($_SESSION["recuperar_ultimo"] ?? 0) < 30) {
                 $error = "Espera unos segundos antes de pedir otro enlace.";
+            } elseif (!LimiteIntentos::permitir("recuperar:ip:" . LimiteIntentos::ipCliente(), 5, 3600)
+                || !LimiteIntentos::permitir("recuperar:global", 60, 3600)) {
+                // Tope en el servidor (no en la sesión): protege el cupo diario de correos
+                error_log("[BiGlobal][recuperar] Tope de solicitudes alcanzado.");
+                $error = "Se pidieron demasiados enlaces. Inténtalo de nuevo en un rato.";
             } else {
                 $_SESSION["recuperar_ultimo"] = time();
                 $enlaceLocal = $this->procesarSolicitud($correo);
