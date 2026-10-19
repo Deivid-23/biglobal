@@ -129,25 +129,8 @@ class AuthController
             $_SESSION["rol_id"]     = $usuario["rol_id"];
             $_SESSION["rol"]        = $usuario["rol"];
 
-            $redireccion = "../index.html";
-
-            switch (strtolower($usuario["rol"])) {
-                case "admin":
-                case "administrador":
-                    $redireccion = "../admin/index.php";
-                    break;
-                case "docente":
-                case "instructor":
-                    $redireccion = "../profesor/index.php";
-                    break;
-                case "estudiante":
-                case "usuario":
-                    $redireccion = "../estudiante/index.php";
-                    break;
-                default:
-                    $redireccion = "../index.html";
-                    break;
-            }
+            /* Cada rol va a su panel (ver panelDeRol en src/auth/proteger.php) */
+            $redireccion = panelDeRol($usuario["rol"]);
 
             echo json_encode([
                 "success" => true,
@@ -268,7 +251,7 @@ class AuthController
             if ($activoInicial === 2) {
 
                 $hayAdminLogueado = isset($_SESSION["usuario_id"])
-                    && in_array(strtolower($_SESSION["rol"] ?? ""), ["admin", "administrador"], true);
+                    && in_array(rolActual(), ["admin", "superadmin"], true);
 
                 if ($hayAdminLogueado) {
                     echo json_encode([
@@ -301,7 +284,7 @@ class AuthController
                ESTUDIANTE (activo = 1)
             ========================================================= */
             $hayAdminLogueado = isset($_SESSION["usuario_id"])
-                && in_array(strtolower($_SESSION["rol"] ?? ""), ["admin", "administrador"], true);
+                && in_array(rolActual(), ["admin", "superadmin"], true);
 
             if ($hayAdminLogueado) {
                 echo json_encode([

@@ -193,23 +193,8 @@ if ($usuarioExistente) {
     }
 
     /* Redirigir según rol */
-    switch (strtolower($usuarioExistente["rol"])) {
-        case "admin":
-        case "administrador":
-            header("Location: ../admin/index.php");
-            exit;
-        case "docente":
-        case "instructor":
-            header("Location: ../profesor/index.php");
-            exit;
-        case "estudiante":
-        case "usuario":
-            header("Location: ../estudiante/index.php");
-            exit;
-        default:
-            header("Location: ../index.html");
-            exit;
-    }
+    header("Location: " . panelDeRol($usuarioExistente["rol"]));
+    exit;
 }
 
 /* =========================================================
