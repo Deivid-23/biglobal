@@ -5,7 +5,7 @@
    ========================================================================== */
 
 body {
-    background-color: var(--blanco);
+    background-color: var(--superficie);
     color: var(--color-texto);
     font-family: var(--fuente-texto);
     margin: 0;
@@ -24,16 +24,16 @@ h6 {
 }
 
 .color-primario {
-    color: var(--color-primario) !important;
+    color: var(--marca-texto) !important;
 }
 
 /* ==========================================================================
    BARRA DE NAVEGACIÓN
    ========================================================================== */
 .barra-navegacion {
-    background-color: var(--blanco);
+    background-color: var(--superficie);
     padding: 1rem 0;
-    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.04);
+    box-shadow: var(--sombra-1);
     position: sticky;
     top: 0;
     z-index: 1000;
@@ -55,7 +55,7 @@ h6 {
     font-family: var(--fuente-titulo);
     font-weight: 800;
     font-size: 1.5rem;
-    color: var(--color-primario);
+    color: var(--marca-texto);
 }
 
 .navbar-nav {
@@ -70,7 +70,7 @@ h6 {
 }
 
 .nav-link:hover {
-    color: var(--color-primario) !important;
+    color: var(--marca-texto) !important;
 }
 
 .botones-acceso {
@@ -114,13 +114,13 @@ h6 {
 
 .btn-principal {
     background-color: var(--color-primario);
-    color: var(--blanco) !important;
+    color: #FFFFFF !important;
     border: 2px solid var(--color-primario);
     box-shadow: var(--sombra-boton);
 }
 
 .btn-secundario {
-    background-color: var(--blanco);
+    background-color: var(--superficie);
     color: var(--azul-700) !important;
     border: 2px solid var(--azul-200);
     box-shadow: 0 3px 0 var(--azul-200);
@@ -129,15 +129,15 @@ h6 {
 .btn-principal:active,
 .btn-secundario:active {
     transform: translateY(2px);
-    box-shadow: 0 1px 0 var(--azul-800);
+    box-shadow: 0 1px 0 var(--azul-sombra);
 }
 
 .btn-secundario:active { box-shadow: 0 1px 0 var(--azul-200); }
 
 @media (hover: hover) and (pointer: fine) {
     .btn-principal:hover {
-        background-color: var(--color-primario-oscuro);
-        border-color: var(--color-primario-oscuro);
+        background-color: var(--azul-hover);
+        border-color: var(--azul-hover);
     }
 
     .btn-secundario:hover {
@@ -156,7 +156,7 @@ h6 {
    ========================================================================== */
 .seccion-hero {
     padding: 5rem 0;
-    background: linear-gradient(180deg, var(--color-secundario) 0%, var(--blanco) 100%);
+    background: linear-gradient(180deg, var(--color-secundario) 0%, var(--superficie) 100%);
     min-height: calc(80vh - 80px);
 }
 
@@ -175,7 +175,7 @@ h6 {
 .etiqueta-alerta {
     display: inline-block;
     background-color: var(--azul-100);
-    color: var(--color-primario-oscuro);
+    color: var(--azul-800);
     font-family: var(--fuente-titulo);
     font-weight: 700;
     font-size: 0.85rem;
@@ -262,7 +262,7 @@ h6 {
     bottom: 30px;
     left: 10%;
     z-index: 3;
-    background: rgba(255, 255, 255, 0.85);
+    background: var(--superficie-vidrio);
     -webkit-backdrop-filter: blur(12px);
     backdrop-filter: blur(12px);
     border: 1px solid rgba(226, 232, 240, 0.8);
@@ -329,7 +329,7 @@ h6 {
     BARRA DE CARACTERÍSTICAS
    ========================================================================== */
 .barra-caracteristicas {
-    background-color: var(--blanco);
+    background-color: var(--superficie);
     border-top: 1px solid var(--borde);
     border-bottom: 1px solid var(--borde);
 }
@@ -353,7 +353,7 @@ h6 {
     width: 48px;
     height: 48px;
     object-fit: contain;
-    color: var(--color-primario);
+    color: var(--marca-texto);
     margin-bottom: 0.8rem;
     transition: transform 0.2s ease;
 }
@@ -372,7 +372,7 @@ h6 {
 }
 
 .tarjeta-ventaja {
-    background-color: var(--blanco);
+    background-color: var(--superficie);
     border: 1px solid var(--borde);
     border-radius: 16px;
     padding: 2rem 1.5rem;
@@ -412,7 +412,7 @@ h6 {
 
 .fondo-azul-suave {
     background-color: var(--azul-100);
-    color: var(--azul-600);
+    color: var(--marca-texto);
 }
 
 .fondo-celeste-suave {
@@ -424,7 +424,7 @@ h6 {
     ESTILOS PARA LA SECCIÓN DEL MÉTODO (CÓMO FUNCIONA)
    ========================================================================== */
 .tarjeta-metodo {
-    background-color: var(--blanco);
+    background-color: var(--superficie);
     border: 1px solid var(--borde);
     border-radius: 16px;
     padding: 2.5rem 2rem;
@@ -447,7 +447,7 @@ h6 {
     right: 1.5rem;
     font-size: 1.5rem;
     font-weight: 800;
-    color: var(--azul-600);
+    color: var(--marca-texto);
     font-family: var(--fuente-titulo);
 }
 
@@ -497,7 +497,7 @@ h6 {
 }
 
 .fondo-verde {
-    background-color: var(--verde-700);
+    background-color: var(--verde-fondo);
 }
 
 .fondo-verde-claro {
@@ -509,7 +509,7 @@ h6 {
 }
 
 .fondo-naranja {
-    background-color: var(--naranja-700);
+    background-color: var(--naranja-fondo);
 }
 
 .fondo-lima {
@@ -522,7 +522,7 @@ h6 {
 
 .etiqueta-curso {
     background-color: rgba(15, 23, 42, 0.22);
-    color: var(--blanco);
+    color: #FFFFFF;
     padding: 0.25rem 0.75rem;
     border-radius: 50px;
     font-size: 0.75rem;
@@ -532,7 +532,7 @@ h6 {
 }
 
 .etiqueta-nivel {
-    background-color: var(--blanco);
+    background-color: var(--superficie);
     color: var(--color-texto);
     padding: 0.25rem 0.75rem;
     border-radius: 50px;
@@ -546,7 +546,7 @@ h6 {
     right: 20px;
     width: 40px;
     height: 40px;
-    background-color: var(--blanco);
+    background-color: var(--superficie);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -619,7 +619,7 @@ h6 {
    ========================================================================== */
 .seccion-planes {
     padding: 5rem 0;
-    background-color: var(--blanco);
+    background-color: var(--superficie);
 }
 
 .tarjeta-plan {
@@ -642,7 +642,7 @@ h6 {
 
 .tarjeta-plan.plan-destacado {
     border-color: var(--color-primario);
-    background: linear-gradient(180deg, var(--color-secundario) 0%, var(--blanco) 100%);
+    background: linear-gradient(180deg, var(--color-secundario) 0%, var(--superficie) 100%);
     box-shadow: 0 20px 25px -5px rgba(37, 99, 235, 0.1);
 }
 
@@ -651,7 +651,7 @@ h6 {
     top: -12px;
     right: 24px;
     background-color: var(--color-primario);
-    color: var(--blanco);
+    color: #FFFFFF;
     font-size: 0.75rem;
     font-weight: 700;
     padding: 0.25rem 0.75rem;
@@ -712,12 +712,12 @@ h6 {
 .accordion-button {
     font-family: var(--fuente-titulo);
     color: var(--color-texto);
-    background-color: var(--blanco);
+    background-color: var(--superficie);
     box-shadow: none !important;
 }
 
 .accordion-button:not(.collapsed) {
-    color: var(--color-primario);
+    color: var(--marca-texto);
     background-color: var(--color-secundario);
 }
 
@@ -738,7 +738,7 @@ h6 {
 .redes-sociales a {
     width: 36px;
     height: 36px;
-    background-color: var(--blanco);
+    background-color: var(--superficie);
     border: 1px solid var(--borde);
     border-radius: 50%;
     display: flex;
@@ -752,7 +752,7 @@ h6 {
 .redes-sociales a:hover {
     background-color: var(--color-primario);
     border-color: var(--color-primario);
-    color: var(--blanco);
+    color: #FFFFFF;
 }
 
 /* Footer */
@@ -769,7 +769,7 @@ h6 {
 
 .enlaces-footer a:hover,
 .enlace-legal:hover {
-    color: var(--color-primario);
+    color: var(--marca-texto);
 }
 
 .linea-footer {
@@ -877,3 +877,56 @@ html { scroll-behavior: smooth; scroll-padding-top: 88px; }
 .nav-link:focus-visible,
 .enlaces-footer a:focus-visible,
 .enlace-legal:focus-visible { outline: 2px solid var(--azul-600); outline-offset: 2px; border-radius: 4px; }
+
+/* Botón de tema + menú de celular, juntos a la derecha de la barra */
+.acciones-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+}
+
+@media (min-width: 992px) {
+    .acciones-nav { margin-left: 1rem; }
+}
+
+.navbar-toggler { border-color: var(--borde); }
+:root[data-tema="oscuro"] .navbar-toggler-icon { filter: invert(1) brightness(1.4); }
+:root[data-tema="oscuro"] .logo-img { filter: brightness(1.15); }
+
+/* ==========================================================================
+   ANIMACIÓN DEL HERO
+   - .hero-flotar: sube y baja muy suave, sin parar (solo transform).
+   - La imagen se inclina hacia el cursor (lo calcula js/inicio.js).
+   - Con "reducir movimiento" activado en el sistema, todo queda quieto.
+   ========================================================================== */
+.hero-flotar {
+    position: relative;
+    z-index: 2;
+    animation: hero-flotar 6s ease-in-out infinite alternate;
+    will-change: transform;
+}
+
+@keyframes hero-flotar {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-12px); }
+}
+
+.imagen-hero-estudiantes {
+    transform: perspective(900px) rotateX(0deg) rotateY(0deg) scale(1);
+    transition: transform 300ms var(--ease-out);
+    transform-origin: 50% 60%;
+}
+
+/* Mientras el cursor está encima, la imagen responde rápido; al salir vuelve suave */
+.hero-flotar.esta-encima .imagen-hero-estudiantes { transition-duration: 120ms; }
+
+.fondo-resplandor-hero {
+    transition: transform 400ms var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-flotar { animation: none; }
+    .imagen-hero-estudiantes { transition: none; transform: none; }
+    .fondo-resplandor-hero { transition: none; }
+}

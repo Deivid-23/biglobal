@@ -102,8 +102,132 @@
     /* ---------- Foco con teclado ---------- */
     --foco: 0 0 0 3px rgba(37, 99, 235, 0.35);
 
+    /* ---------- Tokens con función (cambian en modo oscuro) ----------
+       Úsalos en vez del color directo cuando el color cumple un papel:
+       "texto de marca", "fondo de botón al pasar el mouse", etc. */
+    --marca-texto:       var(--azul-600);   /* logo, íconos y títulos azules */
+    --azul-hover:        #1D4ED8;           /* fondo del botón principal al pasar el mouse */
+    --azul-sombra:       #1E40AF;           /* "borde inferior" 3D de los botones */
+    --verde-fondo:       #15803D;           /* fondo de botones y cabeceras verdes */
+    --verde-sombra:      #14532D;
+    --naranja-fondo:     #C2410C;           /* cabecera naranja de cursos */
+    --neutro-50:         #F8FAFC;
+    --neutro-100:        #EEF2F7;           /* chips y marcas grises */
+    --celeste-800:       #075985;
+    --ambar-200:         #FDE68A;
+    --texto-placeholder: #64748B;
+    --toast-fondo:       #1E293B;
+    --superficie-vidrio: rgba(255, 255, 255, 0.92);  /* barras fijas con desenfoque */
+
     color-scheme: light;
 }
+
+/* ==========================================================================
+   MODO OSCURO
+   --------------------------------------------------------------------------
+   Se activa con <html data-tema="oscuro"> (lo pone src/js/tema.js antes
+   de pintar la página). Solo cambian las variables: ningún componente
+   necesita estilos duplicados.
+   - Los tonos claros (50-300) que se usan como FONDO pasan a azules oscuros.
+   - Los tonos oscuros (700-900) que se usan como TEXTO pasan a tonos claros.
+   - Los colores de botón (azul-600, verde-fondo...) se quedan igual para que
+     el texto blanco siga cumpliendo contraste AA.
+   Contraste revisado: texto 14.7:1, texto-suave 8.3:1, enlaces 9.6:1.
+   ========================================================================== */
+:root[data-tema="oscuro"] {
+    --azul-50:  #0F1D38;
+    --azul-100: #17305C;
+    --azul-200: #1F3F78;
+    --azul-300: #3B5F9E;
+    --azul-700: #93C5FD;
+    --azul-800: #BFDBFE;
+    --azul-900: #DBEAFE;
+    --celeste-50:  #0E1E33;
+    --celeste-100: #0F2E45;
+    --celeste-600: #7DD3FC;
+    --celeste-800: #BAE6FD;
+
+    --verde-50:  #0D2219;
+    --verde-100: #11331F;
+    --verde-700: #86EFAC;
+    --naranja-50:  #2A1A0C;
+    --naranja-100: #3A230F;
+    --naranja-700: #FDBA74;
+    --rojo-50:  #2A1215;
+    --rojo-100: #3D171C;
+    --rojo-700: #FCA5A5;
+    --ambar-100: #33270B;
+    --ambar-200: #5C4512;
+    --ambar-700: #FCD34D;
+
+    --texto:        #E6EDF7;
+    --texto-suave:  #A7B4C8;
+    --texto-tenue:  #7D8BA3;
+    --superficie:   #111A2E;
+    --fondo-app:    #0B1220;
+    --borde:        #22324F;
+    --borde-fuerte: #2E4366;
+
+    --marca-texto:       #60A5FA;
+    --neutro-50:         #0F1729;
+    --neutro-100:        #1C2840;
+    --texto-placeholder: #8592A8;
+    --toast-fondo:       #22324F;
+    --superficie-vidrio: rgba(17, 26, 46, 0.92);
+    --blanco:            #111A2E;   /* en style.css "blanco" se usa como fondo de sección */
+
+    --sombra-1: 0 1px 2px rgba(0, 0, 0, 0.35);
+    --sombra-2: 0 4px 14px -4px rgba(0, 0, 0, 0.55);
+    --sombra-3: 0 18px 40px -16px rgba(0, 0, 0, 0.7);
+    --foco: 0 0 0 3px rgba(96, 165, 250, 0.45);
+
+    color-scheme: dark;
+}
+
+/* Transición suave SOLO al cambiar de tema con el botón (no al cargar) */
+:root[data-tema-cambiando] *,
+:root[data-tema-cambiando] *::before,
+:root[data-tema-cambiando] *::after {
+    transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease, fill 200ms ease !important;
+}
+
+/* ==========================================================================
+   BOTÓN DE TEMA (el mismo en todas las pantallas)
+   <button class="boton-tema" type="button" data-alternar-tema>...</button>
+   ========================================================================== */
+.boton-tema {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 auto;
+    display: inline-grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid var(--borde);
+    border-radius: var(--radio);
+    background: var(--superficie);
+    color: var(--texto-suave);
+    cursor: pointer;
+    overflow: hidden;
+    transition: background-color var(--dur) ease, color var(--dur) ease, transform var(--dur-rapida) var(--ease-out);
+}
+
+.boton-tema:active { transform: scale(0.94); }
+
+@media (hover: hover) and (pointer: fine) {
+    .boton-tema:hover { background: var(--azul-50); color: var(--marca-texto); }
+}
+
+/* Sol y luna: se cruzan girando un poco al cambiar */
+.boton-tema i {
+    grid-area: 1 / 1;
+    font-size: 1.05rem;
+    transition: transform 260ms var(--ease-out), opacity 180ms ease;
+}
+
+.boton-tema .icono-luna { transform: rotate(-30deg) scale(0.6); opacity: 0; }
+:root[data-tema="oscuro"] .boton-tema .icono-sol  { transform: rotate(30deg) scale(0.6); opacity: 0; }
+:root[data-tema="oscuro"] .boton-tema .icono-luna { transform: none; opacity: 1; }
 
 /* ==========================================================================
    BASE COMPARTIDA

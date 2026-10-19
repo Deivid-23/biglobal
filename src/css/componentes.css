@@ -50,7 +50,7 @@
 }
 
 .boton--primario:active:not(:disabled) {
-    box-shadow: 0 1px 0 var(--azul-800);
+    box-shadow: 0 1px 0 var(--azul-sombra);
 }
 
 .boton--secundario {
@@ -66,9 +66,9 @@
 }
 
 .boton--exito {
-    background: var(--verde-700);
+    background: var(--verde-fondo);
     color: #fff;
-    box-shadow: 0 3px 0 #14532D;
+    box-shadow: 0 3px 0 var(--verde-sombra);
 }
 
 .boton--peligro {
@@ -82,7 +82,7 @@
 
 /* Hover solo en dispositivos con mouse (en celular el hover se "pega") */
 @media (hover: hover) and (pointer: fine) {
-    .boton--primario:hover:not(:disabled)   { background: var(--azul-700); }
+    .boton--primario:hover:not(:disabled)   { background: var(--azul-hover); }
     .boton--secundario:hover:not(:disabled) { background: var(--azul-50); border-color: var(--azul-300); }
     .boton--fantasma:hover:not(:disabled)   { background: var(--azul-50); }
     .boton--exito:hover:not(:disabled)      { background: #166534; }
@@ -150,7 +150,7 @@
 
 textarea.entrada { min-height: 110px; padding: var(--esp-3) var(--esp-4); resize: vertical; }
 
-.entrada::placeholder { color: #64748B; }
+.entrada::placeholder { color: var(--texto-placeholder); }
 
 .entrada:focus {
     outline: none;
@@ -178,7 +178,7 @@ textarea.entrada { min-height: 110px; padding: var(--esp-3) var(--esp-4); resize
 .aviso--info   { background: var(--azul-50);   border-color: var(--azul-100);  color: var(--azul-800); }
 .aviso--exito  { background: var(--verde-50);  border-color: var(--verde-100); color: var(--verde-700); }
 .aviso--error  { background: var(--rojo-50);   border-color: var(--rojo-100);  color: var(--rojo-700); }
-.aviso--alerta { background: var(--ambar-100); border-color: #FDE68A;          color: var(--ambar-700); }
+.aviso--alerta { background: var(--ambar-100); border-color: var(--ambar-200);         color: var(--ambar-700); }
 
 /* Entrada suave de los avisos que aparecen con JavaScript */
 .aviso[data-nuevo] {
@@ -206,7 +206,7 @@ textarea.entrada { min-height: 110px; padding: var(--esp-3) var(--esp-4); resize
 
 .chip--exito   { background: var(--verde-100);   color: var(--verde-700); }
 .chip--logro   { background: var(--naranja-100); color: var(--naranja-700); }
-.chip--neutro  { background: #EEF2F7;            color: var(--texto-suave); }
+.chip--neutro  { background: var(--neutro-100);          color: var(--texto-suave); }
 
 /* ---------- BARRA DE PROGRESO ---------- */
 .progreso {
@@ -250,7 +250,7 @@ textarea.entrada { min-height: 110px; padding: var(--esp-3) var(--esp-4); resize
     place-items: center;
     border-radius: var(--radio-lg);
     background: var(--azul-50);
-    color: var(--azul-600);
+    color: var(--marca-texto);
     font-size: 1.4rem;
 }
 
@@ -283,7 +283,7 @@ textarea.entrada { min-height: 110px; padding: var(--esp-3) var(--esp-4); resize
     gap: var(--esp-3);
     padding: var(--esp-3) var(--esp-4);
     border-radius: var(--radio);
-    background: var(--texto);
+    background: var(--toast-fondo);
     color: #fff;
     font-family: var(--fuente-texto);
     font-size: var(--texto-sm);
@@ -307,4 +307,20 @@ textarea.entrada { min-height: 110px; padding: var(--esp-3) var(--esp-4); resize
 
 @keyframes entrar-toast {
     from { opacity: 0; transform: translateY(12px); }
+}
+
+/* ---------- Ubicación del botón de tema ---------- */
+/* Grupo de acciones a la derecha de una barra superior */
+.cabecera-acciones {
+    display: flex;
+    align-items: center;
+    gap: var(--esp-2);
+}
+
+/* Pantallas sin barra (recuperar contraseña, elegir rol, 403): esquina superior derecha */
+.tema-esquina {
+    position: fixed;
+    top: calc(var(--esp-4) + env(safe-area-inset-top));
+    right: var(--esp-4);
+    z-index: 50;
 }

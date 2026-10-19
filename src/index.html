@@ -4,6 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#EFF6FF">
+    <!-- Tema claro/oscuro: va primero para que no haya parpadeo -->
+    <script src="js/tema.js"></script>
     <title>BiGlobal - Aprende Idiomas y LSC</title>
 
     <!-- Bootstrap -->
@@ -36,10 +39,17 @@
                     <span class="logo-texto">BiGlobal</span>
                 </a>
 
+                <!-- Botón de tema + menú de celular (siempre visibles en la barra) -->
+                <div class="acciones-nav order-lg-3">
+                    <button class="boton-tema" type="button" data-alternar-tema aria-label="Cambiar a modo oscuro">
+                        <i class="fa-solid fa-sun icono-sol" aria-hidden="true"></i>
+                        <i class="fa-solid fa-moon icono-luna" aria-hidden="true"></i>
+                    </button>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal"
                     aria-controls="menuPrincipal" aria-expanded="false" aria-label="Abrir menú de navegación">
                     <span class="navbar-toggler-icon"></span>
                 </button>
+                </div>
 
                 <div class="collapse navbar-collapse" id="menuPrincipal">
                     <ul class="navbar-nav mx-auto">
@@ -87,8 +97,11 @@
                         <div class="fondo-resplandor-hero"></div>
 
                         <!-- Imagen principal -->
-                        <img src="img/img-hero.png" alt="Estudiantes bilingües y de LSC en BiGlobal"
-                            class="imagen-hero-estudiantes img-fluid position-relative">
+                        <!-- hero-flotar: flotación continua · la imagen: inclinación al pasar el mouse -->
+                        <div class="hero-flotar" data-hero-inclinar>
+                            <img src="img/img-hero.png" alt="Estudiantes bilingües y de LSC en BiGlobal"
+                                class="imagen-hero-estudiantes img-fluid position-relative" width="520" height="520">
+                        </div>
 
                         <!-- Tarjeta flotante decorativa -->
                         <div class="tarjeta-flotante-hero d-flex align-items-center gap-2 gap-sm-3">
@@ -96,7 +109,7 @@
         <i class="fa-solid fa-circle-check"></i>
     </div>
     <div class="text-start">
-        <span class="d-block fw-bold small text-dark">Aprendizaje real</span>
+        <span class="d-block fw-bold small">Aprendizaje real</span>
         <span class="d-block text-muted texto-pequeno">Inglés • Español • LSC</span>
     </div>
 </div>

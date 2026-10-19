@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="js/tema.js"></script>
     <title>Términos de servicio | BiGlobal</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Manrope:wght@700;800&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -20,7 +21,13 @@
 <header class="pagina-cabecera">
     <div class="pagina-cabecera__barra">
         <a class="pagina-logo" href="index.html"><img src="img/logo-Biglobal.png" alt="" width="34" height="34"> BiGlobal</a>
-        <a class="boton boton--secundario boton--sm" href="index.html">Volver al inicio</a>
+        <div class="cabecera-acciones">
+            <a class="boton boton--secundario boton--sm" href="index.html">Volver al inicio</a>
+            <button class="boton-tema" type="button" data-alternar-tema aria-label="Cambiar a modo oscuro">
+                <i class="fa-solid fa-sun icono-sol" aria-hidden="true"></i>
+                <i class="fa-solid fa-moon icono-luna" aria-hidden="true"></i>
+            </button>
+        </div>
     </div>
     <div class="pagina-titulo">
         <h1>Términos de servicio</h1>

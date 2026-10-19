@@ -53,7 +53,7 @@ a { color: var(--azul-700); text-underline-offset: 3px; }
     align-items: center;
     gap: var(--esp-3);
     text-decoration: none;
-    color: var(--azul-600);
+    color: var(--marca-texto);
     font-family: var(--fuente-titulo);
     font-weight: 800;
     font-size: 1.5rem;
@@ -70,7 +70,7 @@ a { color: var(--azul-700); text-underline-offset: 3px; }
     max-width: 16ch;
 }
 
-.marca-mensaje h2 span { color: var(--azul-600); }
+.marca-mensaje h2 span { color: var(--marca-texto); }
 
 .marca-mensaje p {
     margin-top: var(--esp-4);
@@ -104,7 +104,7 @@ a { color: var(--azul-700); text-underline-offset: 3px; }
     place-items: center;
     border-radius: var(--radio-sm);
     background: var(--superficie);
-    color: var(--azul-600);
+    color: var(--marca-texto);
     box-shadow: var(--sombra-1);
     font-size: 0.9rem;
 }
@@ -483,3 +483,6 @@ a { color: var(--azul-700); text-underline-offset: 3px; }
 
 .opcion-grande strong { display: block; font-family: var(--fuente-titulo); }
 .opcion-grande span { color: var(--texto-suave); font-size: var(--texto-sm); }
+
+/* En escritorio la cabecera solo tiene "Volver" y el botón de tema, a la derecha */
+.auth-movil-cabecera .cabecera-acciones { margin-left: auto; }

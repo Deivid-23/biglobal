@@ -18,6 +18,7 @@ require_once __DIR__ . "/../src/bd/conexion.php";
 require_once __DIR__ . "/../src/auth/csrf.php";
 require_once __DIR__ . "/Helpers/Config.php";
 require_once __DIR__ . "/Helpers/Seguridad.php";
+require_once __DIR__ . "/Helpers/Panel.php";
 
 /**
  * Loguea el error real en el servidor (nunca al navegador)

@@ -15,10 +15,14 @@ $menu = [
 ];
 ?>
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es"
+      data-tema-usuario="<?= e(Panel::temaGuardado()) ?>"
+      data-tema-url="../auth/guardar_tema.php"
+      data-csrf="<?= e(generarCsrfToken()) ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <script src="../js/tema.js"></script>
     <meta name="theme-color" content="#FFFFFF">
     <title><?= e($titulo) ?> | BiGlobal</title>
 
@@ -38,10 +42,16 @@ $menu = [
 
     <!-- ================= BARRA LATERAL (escritorio) ================= -->
     <aside class="est-lateral" aria-label="Menú del estudiante">
-        <a class="est-marca" href="index.php">
-            <img src="../img/logo-Biglobal.png" alt="" width="36" height="36">
-            <span>BiGlobal</span>
-        </a>
+        <div class="est-lateral__cabecera">
+            <a class="est-marca" href="index.php">
+                <img src="../img/logo-Biglobal.png" alt="" width="36" height="36">
+                <span>BiGlobal</span>
+            </a>
+            <button class="boton-tema" type="button" data-alternar-tema aria-label="Cambiar a modo oscuro">
+                <i class="fa-solid fa-sun icono-sol" aria-hidden="true"></i>
+                <i class="fa-solid fa-moon icono-luna" aria-hidden="true"></i>
+            </button>
+        </div>
 
         <nav class="est-nav" aria-label="Principal">
             <?php foreach ($menu as $item): $activo = $paginaActiva === $item["page"]; ?>
@@ -80,9 +90,15 @@ $menu = [
                 <img src="../img/logo-Biglobal.png" alt="" width="32" height="32">
                 <span>BiGlobal</span>
             </a>
+            <div class="cabecera-acciones">
+                <button class="boton-tema" type="button" data-alternar-tema aria-label="Cambiar a modo oscuro">
+                    <i class="fa-solid fa-sun icono-sol" aria-hidden="true"></i>
+                    <i class="fa-solid fa-moon icono-luna" aria-hidden="true"></i>
+                </button>
             <a class="est-avatar est-avatar--boton" href="index.php?page=perfil" aria-label="Mi perfil">
                 <?= e($estudiante["iniciales"]) ?>
             </a>
+            </div>
         </header>
 
         <main id="contenido" class="est-principal" tabindex="-1">

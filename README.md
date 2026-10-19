@@ -17,7 +17,7 @@ BiGlobal/
 │   ├── bootstrap.php         # carga config, sesión, conexión, CSRF y helpers
 │   ├── Controllers/          # AuthController, EstudianteController, RecuperacionController, Admin/*
 │   ├── Models/               # consultas a la BD (siempre con PDO preparado)
-│   ├── Helpers/              # Config.php, Seguridad.php, Correo.php   (¡"Helpers" con H mayúscula!)
+│   ├── Helpers/              # Config, Seguridad, Correo, Panel (layout de paneles)  (¡"Helpers" con H mayúscula!)
 │   └── Views/                # HTML de estudiante, auth y admin (MVC)
 ├── config/config.php         # lee .env / variables de entorno
 ├── database/
@@ -32,9 +32,10 @@ BiGlobal/
 │   ├── css/style.css · auth.css · paginas.css
 │   ├── auth/                 # login, registro, Google, recuperar/restablecer contraseña
 │   ├── estudiante/           # panel del estudiante (rutas delgadas → controlador)
-│   ├── admin/                # panel admin (index.php + css/admin.css compilado)
+│   ├── admin/                # panel admin (index.php = enrutador → AdminController)
+│   ├── superadmin/           # panel del super administrador (SuperAdminController)
 │   └── profesor/             # módulo del otro integrante (no se modificó)
-├── tools/                    # scripts de terminal (hash de contraseña, Tailwind)
+├── tools/                    # terminal: generar_hash, probar_conexion, respaldar_bd, ejecutar_sql
 └── recursos_sin_usar/        # imágenes que no usa ninguna página (no se despliegan)
 ```
 
@@ -42,7 +43,8 @@ BiGlobal/
 
 | Dato | Dónde | Valores |
 |---|---|---|
-| Rol | `usuarios.rol_id` → `roles` | 1 `admin`, 2 `estudiante`, 3 `docente` |
+| Rol | `usuarios.rol_id` → `roles` | 1 `admin`, 2 `estudiante`, 3 `docente`, 4 `superadmin` |
+| Tema | `usuarios.tema` | `claro`, `oscuro` o NULL (usa el del sistema) |
 | Estado de la cuenta | `usuarios.activo` | 0 inactivo/rechazado · 1 activo · 2 docente pendiente |
 | Publicado | `cursos.estado`, `lecciones.estado`, `idiomas.estado` | 1 sí · 0 no |
 | Progreso | `progreso` | una fila por lección completada |
@@ -72,9 +74,14 @@ que aparece al final de `database/schema.sql`.
   `.progreso`, `.vacio`, `.toast-biglobal`… Los usan login, estudiante, páginas legales y admin.
 - **Movimiento**: todo por debajo de 300 ms, curva `--ease-out`, y se apaga con
   `prefers-reduced-motion`.
-- **Admin**: Tailwind ya no corre en el navegador. Se compila a `src/admin/css/admin.css`
-  (ver `tools/tailwind/LEEME.md`). El color de acento se guarda en `configuracion.color_acento`
-  y por defecto es `blue`.
+- **Modo claro / oscuro**: `src/js/tema.js` se carga en el `<head>` antes del CSS (sin parpadeo).
+  Orden: tema guardado en la cuenta → último elegido en el navegador → el del sistema.
+  El botón (`data-alternar-tema`) está en la barra superior de todas las pantallas y guarda la
+  elección en `usuarios.tema` vía `src/auth/guardar_tema.php`. El modo oscuro solo redefine
+  variables en `tokens.css` (`:root[data-tema="oscuro"]`); contraste AA revisado.
+- **Paneles (admin, super admin, profesor)**: un solo layout (`app/Views/panel/`, `src/css/panel.css`,
+  `src/js/panel.js`) con el mismo estilo del panel del estudiante. Ya no se usa Tailwind.
+  El color de acento (`configuracion.color_acento`, por defecto `blue`) cambia los botones principales.
 - **Página principal**: sigue usando Bootstrap 5 para la rejilla, el menú y el acordeón,
   pero los colores, botones y fuentes salen de los tokens.
 
@@ -94,6 +101,20 @@ que aparece al final de `database/schema.sql`.
 `cursos.php`, `curso.php`, `certificados.php` y `completar_leccion.php` siguen funcionando.
 En celular hay barra inferior de navegación; en escritorio, barra lateral.
 
+## 5b. Roles y paneles
+
+| Rol | Panel | Puede |
+|---|---|---|
+| `superadmin` | `src/superadmin/` + todo `src/admin/` | Todo lo del admin + **Cuentas y roles** (crear admins, cambiar roles, activar/desactivar, borrar definitivamente) y **Configuración global** (general, apariencia, notificaciones, seguridad, correo, sistema) |
+| `admin` | `src/admin/` | Contenido (cursos, idiomas, lecciones, actividades), crear estudiantes y docentes, aprobar/rechazar docentes, su perfil |
+| `docente` | `src/profesor/` | Sus cursos, lecciones y actividades (solo si está aprobado: `activo = 1`) |
+| `estudiante` | `src/estudiante/` | Aprender, progreso, certificados, perfil |
+
+- Los permisos se validan **en el servidor**: `protegerRol()` y `protegerSuperAdmin()` en `src/auth/proteger.php`.
+  Un admin que escriba la URL o envíe el formulario a mano recibe 403 o un error.
+- Siempre queda al menos un super administrador activo: nadie puede cambiarse el rol, desactivarse
+  ni borrarse a sí mismo, y no se puede quitar el último. El primero se creó con `database/superadmin_y_tema.sql`.
+
 ## 6. Recuperación de contraseña
 
 `auth/recuperar.php` → correo con enlace → `auth/restablecer.php?token=…`
@@ -108,8 +129,8 @@ En celular hay barra inferior de navegación; en escritorio, barra lateral.
 ## 7. Seguridad
 
 - Consultas preparadas (PDO) en todo el código propio; `htmlspecialchars` al imprimir.
-- CSRF en login, registro, elegir rol, recuperar/restablecer, completar lección y todos los
-  formularios del admin (incluido el modal "Nuevo").
+- CSRF en login, registro, elegir rol, recuperar/restablecer, completar lección, guardar tema y todos los
+  formularios de los paneles (admin, super admin, profesor).
 - Cookies de sesión `HttpOnly`, `SameSite=Lax` y `Secure` en HTTPS.
 - Contraseñas con `password_hash`; las reglas (largo, mayúscula, número) salen de
   Configuración > Seguridad y se aplican en registro, admin y recuperación.

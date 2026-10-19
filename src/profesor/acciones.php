@@ -3,6 +3,7 @@
 require_once __DIR__ . "/../../app/bootstrap.php";
 
 protegerRol("docente");
+require_once __DIR__ . "/verificar_aprobado.php";
 
 $conexion = Conexion::conectar();
 $docenteId = (int) $_SESSION["usuario_id"];

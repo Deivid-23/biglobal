@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <script src="../js/tema.js"></script>
     <meta name="theme-color" content="#EFF6FF">
     <meta name="robots" content="noindex">
     <title><?= e($tituloPagina) ?> | BiGlobal</title>
@@ -16,6 +17,12 @@
     <link rel="stylesheet" href="../css/auth.css">
 </head>
 <body class="auth-body">
+<div class="tema-esquina">
+    <button class="boton-tema" type="button" data-alternar-tema aria-label="Cambiar a modo oscuro">
+        <i class="fa-solid fa-sun icono-sol" aria-hidden="true"></i>
+        <i class="fa-solid fa-moon icono-luna" aria-hidden="true"></i>
+    </button>
+</div>
 <main class="auth-shell" id="contenido">
     <a class="marca-logo" href="../index.html">
         <img src="../img/logo-Biglobal.png" alt="" width="40" height="40"> BiGlobal

@@ -1,25 +1,24 @@
 <?php
-require_once __DIR__ . "/../auth/proteger.php";
-require_once __DIR__ . "/../bd/conexion.php";
-require_once __DIR__ . "/../auth/csrf.php";
+
+/**
+ * Acciones sobre las solicitudes de docentes (solo POST).
+ *
+ *   aprobar   -> admin y super administrador
+ *   rechazar  -> admin y super administrador (desactiva, no borra)
+ *   eliminar  -> SOLO super administrador (borrado definitivo)
+ *
+ * El permiso se revisa aquí, en el servidor: aunque un admin envíe
+ * el formulario a mano, "eliminar" le responde 403.
+ */
+
+require_once __DIR__ . "/../../app/bootstrap.php";
 
 protegerRol("admin");
 
-$conexion = Conexion::conectar();
-
-/* Redirigir siempre a solicitudes */
-function volverCon(string $tipo, string $mensaje): void
-{
-    $_SESSION["flash_solicitudes"] = [
-        "tipo"    => $tipo,
-        "mensaje" => $mensaje,
-    ];
-    header("Location: index.php?page=solicitudes");
-    exit;
-}
+$volver = "index.php?page=solicitudes";
 
 if ($_SERVER["REQUEST_METHOD"] !== "POST") {
-    header("Location: index.php?page=solicitudes");
+    header("Location: " . $volver);
     exit;
 }
 
@@ -29,51 +28,48 @@ $accion = $_POST["accion"] ?? "";
 $id     = (int) ($_POST["id"] ?? 0);
 
 if ($id <= 0) {
-    volverCon("error", "ID inválido.");
+    Panel::volver($volver, "error", "Solicitud no válida.");
+}
+
+if ($accion === "eliminar" && !esSuperAdmin()) {
+    http_response_code(403);
+    Panel::volver($volver, "error", "Solo el super administrador puede eliminar cuentas de forma definitiva.");
 }
 
 try {
+    $conexion = Conexion::conectar();
 
-    /* Verificar que sea un docente */
+    /* Solo se actúa sobre cuentas que de verdad son de docente */
     $stmt = $conexion->prepare("
-        SELECT u.id, u.nombre, u.activo
-        FROM usuarios u
+        SELECT u.id FROM usuarios u
         INNER JOIN roles r ON u.rol_id = r.id
-        WHERE u.id = ? AND LOWER(r.nombre) = 'docente'
+        WHERE u.id = ? AND r.nombre = 'docente'
         LIMIT 1
     ");
     $stmt->execute([$id]);
-    $docente = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if (!$docente) {
-        volverCon("error", "Docente no encontrado.");
+    if (!$stmt->fetch()) {
+        Panel::volver($volver, "error", "Docente no encontrado.");
     }
 
     switch ($accion) {
-
         case "aprobar":
-            $stmt = $conexion->prepare("UPDATE usuarios SET activo = 1 WHERE id = ?");
-            $stmt->execute([$id]);
-            volverCon("ok", "Docente aprobado correctamente.");
-            break;
+            $conexion->prepare("UPDATE usuarios SET activo = 1 WHERE id = ?")->execute([$id]);
+            Panel::volver($volver, "ok", "Docente aprobado. Ya puede entrar a su panel.");
 
         case "rechazar":
-            $stmt = $conexion->prepare("UPDATE usuarios SET activo = 0 WHERE id = ?");
-            $stmt->execute([$id]);
-            volverCon("ok", "Docente rechazado.");
-            break;
+            $conexion->prepare("UPDATE usuarios SET activo = 0 WHERE id = ?")->execute([$id]);
+            Panel::volver($volver, "ok", "Docente desactivado.");
 
         case "eliminar":
-            $stmt = $conexion->prepare("DELETE FROM usuarios WHERE id = ?");
-            $stmt->execute([$id]);
-            volverCon("ok", "Docente eliminado definitivamente.");
-            break;
+            $conexion->prepare("DELETE FROM usuarios WHERE id = ?")->execute([$id]);
+            Panel::volver($volver, "ok", "Cuenta eliminada definitivamente.");
 
         default:
-            volverCon("error", "Acción no reconocida.");
+            Panel::volver($volver, "error", "Acción no reconocida.");
     }
 
 } catch (PDOException $e) {
     error_log("[BiGlobal][solicitudes] " . $e->getMessage());
-    volverCon("error", "Error de base de datos. Intenta de nuevo.");
+    Panel::volver($volver, "error", "Error de base de datos. Intenta de nuevo.");
 }

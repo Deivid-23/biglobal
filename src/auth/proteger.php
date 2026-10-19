@@ -62,7 +62,7 @@ function esSuperAdmin(): bool
 function panelDeRol(string $rol): string
 {
     switch (normalizarRol($rol)) {
-        case "superadmin": return "../admin/index.php"; // provisional, hasta crear su panel
+        case "superadmin": return "../superadmin/index.php";
         case "admin":      return "../admin/index.php";
         case "docente":    return "../profesor/index.php";
         case "estudiante": return "../estudiante/index.php";

@@ -65,7 +65,7 @@ a { color: var(--azul-700); text-underline-offset: 3px; }
     gap: var(--esp-2);
     padding: 0 var(--esp-2);
     text-decoration: none;
-    color: var(--azul-600);
+    color: var(--marca-texto);
     font-family: var(--fuente-titulo);
     font-weight: 800;
     font-size: 1.3rem;
@@ -154,7 +154,7 @@ a { color: var(--azul-700); text-underline-offset: 3px; }
     align-items: center;
     justify-content: space-between;
     padding: calc(var(--esp-2) + env(safe-area-inset-top)) var(--esp-4) var(--esp-2);
-    background: rgba(255, 255, 255, 0.92);
+    background: var(--superficie-vidrio);
     backdrop-filter: saturate(1.4) blur(10px);
     border-bottom: 1px solid var(--borde);
 }
@@ -178,7 +178,7 @@ a { color: var(--azul-700); text-underline-offset: 3px; }
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     padding: 6px var(--esp-2) calc(6px + env(safe-area-inset-bottom));
-    background: rgba(255, 255, 255, 0.96);
+    background: var(--superficie-vidrio);
     backdrop-filter: saturate(1.4) blur(10px);
     border-top: 1px solid var(--borde);
 }
@@ -305,7 +305,7 @@ a { color: var(--azul-700); text-underline-offset: 3px; }
 
 .resumen__dato { display: flex; align-items: center; gap: var(--esp-2); color: var(--texto-suave); font-size: var(--texto-sm); }
 .resumen__dato strong { color: var(--texto); font-family: var(--fuente-titulo); font-size: var(--texto-lg); }
-.resumen__icono { color: var(--azul-600); }
+.resumen__icono { color: var(--marca-texto); }
 .resumen__icono--verde { color: var(--verde-600); }
 .resumen__icono--naranja { color: var(--naranja-500); }
 
@@ -338,7 +338,7 @@ a { color: var(--azul-700); text-underline-offset: 3px; }
     place-items: center;
     border-radius: 50%;
     font-size: 1.35rem;
-    background: #EEF2F7;
+    background: var(--neutro-100);
     color: var(--texto-tenue);
 }
 
@@ -361,7 +361,7 @@ a { color: var(--azul-700); text-underline-offset: 3px; }
 }
 
 /* Nivel: azul de base, barra verde de progreso */
-.juego__nivel .juego__icono { background: var(--azul-100); color: var(--azul-600); }
+.juego__nivel .juego__icono { background: var(--azul-100); color: var(--marca-texto); }
 .juego__nivel-cuerpo { display: grid; gap: var(--esp-2); }
 .juego__nivel .juego__numero { display: flex; align-items: baseline; justify-content: space-between; gap: var(--esp-2); }
 .juego__xp { font-size: var(--texto-sm); color: var(--verde-700); font-weight: 800; }
@@ -408,7 +408,7 @@ a { color: var(--azul-700); text-underline-offset: 3px; }
 .medalla--ganada .medalla__icono { background: var(--naranja-100); color: var(--naranja-500); }
 .medalla--ganada .medalla__estado { color: var(--naranja-700); }
 
-.medalla--pendiente .medalla__icono { background: #EEF2F7; color: var(--texto-tenue); }
+.medalla--pendiente .medalla__icono { background: var(--neutro-100); color: var(--texto-tenue); }
 .medalla--pendiente .medalla__nombre { color: var(--texto-suave); }
 .medalla--pendiente .medalla__estado { color: var(--texto-suave); }
 
@@ -441,7 +441,7 @@ a { color: var(--azul-700); text-underline-offset: 3px; }
 .idioma--en    { background: var(--azul-100);    color: var(--azul-800); }
 .idioma--es    { background: var(--naranja-100); color: var(--naranja-700); }
 .idioma--lsc   { background: var(--verde-100);   color: var(--verde-700); }
-.idioma--otro  { background: var(--celeste-100); color: #075985; }
+.idioma--otro  { background: var(--celeste-100); color: var(--celeste-800); }
 
 /* ---------- Tarjetas de curso ---------- */
 .rejilla-cursos {
@@ -586,7 +586,7 @@ a { color: var(--azul-700); text-underline-offset: 3px; }
     border-radius: 50%;
     font-family: var(--fuente-titulo);
     font-weight: 800;
-    background: #EEF2F7;
+    background: var(--neutro-100);
     color: var(--texto-suave);
 }
 
@@ -611,8 +611,8 @@ a { color: var(--azul-700); text-underline-offset: 3px; }
 .ruta__flecha { color: var(--texto-tenue); }
 
 /* Lección bloqueada: se ve apagada y no se puede abrir */
-.ruta__paso--bloqueada { background: #F8FAFC; border-style: dashed; }
-.ruta__paso--bloqueada .ruta__marca { background: #EEF2F7; color: var(--texto-tenue); }
+.ruta__paso--bloqueada { background: var(--neutro-50); border-style: dashed; }
+.ruta__paso--bloqueada .ruta__marca { background: var(--neutro-100); color: var(--texto-tenue); }
 .ruta__paso--bloqueada .ruta__titulo { color: var(--texto-suave); }
 .ruta__paso--bloqueada .ruta__enlace { cursor: not-allowed; }
 
@@ -852,3 +852,11 @@ a.est-perfil.es-activo { background: var(--azul-100); }
 
 .perfil-salir .perfil-tarjeta__ayuda { margin-bottom: 0; }
 .perfil-salir__titulo { font-family: var(--fuente-titulo); font-weight: 800; }
+
+/* Marca + botón de tema en la parte de arriba de la barra lateral */
+.est-lateral__cabecera {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--esp-2);
+}
