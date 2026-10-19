@@ -196,6 +196,16 @@ class Panel
         $conGraficos  = !empty($opciones["graficos"]);
         $perfilUrl    = $usuarioPanel["rol"] === "docente" ? "../profesor/index.php?page=perfil" : "../admin/index.php?page=perfil";
 
+        // Campana de notificaciones: solo para admin y super admin
+        $campanaPanel = null;
+        if (in_array($usuarioPanel["rol"], ["admin", "superadmin"], true)) {
+            $idUsuario = (int) $_SESSION["usuario_id"];
+            $campanaPanel = [
+                "noLeidas" => Notificador::noLeidas($idUsuario),
+                "lista"    => Notificador::recientes($idUsuario, 10),
+            ];
+        }
+
         // Mensaje de una sola vez (después de guardar algo)
         $flashPanel = $_SESSION["flash_panel"] ?? null;
         unset($_SESSION["flash_panel"]);
@@ -263,6 +273,19 @@ function nombre_panel(array $fila): string
 {
     $apellido = ($fila["apellido"] ?? "") === "No especificado" ? "" : ($fila["apellido"] ?? "");
     return trim(($fila["nombre"] ?? "") . " " . $apellido) ?: "Sin nombre";
+}
+
+/** Tiempo relativo para la campana: "hace 5 min", "hace 2 h", "ayer", o la fecha corta. */
+function hace_panel(?string $fecha): string
+{
+    $t = $fecha ? strtotime($fecha) : false;
+    if (!$t) return "";
+    $segundos = max(0, time() - $t);
+    if ($segundos < 60)     return "hace un momento";
+    if ($segundos < 3600)   return "hace " . intdiv($segundos, 60) . " min";
+    if ($segundos < 86400)  return "hace " . intdiv($segundos, 3600) . " h";
+    if ($segundos < 172800) return "ayer";
+    return fecha_panel($fecha);
 }
 
 /** Fecha corta en español: 18 oct 2026 */

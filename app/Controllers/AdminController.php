@@ -204,6 +204,16 @@ class AdminController
             trim($_POST["nivel"] ?? "") ?: null,
             (int) ($_POST["instructor_id"] ?? 0) ?: null,
         ]);
+
+        // Aviso al resto del equipo (quien lo creó no se avisa a sí mismo)
+        Notificador::avisar(
+            "nuevo_curso",
+            "Nuevo curso: " . $nombre,
+            "Lo creó " . ($_SESSION["nombre"] ?? "un administrador") . " desde el panel de administración.",
+            "admin/index.php?page=cursos",
+            (int) ($_SESSION["usuario_id"] ?? 0)
+        );
+
         Panel::volver($volver, "ok", "Curso creado correctamente.");
     }
 

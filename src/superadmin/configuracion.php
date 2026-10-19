@@ -101,12 +101,13 @@ try {
         ===================================================== */
         case "notificaciones":
 
-            Config::setMany([
-                "notif_nuevo_usuario"   => isset($_POST["notif_nuevo_usuario"])   ? "1" : "0",
-                "notif_nuevo_curso"     => isset($_POST["notif_nuevo_curso"])     ? "1" : "0",
-                "notif_nuevo_reporte"   => isset($_POST["notif_nuevo_reporte"])   ? "1" : "0",
-                "notif_resumen_semanal" => isset($_POST["notif_resumen_semanal"]) ? "1" : "0",
-            ]);
+            /* Una clave por cada tipo de aviso que existe (ver Notificador::TIPOS).
+               notif_nuevo_reporte ya no se muestra: no hay función de reportes todavía. */
+            $preferencias = [];
+            foreach (Notificador::TIPOS as $clave) {
+                $preferencias[$clave] = isset($_POST[$clave]) ? "1" : "0";
+            }
+            Config::setMany($preferencias);
 
             redirigirCon("notificaciones", "ok", "Preferencias de notificaciones guardadas.");
 

@@ -245,6 +245,14 @@ class AuthController
                 "activo"   => $activoInicial,
             ]);
 
+            /* Avisar al equipo (campana + correo). Nunca rompe el registro. */
+            Notificador::cuentaNueva(
+                trim($nombre . " " . ($apellido === "No especificado" ? "" : $apellido)),
+                $correo,
+                $rolId === 3,
+                "con correo y contraseña"
+            );
+
             /* =========================================================
                DOCENTE (activo = 2, pendiente)
             ========================================================= */

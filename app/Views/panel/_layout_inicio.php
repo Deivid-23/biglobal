@@ -2,7 +2,7 @@
 /**
  * Parte superior del layout de los paneles (admin, super admin, profesor).
  * Variables (desde Panel::render): $tituloPagina, $paginaActiva, $menuPanel,
- * $usuarioPanel, $perfilUrl, $flashPanel, $conGraficos
+ * $usuarioPanel, $perfilUrl, $flashPanel, $conGraficos, $campanaPanel (null si no es admin)
  */
 ?>
 <!DOCTYPE html>
@@ -89,6 +89,8 @@
             </button>
 
             <p class="pnl-barra__titulo"><?= e($tituloPagina) ?></p>
+
+            <?php if ($campanaPanel !== null) require __DIR__ . "/_campana.php"; ?>
 
             <button class="boton-tema" type="button" data-alternar-tema aria-label="Cambiar a modo oscuro">
                 <i class="fa-solid fa-sun icono-sol" aria-hidden="true"></i>

@@ -46,6 +46,15 @@ class Correo
      */
     public static function enviar(string $para, string $asunto, string $html, string $texto): bool
     {
+        return self::enviarAVarios([$para], $asunto, $html, $texto);
+    }
+
+    /**
+     * Envía el mismo correo a varias personas en una sola conexión.
+     * Nadie ve las direcciones de los demás (van como copia oculta).
+     */
+    public static function enviarAVarios(array $destinatarios, string $asunto, string $html, string $texto): bool
+    {
         $d = self::datosSmtp();
 
         if (!self::estaConfigurado()) {
@@ -53,9 +62,17 @@ class Correo
             return false;
         }
 
-        if (!filter_var($para, FILTER_VALIDATE_EMAIL)) {
+        $destinatarios = array_values(array_unique(array_filter(
+            $destinatarios,
+            fn($correo) => filter_var($correo, FILTER_VALIDATE_EMAIL)
+        )));
+
+        if (!$destinatarios) {
             return false;
         }
+
+        // Con una sola persona se muestra su correo en "Para"; con varias, ninguno
+        $para = count($destinatarios) === 1 ? "<{$destinatarios[0]}>" : "undisclosed-recipients:;";
 
         $remitente = filter_var($d["remitente"], FILTER_VALIDATE_EMAIL) ? $d["remitente"] : $d["usuario"];
 
@@ -90,7 +107,9 @@ class Correo
             self::comando($socket, base64_encode($d["clave"]), 235, true);
 
             self::comando($socket, "MAIL FROM:<{$remitente}>", 250);
-            self::comando($socket, "RCPT TO:<{$para}>", [250, 251]);
+            foreach ($destinatarios as $correo) {
+                self::comando($socket, "RCPT TO:<{$correo}>", [250, 251]);
+            }
             self::comando($socket, "DATA", 354);
 
             $mensaje = self::armarMensaje($remitente, $d["nombre"], $para, $asunto, $html, $texto);
@@ -120,7 +139,7 @@ class Correo
         $cabeceras = [
             "Date: " . date(DATE_RFC2822),
             "From: " . $codificar($nombre) . " <{$de}>",
-            "To: <{$para}>",
+            "To: {$para}",
             "Subject: " . $codificar($asunto),
             "MIME-Version: 1.0",
             "Content-Type: multipart/alternative; boundary=\"{$limite}\"",

@@ -51,6 +51,14 @@ try {
                 ":instructor"  => $docenteId,
             ]);
 
+            /* Aviso al equipo de administración (campana + correo) */
+            Notificador::avisar(
+                "nuevo_curso",
+                "Nuevo curso: " . $nombre,
+                "Lo creó el docente " . ($_SESSION["nombre"] ?? "") . " desde su panel.",
+                "admin/index.php?page=cursos"
+            );
+
             volverCon("ok", "Curso creado correctamente.");
 
         /* =========================================================

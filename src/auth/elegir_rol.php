@@ -69,6 +69,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             $nuevoId = (int) $conexion->lastInsertId();
 
+            /* Avisar al equipo (campana + correo). Nunca rompe el registro. */
+            Notificador::cuentaNueva(
+                trim($datos["nombre"] . " " . $datos["apellido"]),
+                $datos["correo"],
+                $rolElegido === "docente",
+                "con Google"
+            );
+
             /* Iniciar sesión automáticamente */
             session_regenerate_id(true);
 

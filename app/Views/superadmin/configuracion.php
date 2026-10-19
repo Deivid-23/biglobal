@@ -109,21 +109,28 @@ $g = fn(string $clave, $defecto = "") => Config::get($clave, $defecto);
     </form>
 
 <?php elseif ($tab === "notificaciones"): ?>
-    <div class="pnl-tarjeta__cabecera"><div><h2 id="titulo-config">Notificaciones</h2><p>Avisos que recibe el equipo</p></div></div>
+    <div class="pnl-tarjeta__cabecera"><div><h2 id="titulo-config">Notificaciones</h2><p>Avisos que reciben los administradores y super administradores</p></div></div>
     <form class="pnl-form" method="POST" action="configuracion.php">
         <?= campoCsrf() ?><input type="hidden" name="accion" value="notificaciones">
         <?php foreach ([
-            "notif_nuevo_usuario"   => ["Nuevo usuario registrado",  "Aviso cuando alguien crea una cuenta"],
-            "notif_nuevo_curso"     => ["Nuevo curso creado",         "Aviso cuando se crea un curso"],
-            "notif_nuevo_reporte"   => ["Nuevo reporte",              "Aviso cuando alguien reporta contenido"],
-            "notif_resumen_semanal" => ["Resumen semanal",            "Un correo con el resumen cada lunes"],
-        ] as $clave => [$titulo, $texto]): ?>
+            "notif_nuevo_usuario"     => ["Nuevo usuario registrado",     "Cuando alguien crea una cuenta, con correo o con Google", true],
+            "notif_docente_pendiente" => ["Docente pendiente de aprobar", "Cuando un docente se registra y espera tu aprobación", true],
+            "notif_nuevo_curso"       => ["Nuevo curso creado",           "Cuando se crea un curso desde el panel de admin o de docente", true],
+            "notif_resumen_semanal"   => ["Resumen semanal",              "Cada lunes: usuarios nuevos, docentes pendientes, cursos y lecciones completadas", false],
+        ] as $clave => [$titulo, $texto, $porDefecto]): ?>
             <label class="pnl-interruptor">
                 <span><strong><?= $titulo ?></strong><small><?= $texto ?></small></span>
-                <input type="checkbox" name="<?= $clave ?>" <?= Config::getBool($clave) ? "checked" : "" ?>>
+                <input type="checkbox" name="<?= $clave ?>" <?= Config::getBool($clave, $porDefecto) ? "checked" : "" ?>>
             </label>
         <?php endforeach; ?>
-        <p class="campo__ayuda">El envío de estos avisos todavía no está construido; por ahora solo se guarda la preferencia.</p>
+        <p class="campo__ayuda">
+            Los avisos aparecen en la campana del panel.
+            <?php if (Correo::estaConfigurado()): ?>
+                También llegan por correo a cada administrador.
+            <?php else: ?>
+                Para que también lleguen por correo, configura el servidor en la pestaña <a href="index.php?page=configuracion&amp;tab=correo">Correo</a>.
+            <?php endif; ?>
+        </p>
         <div class="pnl-form__acciones"><button class="boton boton--primario" type="submit">Guardar</button></div>
     </form>
 

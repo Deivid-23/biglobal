@@ -19,6 +19,8 @@ require_once __DIR__ . "/../src/auth/csrf.php";
 require_once __DIR__ . "/Helpers/Config.php";
 require_once __DIR__ . "/Helpers/Seguridad.php";
 require_once __DIR__ . "/Helpers/Panel.php";
+require_once __DIR__ . "/Helpers/Correo.php";
+require_once __DIR__ . "/Helpers/Notificador.php";
 
 /**
  * Loguea el error real en el servidor (nunca al navegador)
