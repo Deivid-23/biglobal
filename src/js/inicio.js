@@ -294,7 +294,7 @@ document.addEventListener("DOMContentLoaded", () => {
             evento.preventDefault();
 
             if (!campoBoletin.checkValidity() || campoBoletin.value.trim() === "") {
-                mensajeBoletin.className = "mensaje-boletin es-error";
+                mensajeBoletin.className = "small mb-0 es-error";
                 mensajeBoletin.textContent = "Escribe un correo válido, por ejemplo nombre@correo.com.";
                 campoBoletin.setAttribute("aria-invalid", "true");
                 campoBoletin.focus();
@@ -304,7 +304,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // TODO (siguiente versión): enviar a un endpoint PHP que guarde
             // el correo en una tabla "boletin_suscriptores".
             campoBoletin.removeAttribute("aria-invalid");
-            mensajeBoletin.className = "mensaje-boletin es-info";
+            mensajeBoletin.className = "small mb-0 es-info";
             mensajeBoletin.textContent = "¡Gracias! El boletín abre muy pronto. Mientras tanto, crea tu cuenta gratis para empezar a aprender.";
         });
     }
