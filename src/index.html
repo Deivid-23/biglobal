@@ -5,11 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#EFF6FF">
+    <meta name="description" content="Aprende inglés, español y Lengua de Señas Colombiana (LSC) con lecciones cortas e interactivas. Empieza gratis.">
     <!-- Tema claro/oscuro: va primero para que no haya parpadeo -->
     <script src="js/tema.js"></script>
     <title>BiGlobal - Aprende Idiomas y LSC</title>
 
-    <!-- Bootstrap -->
+    <!-- Bootstrap: solo lo usa el menú del celular (collapse) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 
@@ -25,7 +26,7 @@
     <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/style.css">
 
-    <!-- JS de la página principal (boletín y menú en celular) -->
+    <!-- JS de la página principal (lección de ejemplo, boletín y menú en celular) -->
     <script src="js/inicio.js" defer></script>
 </head>
 
@@ -35,7 +36,7 @@
         <nav class="navbar navbar-expand-lg barra-navegacion">
             <div class="container">
                 <a class="navbar-brand contenedor-logo" href="#">
-                    <img src="img/logo-Biglobal.png" alt="Icono BiGlobal" class="logo-img">
+                    <img src="img/logo-Biglobal.png" alt="" class="logo-img" width="40" height="40">
                     <span class="logo-texto">BiGlobal</span>
                 </a>
 
@@ -45,22 +46,22 @@
                         <i class="fa-solid fa-sun icono-sol" aria-hidden="true"></i>
                         <i class="fa-solid fa-moon icono-luna" aria-hidden="true"></i>
                     </button>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal"
-                    aria-controls="menuPrincipal" aria-expanded="false" aria-label="Abrir menú de navegación">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal"
+                        aria-controls="menuPrincipal" aria-expanded="false" aria-label="Abrir menú de navegación">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
                 </div>
 
                 <div class="collapse navbar-collapse" id="menuPrincipal">
                     <ul class="navbar-nav mx-auto">
                         <li class="nav-item"><a class="nav-link" href="#cursos">Cursos</a></li>
                         <li class="nav-item"><a class="nav-link" href="#comoFunciona">Cómo funciona</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#Planes-big">Membresias</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#info-contac">Más información</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#planes">Planes</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#preguntas">Preguntas</a></li>
                     </ul>
                     <div class="botones-acceso">
                         <a href="auth/login.html" class="btn-secundario">Iniciar sesión</a>
-                        <a href="auth/login.html#registro" class="btn-principal">Registrarse</a>
+                        <a href="auth/login.html#registro" class="btn-principal">Crear cuenta</a>
                     </div>
                 </div>
             </div>
@@ -68,424 +69,310 @@
     </header>
 
     <main id="contenido">
-        <!-- Sección Principal (Hero) -->
-        <section class="seccion-hero d-flex align-items-center">
-            <div class="container">
-                <div class="row contenedor-fila-hero align-items-center g-5">
-                    <div class="col-lg-6">
-                        <span class="etiqueta-alerta d-inline-block mb-3">
-                            <i class="fa-solid fa-globe me-2"></i>Aprende sin límites
-                        </span>
-                        <h1 class="titulo-principal mb-3">
-                            Aprende idiomas y Lengua de Señas de forma interactiva.
-                        </h1>
-                        <p class="descripcion-hero mb-4">
-                            Cursos prácticos enfocados en el bilingüismo profesional y la inclusión. Contenido accesible
-                            para conectar con el mundo.
-                        </p>
-                        <div class="contenedor-botones-hero">
-                            <a href="auth/login.html" class="btn-principal btn-grande d-inline-flex align-items-center gap-2">
-                                Comenzar ahora <i class="fa-solid fa-arrow-right"></i>
-                            </a>
-                            <a href="#cursos" class="btn-secundario btn-grande">Explorar cursos</a>
-                        </div>
+
+        <!-- ================================================================
+             HERO: el título a la izquierda y, a la derecha, una lección de
+             ejemplo que se puede tocar. Así quien llega ve cómo es BiGlobal
+             por dentro en vez de una foto. Las preguntas viven en inicio.js.
+             ================================================================ -->
+        <section class="hero" aria-labelledby="titulo-hero">
+            <div class="container hero__rejilla">
+                <div class="hero__texto">
+                    <h1 class="hero__titulo" id="titulo-hero">
+                        Inglés, español y Lengua de Señas, <span class="hero__resalte">una lección a la vez.</span>
+                    </h1>
+                    <p class="hero__descripcion">
+                        Lecciones cortas con respuesta inmediata. Ganas XP, mantienes tu racha
+                        y tu avance queda guardado en tu cuenta, desde el celular o el computador.
+                    </p>
+                    <div class="hero__acciones">
+                        <a href="auth/login.html#registro" class="btn-principal btn-grande">
+                            Empieza gratis <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                        </a>
+                        <a href="#cursos" class="btn-secundario btn-grande">Ver los cursos</a>
+                    </div>
+                    <p class="hero__nota">
+                        <i class="fa-solid fa-hand-pointer" aria-hidden="true"></i>
+                        Prueba la lección de ejemplo: responde y mira qué pasa.
+                    </p>
+                </div>
+
+                <!-- Lección de ejemplo -->
+                <div class="leccion" data-leccion aria-label="Lección de ejemplo" role="region">
+                    <div class="leccion__tarjeta">
+                    <div class="leccion__pestanas" role="tablist" aria-label="Idioma de la lección">
+                        <button class="leccion__pestana" type="button" role="tab" id="pestana-en"
+                            aria-selected="true" aria-controls="panel-leccion" data-idioma="en">Inglés</button>
+                        <button class="leccion__pestana" type="button" role="tab" id="pestana-es"
+                            aria-selected="false" aria-controls="panel-leccion" data-idioma="es" tabindex="-1">Español</button>
+                        <button class="leccion__pestana" type="button" role="tab" id="pestana-lsc"
+                            aria-selected="false" aria-controls="panel-leccion" data-idioma="lsc" tabindex="-1">LSC</button>
                     </div>
 
-                    <!-- Imagen principal (Hero) -->
-                    <div class="col-lg-6 col-imagen-mascota text-center position-relative">
-                        <!-- Resplandor decorativo de fondo -->
-                        <div class="fondo-resplandor-hero"></div>
-
-                        <!-- Imagen principal -->
-                        <!-- hero-flotar: flotación continua · la imagen: inclinación al pasar el mouse -->
-                        <div class="hero-flotar" data-hero-inclinar>
-                            <img src="img/img-hero.png" alt="Estudiantes bilingües y de LSC en BiGlobal"
-                                class="imagen-hero-estudiantes img-fluid position-relative" width="520" height="520">
+                    <div class="leccion__panel" id="panel-leccion" role="tabpanel" aria-labelledby="pestana-en">
+                        <div class="leccion__estado">
+                            <div class="leccion__barra" role="progressbar" aria-label="Avance de la lección"
+                                aria-valuemin="0" aria-valuemax="3" aria-valuenow="0">
+                                <span class="leccion__relleno" data-relleno></span>
+                            </div>
+                            <span class="leccion__racha" title="Racha de días seguidos">
+                                <i class="fa-solid fa-fire" aria-hidden="true"></i>
+                                <span class="numeros" data-racha>3</span><span class="sr-only"> días de racha</span>
+                            </span>
+                            <span class="leccion__xp numeros" data-xp aria-label="XP ganados">0 XP</span>
                         </div>
 
-                        <!-- Tarjeta flotante decorativa -->
-                        <div class="tarjeta-flotante-hero d-flex align-items-center gap-2 gap-sm-3">
-    <div class="icono-flotante fondo-verde-suave">
-        <i class="fa-solid fa-circle-check"></i>
-    </div>
-    <div class="text-start">
-        <span class="d-block fw-bold small">Aprendizaje real</span>
-        <span class="d-block text-muted texto-pequeno">Inglés • Español • LSC</span>
-    </div>
-</div>
+                        <!-- Contenido de la pregunta (lo reemplaza inicio.js; esto es lo que se ve sin JS) -->
+                        <div class="leccion__cuerpo" data-cuerpo>
+                            <p class="leccion__tema" data-tema>Saludos · Pregunta 1 de 3</p>
+                            <p class="leccion__pregunta" data-pregunta>¿Cómo se dice «Buenos días» en inglés?</p>
+                            <div class="leccion__opciones" data-opciones>
+                                <button type="button" class="opcion">Good night</button>
+                                <button type="button" class="opcion">Good morning</button>
+                                <button type="button" class="opcion">Goodbye</button>
+                            </div>
+                        </div>
+
+                        <div class="leccion__pie" data-pie>
+                            <p class="leccion__mensaje" data-mensaje role="status" aria-live="polite"></p>
+                            <button type="button" class="btn-principal leccion__siguiente" data-siguiente hidden>
+                                Siguiente <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                            </button>
+                        </div>
                     </div>
+                    </div>
+                    <p class="leccion__aviso">Ejemplo de una lección. Tu XP y tu racha reales se guardan al crear tu cuenta.</p>
                 </div>
             </div>
         </section>
 
-        <!-- Barra de Características -->
-        <section class="barra-caracteristicas py-5">
-            <div class="container">
-                <div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-4 fila-caracteristicas text-center">
-                    <div class="col d-flex flex-column align-items-center">
-                        <img src="img/icono-cursos.png" alt="" class="icono-caracteristica mb-3">
-                        <h2 class="h6 fw-bold mb-1">Cursos</h2>
-                        <p class="small text-muted mb-0">Lecciones interactivas</p>
-                    </div>
-
-                    <div class="col d-flex flex-column align-items-center">
-                        <img src="img/icono-comunidad.png" alt="" class="icono-caracteristica mb-3">
-                        <h2 class="h6 fw-bold mb-1">Comunidad</h2>
-                        <p class="small text-muted mb-0">Conecta con estudiantes</p>
-                    </div>
-
-                    <div class="col d-flex flex-column align-items-center">
-                        <img src="img/icono-lengua-senas.png" alt=""
-                            class="icono-caracteristica mb-3">
-                        <h2 class="h6 fw-bold mb-1">LSC</h2>
-                        <p class="small text-muted mb-0">Contenido inclusivo</p>
-                    </div>
-
-                    <div class="col d-flex flex-column align-items-center">
-                        <img src="img/icono-recursos.png" alt="" class="icono-caracteristica mb-3">
-                        <h2 class="h6 fw-bold mb-1">Recursos</h2>
-                        <p class="small text-muted mb-0">Material descargable</p>
-                    </div>
-
-                    <div class="col d-flex flex-column align-items-center">
-                        <img src="img/icono-soporte.png" alt="" class="icono-caracteristica mb-3">
-                        <h2 class="h6 fw-bold mb-1">Soporte</h2>
-                        <p class="small text-muted mb-0">Estamos para ayudarte</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Sección: ¿Por qué usar nuestra plataforma? -->
-        <section class="seccion-ventajas py-5">
-            <div class="container">
-                <div class="text-center mb-5">
-                    <span class="etiqueta-alerta mb-2 d-inline-block">Ventajas BiGlobal</span>
-                    <h2 class="fw-bold display-6 mb-2">¿Por qué usar nuestra plataforma?</h2>
-                    <p class="text-muted">Aprende idiomas y Lengua de Señas Colombiana mediante una metodología moderna,
-                        inclusiva y práctica.</p>
-                </div>
-
-                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
-
-                    <!-- Tarjeta 1 -->
-                    <div class="col">
-                        <div class="tarjeta-ventaja">
-                            <div class="icono-ventaja fondo-verde-suave">
-                                <i class="fa-solid fa-graduation-cap"></i>
-                            </div>
-                            <h3 class="h5 fw-bold mb-2">Cursos interactivos</h3>
-                            <p class="text-muted small mb-0">Lecciones dinámicas, ejercicios prácticos y
-                                retroalimentación inmediata.</p>
-                        </div>
-                    </div>
-
-                    <!-- Tarjeta 2 -->
-                    <div class="col">
-                        <div class="tarjeta-ventaja">
-                            <div class="icono-ventaja fondo-naranja-suave">
-                                <i class="fa-solid fa-hands-asl-interpreting"></i>
-                            </div>
-                            <h3 class="h5 fw-bold mb-2">Lengua de Señas</h3>
-                            <p class="text-muted small mb-0">Aprende mediante videos, actividades y prácticas accesibles
-                                para todos.</p>
-                        </div>
-                    </div>
-
-                    <!-- Tarjeta 3 -->
-                    <div class="col">
-                        <div class="tarjeta-ventaja">
-                            <div class="icono-ventaja fondo-azul-suave">
-                                <i class="fa-solid fa-laptop"></i>
-                            </div>
-                            <h3 class="h5 fw-bold mb-2">Acceso multiplataforma</h3>
-                            <p class="text-muted small mb-0">Continúa aprendiendo desde computador, tablet o celular sin
-                                perder tu avance.</p>
-                        </div>
-                    </div>
-
-                    <!-- Tarjeta 4 -->
-                    <div class="col">
-                        <div class="tarjeta-ventaja">
-                            <div class="icono-ventaja fondo-celeste-suave">
-                                <i class="fa-solid fa-chart-line"></i>
-                            </div>
-                            <h3 class="h5 fw-bold mb-2">Aprendizaje progresivo</h3>
-                            <p class="text-muted small mb-0">Avanza a tu ritmo, desbloquea nuevos niveles y alcanza tus
-                                objetivos.</p>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        </section>
-
-        <!-- Sección 1: El Método BiGlobal (Cómo Funciona) -->
-        <section class="seccion-metodo py-5" id="comoFunciona">
-            <div class="container">
-                <div class="text-center mb-5">
-                    <span class="etiqueta-alerta mb-2 d-inline-block">Paso a paso</span>
-                    <h2 class="fw-bold display-6 mb-2">¿Cómo funciona BiGlobal?</h2>
-                    <p class="text-muted">Aprende de forma inclusiva y rápida en solo 3 sencillos pasos.</p>
-                </div>
-
-                <div class="row row-cols-1 row-cols-md-3 g-4">
-
-                    <!-- Paso 1 -->
-                    <div class="col">
-                        <div class="tarjeta-metodo">
-                            <div class="numero-paso">01</div>
-                            <div class="icono-metodo fondo-verde-suave mb-3">
-                                <i class="fa-solid fa-book-open-reader"></i>
-                            </div>
-                            <h3 class="h5 fw-bold mb-2">Elige tu curso</h3>
-                            <p class="text-muted small mb-0">Selecciona entre Inglés, Español o Lengua de Señas
-                                Colombiana (LSC) según tus metas.</p>
-                        </div>
-                    </div>
-
-                    <!-- Paso 2 -->
-                    <div class="col">
-                        <div class="tarjeta-metodo">
-                            <div class="numero-paso">02</div>
-                            <div class="icono-metodo fondo-naranja-suave mb-3">
-                                <i class="fa-solid fa-gamepad"></i>
-                            </div>
-                            <h3 class="h5 fw-bold mb-2">Aprende jugando</h3>
-                            <p class="text-muted small mb-0">Disfruta lecciones interactivas, material visual y práctica
-                                constante a tu propio ritmo.</p>
-                        </div>
-                    </div>
-
-                    <!-- Paso 3 -->
-                    <div class="col">
-                        <div class="tarjeta-metodo">
-                            <div class="numero-paso">03</div>
-                            <div class="icono-metodo fondo-azul-suave mb-3">
-                                <i class="fa-solid fa-award"></i>
-                            </div>
-                            <h3 class="h5 fw-bold mb-2">Certifícate y conecta</h3>
-                            <p class="text-muted small mb-0">Valida tus conocimientos con certificados oficiales y
-                                conéctate con el mundo real.</p>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        </section>
-
-        <!-- Sección de Cursos (Inglés, Español y LSC)
+        <!-- ================================================================
+             CURSOS: tres idiomas, cada uno con una frase de ejemplo.
              OJO: no mostramos cifras (lecciones, horas, estrellas) porque
-             todavía no vienen de la base de datos. Cuando la página se
-             alimente desde la BD, aquí irán los datos reales. -->
-        <section class="seccion-cursos" id="cursos">
+             todavía no vienen de la base de datos.
+             ================================================================ -->
+        <section class="cursos" id="cursos" aria-labelledby="titulo-cursos">
             <div class="container">
-                <div class="text-center mb-5">
-                    <h2 class="fw-bold display-6 mb-2">Explora nuestros cursos</h2>
-                    <p class="text-muted">Inglés, Español y Lengua de Señas Colombiana (LSC)</p>
+                <div class="encabezado encabezado--dividido">
+                    <h2 class="encabezado__titulo" id="titulo-cursos">Elige con qué idioma empiezas</h2>
+                    <p class="encabezado__texto">Todos empiezan desde el nivel básico. Puedes tomar más de uno a la vez.</p>
                 </div>
 
-                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 justify-content-center">
+                <ul class="cursos__lista">
+                    <li class="curso">
+                        <p class="curso__frase" lang="en">Hello.</p>
+                        <h3 class="curso__nombre">Inglés</h3>
+                        <p class="curso__texto">Vocabulario y frases útiles para estudiar, trabajar y viajar, lección por lección.</p>
+                        <a href="auth/login.html#registro" class="curso__enlace">
+                            Empezar inglés <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                        </a>
+                    </li>
+                    <li class="curso">
+                        <p class="curso__frase">Hola.</p>
+                        <h3 class="curso__nombre">Español</h3>
+                        <p class="curso__texto">Para quienes empiezan con el español: saludos, frases del día a día y conversación.</p>
+                        <a href="auth/login.html#registro" class="curso__enlace">
+                            Empezar español <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                        </a>
+                    </li>
+                    <li class="curso curso--pronto">
+                        <p class="curso__frase curso__frase--icono" aria-hidden="true">
+                            <i class="fa-solid fa-hands-asl-interpreting"></i>
+                        </p>
+                        <h3 class="curso__nombre">
+                            Lengua de Señas Colombiana
+                            <span class="chip-pronto">Próximamente</span>
+                        </h3>
+                        <p class="curso__texto">Estamos preparando el curso de LSC. Crea tu cuenta y te avisamos cuando abra.</p>
+                        <a href="auth/login.html#registro" class="curso__enlace">
+                            Crear cuenta <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </section>
 
-                    <!-- Tarjeta 1: Inglés -->
-                    <div class="col">
-                        <article class="tarjeta-curso">
-                            <div class="cabecera-curso fondo-azul">
-                                <span class="etiqueta-curso">INGLÉS</span>
-                                <span class="etiqueta-nivel">Desde nivel básico</span>
-                            </div>
-                            <div class="cuerpo-curso">
-                                <h3 class="titulo-curso">Inglés para el mundo real</h3>
-                                <p class="texto-curso">Vocabulario y frases útiles para estudiar, trabajar y viajar, lección por lección.</p>
-                                <div class="pie-curso">
-                                    <span class="detalle-curso"><i class="fa-solid fa-award me-1" aria-hidden="true"></i>Con certificado</span>
-                                    <a href="auth/login.html#registro" class="enlace-comenzar">Comenzar <i
-                                            class="fa-solid fa-arrow-right ms-1" aria-hidden="true"></i></a>
-                                </div>
-                            </div>
-                        </article>
+        <!-- ================================================================
+             CÓMO FUNCIONA: una ruta de lecciones, como la que ve el
+             estudiante en su panel. Cada parada es un paso real.
+             ================================================================ -->
+        <section class="ruta" id="comoFunciona" aria-labelledby="titulo-ruta">
+            <div class="container">
+                <div class="encabezado">
+                    <h2 class="encabezado__titulo" id="titulo-ruta">Así avanzas en BiGlobal</h2>
+                    <p class="encabezado__texto">Un camino claro, de la primera lección al certificado.</p>
+                </div>
+
+                <ol class="ruta__camino">
+                    <li class="parada parada--hecha">
+                        <span class="parada__nodo" aria-hidden="true"><i class="fa-solid fa-check"></i></span>
+                        <h3 class="parada__titulo">Elige tu curso</h3>
+                        <p class="parada__texto">Inglés o español hoy; LSC muy pronto.</p>
+                    </li>
+                    <li class="parada parada--hecha">
+                        <span class="parada__nodo" aria-hidden="true"><i class="fa-solid fa-check"></i></span>
+                        <h3 class="parada__titulo">Haz lecciones cortas</h3>
+                        <p class="parada__texto">Ejercicios con respuesta inmediata, a tu ritmo.</p>
+                    </li>
+                    <li class="parada parada--actual">
+                        <span class="parada__nodo" aria-hidden="true"><i class="fa-solid fa-fire"></i></span>
+                        <h3 class="parada__titulo">Suma XP y racha</h3>
+                        <p class="parada__texto">Cada lección da 10 XP. Estudia a diario y sube de nivel.</p>
+                    </li>
+                    <li class="parada">
+                        <span class="parada__nodo" aria-hidden="true"><i class="fa-solid fa-award"></i></span>
+                        <h3 class="parada__titulo">Obtén tu certificado</h3>
+                        <p class="parada__texto">Termina todas las lecciones y recibe tu certificado con código.</p>
+                    </li>
+                </ol>
+            </div>
+        </section>
+
+        <!-- ================================================================
+             POR QUÉ BIGLOBAL: antes eran dos secciones de tarjetas con
+             íconos que repetían lo mismo. Ahora es una sola lista.
+             ================================================================ -->
+        <section class="razones" aria-labelledby="titulo-razones">
+            <div class="container razones__rejilla">
+                <h2 class="razones__titulo" id="titulo-razones">
+                    Hecho para aprender de verdad, y para que nadie se quede por fuera.
+                </h2>
+                <dl class="razones__lista">
+                    <div class="razon">
+                        <dt><i class="fa-solid fa-bolt" aria-hidden="true"></i> Practicas desde el primer minuto</dt>
+                        <dd>Cada lección es interactiva: respondes, ves al instante si acertaste y sigues.</dd>
                     </div>
-
-                    <!-- Tarjeta 2: Español -->
-                    <div class="col">
-                        <article class="tarjeta-curso">
-                            <div class="cabecera-curso fondo-naranja">
-                                <span class="etiqueta-curso">ESPAÑOL</span>
-                                <span class="etiqueta-nivel">Desde nivel básico</span>
-                            </div>
-                            <div class="cuerpo-curso">
-                                <h3 class="titulo-curso">Español conversacional</h3>
-                                <p class="texto-curso">Para quienes empiezan con el español: saludos, frases del día a día y conversación.</p>
-                                <div class="pie-curso">
-                                    <span class="detalle-curso"><i class="fa-solid fa-award me-1" aria-hidden="true"></i>Con certificado</span>
-                                    <a href="auth/login.html#registro" class="enlace-comenzar">Comenzar <i
-                                            class="fa-solid fa-arrow-right ms-1" aria-hidden="true"></i></a>
-                                </div>
-                            </div>
-                        </article>
+                    <div class="razon">
+                        <dt><i class="fa-solid fa-hands-asl-interpreting" aria-hidden="true"></i> Inclusión con la LSC</dt>
+                        <dd>Idiomas orales y Lengua de Señas Colombiana en una sola plataforma.</dd>
                     </div>
-
-                    <!-- Tarjeta 3: LSC (todavía no existe en la BD) -->
-                    <div class="col">
-                        <article class="tarjeta-curso">
-                            <div class="cabecera-curso fondo-verde">
-                                <span class="etiqueta-curso">LSC</span>
-                                <span class="etiqueta-nivel">Próximamente</span>
-                            </div>
-                            <div class="cuerpo-curso">
-                                <h3 class="titulo-curso">Lengua de Señas Colombiana</h3>
-                                <p class="texto-curso">Estamos preparando el curso de LSC. Crea tu cuenta y te avisamos cuando abra.</p>
-                                <div class="pie-curso">
-                                    <span class="detalle-curso"><i class="fa-solid fa-hands-asl-interpreting me-1" aria-hidden="true"></i>Inclusión real</span>
-                                    <a href="auth/login.html#registro" class="enlace-comenzar">Crear cuenta <i
-                                            class="fa-solid fa-arrow-right ms-1" aria-hidden="true"></i></a>
-                                </div>
-                            </div>
-                        </article>
+                    <div class="razon">
+                        <dt><i class="fa-solid fa-mobile-screen" aria-hidden="true"></i> Sigues donde quedaste</dt>
+                        <dd>Tu avance se guarda en tu cuenta: empieza en el computador y continúa en el celular.</dd>
                     </div>
+                    <div class="razon">
+                        <dt><i class="fa-solid fa-medal" aria-hidden="true"></i> Motivación que se nota</dt>
+                        <dd>XP, niveles, rachas diarias y medallas que celebran tu progreso real.</dd>
+                    </div>
+                </dl>
+            </div>
+        </section>
 
+        <!-- ================================================================
+             PLANES. Los precios los decidió el dueño del proyecto.
+             Solo listamos lo que BiGlobal hace hoy; lo que viene va
+             marcado como "próximamente". Aún no hay sistema de pagos.
+             ================================================================ -->
+        <section class="planes" id="planes" aria-labelledby="titulo-planes">
+            <div class="container">
+                <div class="encabezado">
+                    <h2 class="encabezado__titulo" id="titulo-planes">Empieza gratis, mejora cuando quieras</h2>
+                    <p class="encabezado__texto">Crea tu cuenta gratis y elige un plan cuando lo necesites.</p>
+                </div>
+
+                <div class="planes__rejilla">
+                    <article class="plan">
+                        <h3 class="plan__nombre">Básico</h3>
+                        <p class="plan__para">Para conocer BiGlobal y probar un idioma.</p>
+                        <p class="plan__precio numeros">$0 <span>/ mes</span></p>
+                        <ul class="plan__lista">
+                            <li><i class="fa-solid fa-check" aria-hidden="true"></i> Primer módulo de cada curso</li>
+                            <li><i class="fa-solid fa-check" aria-hidden="true"></i> Ejercicios con respuesta inmediata</li>
+                            <li><i class="fa-solid fa-check" aria-hidden="true"></i> XP, rachas y medallas</li>
+                        </ul>
+                        <a href="auth/login.html#registro" class="btn-secundario plan__boton">Empezar gratis</a>
+                    </article>
+
+                    <article class="plan plan--destacado">
+                        <p class="plan__sello">Recomendado</p>
+                        <h3 class="plan__nombre">Pro Bilingüe</h3>
+                        <p class="plan__para">Para avanzar en serio en un idioma.</p>
+                        <p class="plan__precio numeros">$15 <span>/ mes</span></p>
+                        <ul class="plan__lista">
+                            <li><i class="fa-solid fa-check" aria-hidden="true"></i> Un curso completo: inglés o español</li>
+                            <li><i class="fa-solid fa-check" aria-hidden="true"></i> Certificado al terminar el curso</li>
+                            <li><i class="fa-solid fa-check" aria-hidden="true"></i> Todo lo del plan Básico</li>
+                            <li class="es-pronto"><i class="fa-regular fa-clock" aria-hidden="true"></i> Curso de LSC <span class="chip-pronto">Próximamente</span></li>
+                        </ul>
+                        <a href="auth/login.html#registro" class="btn-principal plan__boton">Elegir Pro</a>
+                    </article>
+
+                    <article class="plan">
+                        <h3 class="plan__nombre">Global</h3>
+                        <p class="plan__para">Para aprender varios idiomas a la vez.</p>
+                        <p class="plan__precio numeros">$25 <span>/ mes</span></p>
+                        <ul class="plan__lista">
+                            <li><i class="fa-solid fa-check" aria-hidden="true"></i> Todos los cursos de inglés y español</li>
+                            <li><i class="fa-solid fa-check" aria-hidden="true"></i> Un certificado por cada curso</li>
+                            <li><i class="fa-solid fa-check" aria-hidden="true"></i> Ayuda por correo desde Contacto</li>
+                            <li class="es-pronto"><i class="fa-regular fa-clock" aria-hidden="true"></i> Curso de LSC <span class="chip-pronto">Próximamente</span></li>
+                        </ul>
+                        <a href="auth/login.html#registro" class="btn-secundario plan__boton">Elegir Global</a>
+                    </article>
                 </div>
             </div>
         </section>
 
-        <!-- Sección de Planes / Precios -->
-        <section class="seccion-planes" id="Planes-big">
-            <div class="container">
-                <div class="text-center mb-5">
-                    <span class="etiqueta-alerta mb-2 d-inline-block">Inversión en tu futuro</span>
-                    <h2 class="fw-bold display-6 mb-2">Planes diseñados para tu ritmo</h2>
-                    <p class="text-muted">Empieza gratis y mejora tu plan cuando estés listo para más</p>
+        <!-- ================================================================
+             PREGUNTAS FRECUENTES: <details> nativo (teclado y lector de
+             pantalla funcionan sin JavaScript).
+             ================================================================ -->
+        <section class="preguntas" id="preguntas" aria-labelledby="titulo-preguntas">
+            <div class="container preguntas__rejilla">
+                <div>
+                    <h2 class="encabezado__titulo" id="titulo-preguntas">Preguntas frecuentes</h2>
+                    <p class="encabezado__texto">¿Te queda otra duda? <a href="contacto.html">Escríbenos</a>.</p>
                 </div>
 
-                <div class="row row-cols-1 row-cols-md-3 g-4 align-items-center">
-                    <!-- Plan Gratis -->
-                    <div class="col">
-                        <div class="tarjeta-plan">
-                            <h3 class="fw-bold h4">Básico</h3>
-                            <p class="text-muted small">Para quienes están explorando un nuevo idioma.</p>
-                            <div class="precio-plan">$0 <span>/ mes</span></div>
-                            <ul class="lista-beneficios">
-                                <li><i class="fa-solid fa-check"></i> Acceso al primer módulo</li>
-                                <li><i class="fa-solid fa-check"></i> Ejercicios prácticos básicos</li>
-                                <li><i class="fa-solid fa-check"></i> Comunidad general</li>
-                            </ul>
-                            <a href="auth/login.html" class="btn-secundario w-100 mt-3">Comenzar gratis</a>
-                        </div>
-                    </div>
-
-                    <!-- Plan Pro (Destacado) -->
-                    <div class="col">
-                        <div class="tarjeta-plan plan-destacado">
-                            <span class="etiqueta-popular">MÁS POPULAR</span>
-                            <h3 class="fw-bold h4 color-primario">Pro Bilingüe</h3>
-                            <p class="text-muted small">Ideal para lograr fluidez y certificación rápida.</p>
-                            <div class="precio-plan">$15 <span>/ mes</span></div>
-                            <ul class="lista-beneficios">
-                                <li><i class="fa-solid fa-check"></i> Acceso ilimitado a 1 idioma</li>
-                                <li><i class="fa-solid fa-check"></i> Cursos completos de LSC</li>
-                                <li><i class="fa-solid fa-check"></i> Certificados de finalización</li>
-                                <li><i class="fa-solid fa-check"></i> Sin publicidad</li>
-                            </ul>
-                            <a href="auth/login.html" class="btn-principal w-100 mt-3">Obtener Pro</a>
-                        </div>
-                    </div>
-
-                    <!-- Plan Global -->
-                    <div class="col">
-                        <div class="tarjeta-plan">
-                            <h3 class="fw-bold h4">Global</h3>
-                            <p class="text-muted small">Acceso total para políglotas sin límites.</p>
-                            <div class="precio-plan">$25 <span>/ mes</span></div>
-                            <ul class="lista-beneficios">
-                                <li><i class="fa-solid fa-check"></i> Todos los idiomas desbloqueados</li>
-                                <li><i class="fa-solid fa-check"></i> Sesiones en vivo con nativos</li>
-                                <li><i class="fa-solid fa-check"></i> Material descargable offline</li>
-                                <li><i class="fa-solid fa-check"></i> Soporte prioritario 24/7</li>
-                            </ul>
-                            <a href="auth/login.html" class="btn-secundario w-100 mt-3">Ser Global</a>
-                        </div>
-                    </div>
+                <div class="preguntas__lista">
+                    <details class="pregunta" open>
+                        <summary>¿Necesito saber algo antes de empezar?</summary>
+                        <p>No. Todos los cursos empiezan desde el nivel básico y te llevan paso a paso. El curso de
+                            Lengua de Señas Colombiana también empezará desde cero.</p>
+                    </details>
+                    <details class="pregunta">
+                        <summary>¿Los cursos dan certificado?</summary>
+                        <p>Sí. Cuando completas todas las lecciones de un curso, tu certificado aparece en tu panel con
+                            un código propio.</p>
+                    </details>
+                    <details class="pregunta">
+                        <summary>¿Cómo son las lecciones?</summary>
+                        <p>Son cortas y prácticas: respondes ejercicios y ves al instante si acertaste, como en la
+                            lección de ejemplo de arriba. Cada lección completada te da XP y cuenta para tu racha.</p>
+                    </details>
+                    <details class="pregunta">
+                        <summary>¿Cuándo abre el curso de LSC?</summary>
+                        <p>Lo estamos preparando. Crea tu cuenta gratis y te avisamos en cuanto esté listo.</p>
+                    </details>
                 </div>
             </div>
         </section>
 
-    <!-- Sección de Preguntas Frecuentes -->
-    <section class="seccion-faq py-5" id="preguntas">
-        <div class="container container-faq">
-            <div class="text-center mb-5">
-                <span class="etiqueta-alerta mb-2 d-inline-block">Resolvemos tus dudas</span>
-                <h2 class="fw-bold display-6 mb-2">Preguntas frecuentes</h2>
-                <p class="text-muted">Todo lo que necesitas saber sobre BiGlobal y nuestros cursos</p>
-            </div>
-
-            <div class="accordion" id="acordeonFaq">
-                <!-- Pregunta 1 -->
-                <div class="accordion-item mb-3 border-0 shadow-sm rounded">
-                    <h3 class="accordion-header" id="headingOne">
-                        <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                            ¿Necesito experiencia previa para tomar el curso de Lengua de Señas Colombiana (LSC)?
-                        </button>
-                    </h3>
-                    <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne"
-                        data-bs-parent="#acordeonFaq">
-                        <div class="accordion-body text-muted">
-                            No necesitas ningún conocimiento previo. El curso está diseñado desde el nivel básico para
-                            llevarte paso a paso en el aprendizaje de la LSC y fomentar la inclusión real.
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Pregunta 2 -->
-                <div class="accordion-item mb-3 border-0 shadow-sm rounded">
-                    <h3 class="accordion-header" id="headingTwo">
-                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                            ¿Los cursos incluyen certificado al finalizar?
-                        </button>
-                    </h3>
-                    <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo"
-                        data-bs-parent="#acordeonFaq">
-                        <div class="accordion-body text-muted">
-                            Sí, al completar todas las lecciones y evaluaciones de los planes Pro o Global, obtendrás un
-                            certificado digital verificable que podrás agregar a tu hoja de vida o perfil profesional.
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Pregunta 3 -->
-                <div class="accordion-item border-0 shadow-sm rounded">
-                    <h3 class="accordion-header" id="headingThree">
-                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                            ¿Cómo funcionan las lecciones interactivas?
-                        </button>
-                    </h3>
-                    <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree"
-                        data-bs-parent="#acordeonFaq">
-                        <div class="accordion-body text-muted">
-                            Combinamos teoría práctica, ejercicios visuales, videos explicativos en alta definición (con
-                            enfoque especial en señas) y retos cortos para que aprendas a tu propio ritmo desde
-                            cualquier dispositivo.
-                        </div>
-                    </div>
+        <!-- Cierre: una última invitación antes del footer -->
+        <section class="cierre" aria-labelledby="titulo-cierre">
+            <div class="container cierre__contenido">
+                <h2 class="cierre__titulo" id="titulo-cierre">Tu primera lección te está esperando.</h2>
+                <div class="cierre__acciones">
+                    <a href="auth/login.html#registro" class="boton-claro btn-grande">
+                        Crear cuenta gratis <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                    </a>
+                    <a href="auth/login.html" class="cierre__enlace">Ya tengo cuenta</a>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
     </main>
 
     <!-- Pie de página (Footer) -->
-    <footer class="pie-pagina py-5" id="info-contac">
+    <footer class="pie-pagina" id="info-contac">
         <div class="container">
-            <div class="row g-4 justify-content-between mb-4">
-                <div class="col-lg-4">
-                    <a class="navbar-brand contenedor-logo mb-3 d-inline-flex" href="#">
-                        <img src="img/logo-Biglobal.png" alt="" class="logo-img">
+            <div class="pie-pagina__rejilla">
+                <div class="pie-pagina__marca">
+                    <a class="contenedor-logo" href="#">
+                        <img src="img/logo-Biglobal.png" alt="" class="logo-img" width="40" height="40">
                         <span class="logo-texto">BiGlobal</span>
                     </a>
-                    <p class="text-muted small mb-3">
+                    <p>
                         Conectamos al mundo a través del bilingüismo y la inclusión con la Lengua de Señas Colombiana.
                         Aprende a tu ritmo, en cualquier lugar.
                     </p>
@@ -493,47 +380,41 @@
                          Cuando existan, agrega aquí <a href="https://..."> con su ícono fa-brands. -->
                 </div>
 
-                <div class="col-6 col-lg-2">
+                <div>
                     <h2 class="titulo-footer">Plataforma</h2>
-                    <ul class="list-unstyled enlaces-footer">
+                    <ul class="enlaces-footer">
                         <li><a href="#cursos">Cursos</a></li>
                         <li><a href="#comoFunciona">Cómo funciona</a></li>
-                        <li><a href="#Planes-big">Membresías</a></li>
+                        <li><a href="#planes">Planes</a></li>
                         <li><a href="#preguntas">Preguntas frecuentes</a></li>
                     </ul>
                 </div>
 
-                <div class="col-6 col-lg-2">
+                <div>
                     <h2 class="titulo-footer">Ayuda</h2>
-                    <ul class="list-unstyled enlaces-footer">
+                    <ul class="enlaces-footer">
                         <li><a href="contacto.html">Contacto</a></li>
                         <li><a href="auth/login.html">Iniciar sesión</a></li>
                         <li><a href="auth/recuperar.php">Recuperar contraseña</a></li>
                     </ul>
                 </div>
 
-                <div class="col-lg-3">
+                <div class="pie-pagina__boletin">
                     <h2 class="titulo-footer">Únete al boletín</h2>
-                    <p class="text-muted small">Recibe consejos gratuitos de aprendizaje.</p>
-                    <form class="input-group mb-2" id="form-boletin" novalidate>
+                    <p>Recibe consejos gratuitos de aprendizaje.</p>
+                    <form class="boletin" id="form-boletin" novalidate>
                         <label for="campo-boletin" class="sr-only">Tu correo electrónico</label>
-                        <input type="email" id="campo-boletin" class="form-control campo-boletin"
+                        <input type="email" id="campo-boletin" class="campo-boletin"
                                placeholder="Tu correo electrónico" autocomplete="email" required>
-                        <button class="btn-principal boton-boletin" type="submit">
-                            <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
-                            Enviar
-                        </button>
+                        <button class="btn-principal boton-boletin" type="submit">Enviar</button>
                     </form>
-                    <p class="small mb-0" id="mensaje-boletin" role="status" aria-live="polite"></p>
+                    <p class="mensaje-boletin" id="mensaje-boletin" role="status" aria-live="polite"></p>
                 </div>
             </div>
 
-            <hr class="linea-footer">
-
-            <div
-                class="d-flex flex-column flex-md-row justify-content-between align-items-center text-muted small pt-2">
-                <p class="mb-2 mb-md-0">© 2026 BiGlobal. Todos los derechos reservados.</p>
-                <div class="d-flex gap-4">
+            <div class="pie-pagina__legal">
+                <p>© 2026 BiGlobal. Todos los derechos reservados.</p>
+                <div class="pie-pagina__legales">
                     <a href="privacidad.html" class="enlace-legal">Privacidad</a>
                     <a href="terminos.html" class="enlace-legal">Términos</a>
                     <a href="contacto.html" class="enlace-legal">Contacto</a>
