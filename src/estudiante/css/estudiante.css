@@ -906,3 +906,15 @@ a.est-perfil.es-activo { background: var(--azul-100); }
     border-radius: var(--radio-pill);
     font-size: 0.68rem;
 }
+
+/* ---------- Botones de cada certificado ---------- */
+.certificado__acciones {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--esp-2);
+}
+
+@media (min-width: 640px) { .certificado__acciones { grid-column: 2 / -1; } }
+
+.certificados__nota { margin-top: var(--esp-4); font-size: var(--texto-sm); }

@@ -26,7 +26,37 @@
                     <span class="sr-only">Código de verificación:</span>
                     <code><?= e($cert["codigo"]) ?></code>
                 </p>
+                <div class="certificado__acciones">
+                    <a class="boton boton--secundario boton--sm" href="../certificado.php?codigo=<?= e(rawurlencode($cert["codigo"])) ?>" target="_blank" rel="noopener">
+                        <i class="fa-solid fa-print" aria-hidden="true"></i> Ver e imprimir
+                    </a>
+                    <button class="boton boton--fantasma boton--sm" type="button" data-copiar-certificado="<?= e($cert["codigo"]) ?>">
+                        <i class="fa-solid fa-link" aria-hidden="true"></i> <span>Copiar enlace</span>
+                    </button>
+                </div>
             </li>
         <?php endforeach; ?>
     </ul>
+    <p class="texto-suave certificados__nota">
+        Comparte el enlace de verificación: quien lo abra puede comprobar que tu certificado es real.
+    </p>
+
+    <script>
+    /* "Copiar enlace": copia la dirección pública de verificación del certificado */
+    document.querySelectorAll("[data-copiar-certificado]").forEach(function (boton) {
+        boton.addEventListener("click", function () {
+            var url = new URL("../certificado.php?codigo=" + encodeURIComponent(boton.dataset.copiarCertificado), location.href).href;
+            var texto = boton.querySelector("span");
+            var listo = function () {
+                texto.textContent = "¡Enlace copiado!";
+                setTimeout(function () { texto.textContent = "Copiar enlace"; }, 2500);
+            };
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(url).then(listo, function () { window.prompt("Copia este enlace:", url); });
+            } else {
+                window.prompt("Copia este enlace:", url);
+            }
+        });
+    });
+    </script>
 <?php endif; ?>

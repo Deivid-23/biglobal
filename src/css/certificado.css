@@ -1,0 +1,208 @@
+/* ==========================================================================
+   BiGlobal · Verificación e impresión de certificados (certificado.php)
+   El diploma siempre se ve como papel claro (también en modo oscuro),
+   porque es lo que se imprime o se guarda en PDF.
+   ========================================================================== */
+
+/* ---------- Formulario de verificación ---------- */
+.verificar { max-width: 560px; }
+
+.verificar__fila {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--esp-3);
+    margin-top: var(--esp-2);
+}
+
+.verificar__entrada {
+    flex: 1 1 220px;
+    font-family: var(--fuente-titulo);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.verificar__entrada::placeholder { letter-spacing: 0.06em; text-transform: none; }
+
+.verificar__aviso { margin-top: var(--esp-6); max-width: 860px; }
+
+.verificar__acciones {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--esp-6);
+}
+
+/* ---------- El diploma ---------- */
+.diploma {
+    --papel: #FFFFFF;
+    --tinta: #1E293B;
+    --tinta-suave: #475569;
+    --marca: #2563EB;
+    --marca-suave: #DBEAFE;
+    --logro: #C2410C;
+    --logro-suave: #FFEDD5;
+
+    max-width: 860px;
+    margin: var(--esp-6) auto 0;
+    padding: clamp(10px, 2vw, 16px);
+    background: var(--papel);
+    border-radius: var(--radio-lg);
+    box-shadow: var(--sombra-3);
+    color: var(--tinta);
+}
+
+.diploma__marco {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: clamp(24px, 5vw, 56px) clamp(18px, 5vw, 64px) clamp(20px, 4vw, 40px);
+    border: 2px solid var(--marca);
+    outline: 1px solid var(--marca-suave);
+    outline-offset: -8px;
+    border-radius: calc(var(--radio-lg) - 6px);
+    background:
+        radial-gradient(circle at 0 0, var(--marca-suave) 0 64px, transparent 65px),
+        radial-gradient(circle at 100% 100%, var(--marca-suave) 0 64px, transparent 65px),
+        var(--papel);
+}
+
+.diploma__cabecera {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: clamp(16px, 3vw, 28px);
+}
+
+.diploma__marca {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--fuente-titulo);
+    font-weight: 800;
+    font-size: 1.25rem;
+    color: var(--marca);
+}
+
+.diploma__sello {
+    width: 56px;
+    height: 56px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--logro-suave);
+    color: var(--logro);
+    font-size: 1.5rem;
+    box-shadow: 0 0 0 4px var(--papel), 0 0 0 6px var(--logro-suave);
+}
+
+.diploma__tipo {
+    margin: 0;
+    font-family: var(--fuente-titulo);
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--marca);
+}
+
+.diploma__texto {
+    margin: clamp(14px, 2.5vw, 22px) 0 6px;
+    color: var(--tinta-suave);
+}
+
+.diploma__nombre {
+    margin: 0;
+    font-family: var(--fuente-titulo);
+    font-size: clamp(1.8rem, 1.1rem + 3vw, 2.9rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    color: var(--tinta);
+    overflow-wrap: anywhere;
+    text-wrap: balance;
+}
+
+.diploma__curso {
+    margin: 0;
+    font-family: var(--fuente-titulo);
+    font-size: clamp(1.25rem, 1rem + 1.2vw, 1.6rem);
+    font-weight: 800;
+    color: var(--marca);
+    overflow-wrap: anywhere;
+    text-wrap: balance;
+}
+
+.diploma__detalle {
+    margin: 6px 0 0;
+    min-height: 1.5em;
+    color: var(--tinta-suave);
+}
+
+.diploma__pie {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 24px;
+    margin-top: clamp(24px, 4vw, 40px);
+    padding-top: 18px;
+    border-top: 1px solid var(--marca-suave);
+    text-align: left;
+}
+
+.diploma__verificar { grid-column: 1 / -1; }
+
+.diploma__etiqueta {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--tinta-suave);
+}
+
+.diploma__valor {
+    display: block;
+    margin-top: 2px;
+    font-family: var(--fuente-titulo);
+    font-weight: 700;
+    color: var(--tinta);
+}
+
+.diploma__codigo { letter-spacing: 0.06em; }
+.diploma__enlace { font-family: var(--fuente-texto); font-weight: 400; font-size: 0.85rem; overflow-wrap: anywhere; }
+
+@media (min-width: 640px) {
+    .diploma__pie { grid-template-columns: 1fr 1fr 1.6fr; }
+    .diploma__verificar { grid-column: auto; }
+}
+
+/* ---------- Impresión / PDF: solo el diploma, en una hoja horizontal ---------- */
+@page { size: A4 landscape; margin: 12mm; }
+
+@media print {
+    html, body { background: #FFFFFF !important; }
+
+    .saltar-contenido,
+    .pagina-cabecera,
+    .pagina-pie,
+    .verificar,
+    .verificar__aviso,
+    .verificar__acciones { display: none !important; }
+
+    .pagina-contenido { padding: 0 !important; max-width: none !important; }
+
+    .diploma {
+        max-width: none;
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+    }
+
+    .diploma__marco { min-height: calc(210mm - 24mm - 4px); justify-content: center; }
+    .diploma__pie { grid-template-columns: 1fr 1fr 1.6fr; }
+    .diploma__verificar { grid-column: auto; }
+}
