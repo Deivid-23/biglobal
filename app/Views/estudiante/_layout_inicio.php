@@ -55,13 +55,15 @@ $menu = [
         </nav>
 
         <div class="est-lateral__pie">
-            <div class="est-perfil">
+            <!-- Tu nombre lleva a "Mi perfil" -->
+            <a class="est-perfil <?= $paginaActiva === "perfil" ? "es-activo" : "" ?>" href="index.php?page=perfil"
+               <?= $paginaActiva === "perfil" ? 'aria-current="page"' : "" ?>>
                 <span class="est-avatar" aria-hidden="true"><?= e($estudiante["iniciales"]) ?></span>
                 <span class="est-perfil__texto">
                     <strong><?= e($estudiante["nombre"]) ?></strong>
-                    <small><?= e($estudiante["correo"]) ?></small>
+                    <small>Mi perfil</small>
                 </span>
-            </div>
+            </a>
             <a class="est-nav__enlace est-salir" href="../auth/logout.php">
                 <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
                 <span>Cerrar sesión</span>
@@ -78,8 +80,8 @@ $menu = [
                 <img src="../img/logo-Biglobal.png" alt="" width="32" height="32">
                 <span>BiGlobal</span>
             </a>
-            <a class="est-icono-boton" href="../auth/logout.php" aria-label="Cerrar sesión">
-                <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
+            <a class="est-avatar est-avatar--boton" href="index.php?page=perfil" aria-label="Mi perfil">
+                <?= e($estudiante["iniciales"]) ?>
             </a>
         </header>
 

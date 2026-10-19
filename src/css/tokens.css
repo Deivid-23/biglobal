@@ -127,6 +127,11 @@ body {
     text-rendering: optimizeLegibility;
 }
 
+/* El atributo hidden siempre oculta, aunque la clase tenga display: flex o grid */
+[hidden] {
+    display: none !important;
+}
+
 /* Números alineados en tablas y contadores */
 table, .numeros {
     font-variant-numeric: tabular-nums;

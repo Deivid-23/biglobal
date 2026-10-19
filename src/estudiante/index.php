@@ -18,6 +18,7 @@ $rutas = [
     "curso"        => "curso",
     "leccion"      => "leccion",
     "certificados" => "certificados",
+    "perfil"       => "perfil",
 ];
 
 $pagina = $_GET["page"] ?? "inicio";

@@ -2,6 +2,7 @@
 
 require_once __DIR__ . "/../Models/EstudianteModel.php";
 require_once __DIR__ . "/../Models/GamificacionModel.php";
+require_once __DIR__ . "/../Models/PerfilModel.php";
 
 /**
  * EstudianteController
@@ -17,6 +18,7 @@ require_once __DIR__ . "/../Models/GamificacionModel.php";
  *   estudiante/index.php?page=curso&id=N    -> curso()        (también curso.php?id=N)
  *   estudiante/index.php?page=leccion&id=N  -> leccion()
  *   estudiante/index.php?page=certificados  -> certificados() (también certificados.php)
+ *   estudiante/index.php?page=perfil        -> perfil()       (GET muestra, POST guarda)
  *   estudiante/completar_leccion.php (POST) -> completarLeccion()
  */
 class EstudianteController
@@ -65,6 +67,193 @@ class EstudianteController
         require __DIR__ . "/../Views/estudiante/_layout_inicio.php";
         require __DIR__ . "/../Views/estudiante/{$vista}.php";
         require __DIR__ . "/../Views/estudiante/_layout_fin.php";
+    }
+
+    /* =========================================================
+       MI PERFIL
+       GET  -> muestra los datos de la cuenta
+       POST -> accion=datos     : cambia nombre, apellido y correo
+               accion=password  : cambia la contraseña
+       Si hay un error, la página se vuelve a mostrar con el mensaje
+       y lo que el usuario escribió. Si todo sale bien, se redirige
+       (así al recargar no se envía el formulario dos veces).
+    ========================================================= */
+    public function perfil(): void
+    {
+        $conexion = $this->conexion;
+        $id = $this->usuarioId;
+
+        $cuenta = PerfilModel::obtener($conexion, $id);
+
+        if (!$cuenta) {
+            header("Location: ../auth/logout.php");
+            exit;
+        }
+
+        $errores = ["datos" => null, "password" => null];
+        $valores = [
+            "nombre"   => $cuenta["nombre"],
+            "apellido" => $cuenta["apellido"] === "No especificado" ? "" : $cuenta["apellido"],
+            "correo"   => $cuenta["correo"],
+        ];
+
+        if ($_SERVER["REQUEST_METHOD"] === "POST") {
+
+            verificarCsrfFormulario($_POST["csrf_token"] ?? "");
+
+            $accion = $_POST["accion"] ?? "";
+
+            if ($accion === "datos") {
+                $valores = [
+                    "nombre"   => trim($_POST["nombre"] ?? ""),
+                    "apellido" => trim($_POST["apellido"] ?? ""),
+                    "correo"   => mb_strtolower(trim($_POST["correo"] ?? "")),
+                ];
+                $errores["datos"] = $this->guardarDatos($cuenta, $valores, $_POST["password_actual"] ?? "");
+            } elseif ($accion === "password") {
+                $errores["password"] = $this->guardarPassword(
+                    $_POST["password_actual"] ?? "",
+                    $_POST["password_nueva"] ?? "",
+                    $_POST["password_confirmar"] ?? ""
+                );
+            }
+
+            // Sin errores: guardado. Volvemos a la página con un aviso.
+            if ($errores["datos"] === null && $errores["password"] === null) {
+                header("Location: index.php?page=perfil");
+                exit;
+            }
+        }
+
+        $reglas = Seguridad::reglasPassword();
+
+        $this->render("perfil", "perfil", "Mi perfil", compact("cuenta", "valores", "errores", "reglas"));
+    }
+
+    /** Guarda nombre, apellido y correo. Devuelve null si salió bien o el mensaje de error. */
+    private function guardarDatos(array $cuenta, array $valores, string $passwordActual): ?string
+    {
+        $nombre   = $valores["nombre"];
+        $apellido = $valores["apellido"];
+        $correo   = $valores["correo"];
+
+        if ($nombre === "") {
+            return "Escribe tu nombre.";
+        }
+        if (mb_strlen($nombre) > 100 || mb_strlen($apellido) > 100) {
+            return "El nombre y el apellido pueden tener máximo 100 caracteres.";
+        }
+        if (!mb_check_encoding($nombre . $apellido, "UTF-8")) {
+            return "El nombre tiene caracteres no válidos.";
+        }
+        if (!filter_var($correo, FILTER_VALIDATE_EMAIL) || mb_strlen($correo) > 150) {
+            return "Escribe un correo válido, por ejemplo nombre@correo.com.";
+        }
+
+        $cambiaCorreo = $correo !== mb_strtolower($cuenta["correo"]);
+
+        if ($cambiaCorreo) {
+            if (PerfilModel::correoEnUso($this->conexion, $correo, $this->usuarioId)) {
+                return "Ese correo ya lo usa otra cuenta.";
+            }
+
+            // Para cambiar el correo pedimos la contraseña (si la cuenta tiene una)
+            $hash = PerfilModel::obtenerHash($this->conexion, $this->usuarioId);
+            if ($hash !== null && !$this->passwordCorrecta($passwordActual, $hash)) {
+                return $this->mensajePasswordIncorrecta();
+            }
+        }
+
+        try {
+            PerfilModel::actualizarDatos(
+                $this->conexion,
+                $this->usuarioId,
+                $nombre,
+                $apellido !== "" ? $apellido : "No especificado",
+                $correo
+            );
+        } catch (PDOException $e) {
+            error_log("[BiGlobal][perfil datos] " . $e->getMessage());
+            return "No pudimos guardar tus datos. Inténtalo de nuevo.";
+        }
+
+        // La barra lateral y el login usan estos datos de la sesión
+        $_SESSION["nombre"]   = $nombre;
+        $_SESSION["apellido"] = $apellido !== "" ? $apellido : "No especificado";
+        $_SESSION["correo"]   = $correo;
+
+        $_SESSION["flash_estudiante"] = ["tipo" => "exito", "mensaje" => "¡Listo! Guardamos tus datos."];
+        return null;
+    }
+
+    /** Cambia la contraseña. Devuelve null si salió bien o el mensaje de error. */
+    private function guardarPassword(string $actual, string $nueva, string $confirmar): ?string
+    {
+        $hash = PerfilModel::obtenerHash($this->conexion, $this->usuarioId);
+
+        if ($hash === null) {
+            return "Tu cuenta entra con Google y no tiene contraseña. Usa «Crear contraseña» para hacerla con tu correo.";
+        }
+        if ($actual === "" || $nueva === "" || $confirmar === "") {
+            return "Completa los tres campos de contraseña.";
+        }
+        if (!$this->passwordCorrecta($actual, $hash)) {
+            return $this->mensajePasswordIncorrecta();
+        }
+        if ($nueva !== $confirmar) {
+            return "La nueva contraseña y su confirmación no coinciden.";
+        }
+        if (password_verify($nueva, $hash)) {
+            return "La nueva contraseña debe ser distinta a la actual.";
+        }
+        if (($errorReglas = Seguridad::validarPassword($nueva)) !== null) {
+            return $errorReglas;
+        }
+
+        try {
+            PerfilModel::actualizarPassword($this->conexion, $this->usuarioId, $nueva);
+        } catch (PDOException $e) {
+            error_log("[BiGlobal][perfil password] " . $e->getMessage());
+            return "No pudimos cambiar tu contraseña. Inténtalo de nuevo.";
+        }
+
+        // Nuevo identificador de sesión: si alguien tenía la sesión vieja, deja de servir
+        session_regenerate_id(true);
+
+        $_SESSION["flash_estudiante"] = ["tipo" => "exito", "mensaje" => "¡Contraseña actualizada!"];
+        return null;
+    }
+
+    /**
+     * Revisa la contraseña actual con un límite de intentos:
+     * después de 5 fallos seguidos hay que esperar 15 minutos.
+     */
+    private function passwordCorrecta(string $password, string $hash): bool
+    {
+        $bloqueadoHasta = $_SESSION["perfil_bloqueo"] ?? 0;
+        if (time() < $bloqueadoHasta) {
+            return false;
+        }
+
+        if (password_verify($password, $hash)) {
+            $_SESSION["perfil_intentos"] = 0;
+            return true;
+        }
+
+        $_SESSION["perfil_intentos"] = ($_SESSION["perfil_intentos"] ?? 0) + 1;
+        if ($_SESSION["perfil_intentos"] >= 5) {
+            $_SESSION["perfil_bloqueo"] = time() + 15 * 60;
+            $_SESSION["perfil_intentos"] = 0;
+        }
+        return false;
+    }
+
+    private function mensajePasswordIncorrecta(): string
+    {
+        if (time() < ($_SESSION["perfil_bloqueo"] ?? 0)) {
+            return "Demasiados intentos. Espera unos minutos antes de volver a intentarlo.";
+        }
+        return "La contraseña actual no es correcta.";
     }
 
     /* =========================================================
