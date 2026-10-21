@@ -10,8 +10,11 @@
  * Regla para borrar: un curso o una lección NO se borra si algún
  * estudiante ya avanzó en él (la BD borraría en cascada su progreso y,
  * en un curso, sus certificados). En ese caso se sugiere pasarlo a
- * "Borrador", que lo oculta sin perder nada.
+ * "Borrador", que lo oculta sin perder nada. Una actividad tampoco se
+ * borra si algún estudiante ya la respondió.
  */
+require_once __DIR__ . "/QuizModel.php";
+
 class ContenidoModel
 {
     public const NIVELES = ["Básico", "Intermedio", "Avanzado"];
@@ -272,8 +275,19 @@ class ContenidoModel
         return null;
     }
 
-    public static function eliminarActividad(PDO $c, int $id): void
+    /** No se borra si algún estudiante ya la respondió (se perderían sus intentos). */
+    public static function eliminarActividad(PDO $c, int $id): ?string
     {
+        if (QuizModel::disponible($c)) {
+            $stmt = $c->prepare("SELECT COUNT(DISTINCT usuario_id) FROM actividad_intentos WHERE actividad_id = ?");
+            $stmt->execute([$id]);
+            $avance = (int) $stmt->fetchColumn();
+            if ($avance > 0) {
+                return plural_panel($avance, "estudiante ya respondió", "estudiantes ya respondieron")
+                    . " esta actividad. Puedes editarla, pero no borrarla.";
+            }
+        }
         $c->prepare("DELETE FROM actividades WHERE id = ?")->execute([$id]);
+        return null;
     }
 }

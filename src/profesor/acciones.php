@@ -207,10 +207,9 @@ try {
                 volverCon("error", "La actividad no existe o no es tuya.");
             }
 
-            $stmt = $conexion->prepare("DELETE FROM actividades WHERE id = ?");
-            $stmt->execute([$actividadId]);
-
-            volverCon("ok", "Actividad eliminada.", "index.php?page=actividades&id=" . $cursoId);
+            /* Solo si ningún estudiante la ha respondido (ver ContenidoModel) */
+            $error = ContenidoModel::eliminarActividad($conexion, $actividadId);
+            volverCon($error ? "error" : "ok", $error ?? "Actividad eliminada.", "index.php?page=actividades&id=" . $cursoId);
 
 
 

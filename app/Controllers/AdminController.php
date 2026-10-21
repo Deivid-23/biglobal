@@ -409,8 +409,8 @@ class AdminController
                     Panel::volver($volver, $error ? "error" : "ok", $error ?? "Lección eliminada.");
 
                 case "actividades":
-                    ContenidoModel::eliminarActividad($this->c, $id);
-                    Panel::volver($volver, "ok", "Actividad eliminada.");
+                    $error = ContenidoModel::eliminarActividad($this->c, $id);
+                    Panel::volver($volver, $error ? "error" : "ok", $error ?? "Actividad eliminada.");
             }
         } catch (PDOException $e) {
             error_log("[BiGlobal][admin eliminar] " . $e->getMessage());
