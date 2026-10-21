@@ -42,6 +42,11 @@ class Conexion
 
         try {
             self::$conexion = new PDO($dsn, $db["usuario"], $db["clave"], $opciones);
+
+            // Hora de Colombia (UTC-5, sin horario de verano) para NOW(),
+            // CURRENT_TIMESTAMP y la lectura de columnas TIMESTAMP.
+            // Sin esto TiDB usa UTC y las fechas salían 5 horas adelantadas.
+            self::$conexion->exec("SET time_zone = '-05:00'");
         } catch (PDOException $e) {
             // El detalle real va al log del servidor, nunca al navegador
             error_log("[BiGlobal][conexion] " . $e->getMessage());
