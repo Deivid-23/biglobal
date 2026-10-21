@@ -679,6 +679,82 @@ a { color: var(--azul-700); text-underline-offset: 3px; }
 
 .actividad__texto { margin-top: var(--esp-1); color: var(--texto-suave); font-size: var(--texto-sm); line-height: 1.6; overflow-wrap: anywhere; }
 
+/* ---------- Actividad con preguntas (quiz) ---------- */
+/* Al saltar a #actividad-N desde el resultado, que no quede pegada al borde */
+.actividad { scroll-margin-top: var(--esp-6); }
+
+.quiz__meta { margin-top: var(--esp-2); color: var(--texto-suave); font-size: var(--texto-sm); }
+
+.quiz { margin-top: var(--esp-4); display: grid; gap: var(--esp-4); justify-items: start; }
+.quiz__preguntas { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--esp-4); width: 100%; }
+
+.quiz__pregunta { border: 0; margin: 0; padding: 0; min-width: 0; display: grid; gap: var(--esp-2); }
+.quiz__pregunta legend { margin-bottom: var(--esp-2); padding: 0; font-weight: 700; line-height: 1.5; overflow-wrap: anywhere; }
+.quiz__numero { color: var(--texto-suave); }
+
+.quiz__opcion {
+    display: flex;
+    align-items: center;
+    gap: var(--esp-3);
+    min-height: 48px;
+    padding: var(--esp-2) var(--esp-4);
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio);
+    cursor: pointer;
+    overflow-wrap: anywhere;
+    transition: border-color var(--dur) ease, background-color var(--dur) ease;
+}
+
+.quiz__opcion span { flex: 1 1 auto; min-width: 0; }
+.quiz__opcion input { flex: 0 0 auto; width: 20px; height: 20px; margin: 0; accent-color: var(--azul-600); }
+.quiz__opcion:has(input:checked) { border-color: var(--azul-600); background: var(--azul-50); }
+.quiz__opcion:has(input:focus-visible) { outline: 2px solid var(--azul-600); outline-offset: 2px; }
+
+@media (hover: hover) and (pointer: fine) {
+    .quiz__opcion:hover { border-color: var(--azul-300); }
+}
+
+/* Después de enviar: acierto en verde, error en rojo */
+.quiz__opcion--bien,
+.quiz__opcion--bien:has(input:checked) { border-color: var(--verde-600); background: var(--verde-50); color: var(--verde-700); }
+.quiz__opcion--mal,
+.quiz__opcion--mal:has(input:checked) { border-color: var(--rojo-600); background: var(--rojo-50); color: var(--rojo-700); }
+.quiz__opcion--correcta { border-style: dashed; border-color: var(--verde-600); }
+.quiz__opcion > i { flex: 0 0 auto; }
+.quiz__etiqueta { flex: 0 0 auto !important; color: var(--verde-700); font-size: var(--texto-xs); font-weight: 700; }
+
+.quiz__resultado {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--esp-3);
+    margin-top: var(--esp-4);
+    padding: var(--esp-4);
+    border: 1px solid;
+    border-radius: var(--radio);
+    font-size: var(--texto-sm);
+    line-height: 1.55;
+}
+
+.quiz__resultado > i { margin-top: 3px; font-size: 1.125rem; }
+.quiz__resultado-titulo { font-family: var(--fuente-titulo); font-weight: 800; font-size: var(--texto-base); }
+.quiz__resultado--bien { background: var(--verde-50); border-color: var(--verde-100); color: var(--verde-700); }
+.quiz__resultado--repasar { background: var(--ambar-100); border-color: var(--ambar-200); color: var(--ambar-700); }
+
+.quiz__practicar { margin-top: var(--esp-3); }
+.quiz__practicar summary {
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    font-weight: 700;
+    color: var(--azul-700);
+    cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .quiz__opcion { transition: none; }
+}
+
 .leccion__pie {
     display: flex;
     flex-wrap: wrap;

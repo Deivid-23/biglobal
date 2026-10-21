@@ -2,6 +2,7 @@
 
 require_once __DIR__ . "/../Models/AdminModel.php";
 require_once __DIR__ . "/../Models/ContenidoModel.php";
+require_once __DIR__ . "/../Models/QuizModel.php";
 
 /**
  * AdminController
@@ -12,8 +13,9 @@ require_once __DIR__ . "/../Models/ContenidoModel.php";
  * SuperAdminController y se valida otra vez en el servidor.
  *
  * Páginas: inicio, usuarios, cursos, idiomas, lecciones, actividades,
- *          solicitudes, perfil.
- * POST:    accion=crear (modal "Nuevo"), accion=editar, accion=eliminar
+ *          preguntas (de una actividad), solicitudes, perfil.
+ * POST:    accion=crear (modal "Nuevo"), accion=editar, accion=eliminar,
+ *          accion=guardar_pregunta, accion=eliminar_pregunta
  */
 class AdminController
 {
@@ -101,10 +103,39 @@ class AdminController
 
     public function actividades(): void
     {
+        $actividades = AdminModel::actividades($this->c);
+
         $this->render("actividades", "actividades", "Actividades", [
-            "actividades" => AdminModel::actividades($this->c),
-            "porTipo"     => AdminModel::actividadesPorTipo($this->c),
+            "actividades"  => $actividades,
+            "porTipo"      => AdminModel::actividadesPorTipo($this->c),
+            // null = aún no se aplicó el SQL de preguntas (no se muestra el botón)
+            "numPreguntas" => QuizModel::disponible($this->c)
+                ? QuizModel::contarPreguntas($this->c, array_column($actividades, "id"))
+                : null,
         ], true);
+    }
+
+    /** Preguntas de una actividad (?page=preguntas&id=...). */
+    public function preguntas(): void
+    {
+        if (!QuizModel::disponible($this->c)) {
+            Panel::volver("index.php?page=actividades", "error", "Las preguntas aún no están disponibles: falta aplicar database/actividades_resolubles.sql.");
+        }
+
+        $actividad = QuizModel::actividad($this->c, (int) ($_GET["id"] ?? 0));
+        if (!$actividad) {
+            Panel::volver("index.php?page=actividades", "error", "No se encontró la actividad.");
+        }
+
+        $this->render("../panel/preguntas", "actividades", "Preguntas", [
+            "actividad"      => $actividad,
+            "preguntas"      => QuizModel::preguntas($this->c, (int) $actividad["id"]),
+            "intentos"       => QuizModel::contarIntentos($this->c, (int) $actividad["id"]),
+            "volverUrl"      => "index.php?page=actividades",
+            "formAction"     => "index.php",
+            "accionGuardar"  => "guardar_pregunta",
+            "accionEliminar" => "eliminar_pregunta",
+        ]);
     }
 
     public function solicitudes(): void
@@ -385,5 +416,72 @@ class AdminController
             error_log("[BiGlobal][admin eliminar] " . $e->getMessage());
             Panel::volver($volver, "error", "No se pudo eliminar. Inténtalo de nuevo.");
         }
+    }
+
+    /* =========================================================
+       PREGUNTAS DE UNA ACTIVIDAD (opción múltiple)
+    ========================================================= */
+    public function guardarPregunta(): void
+    {
+        verificarCsrfFormulario($_POST["csrf_token"] ?? "");
+
+        [$actividadId, $preguntaId, $volver] = $this->preguntaElegida();
+
+        $actividad = QuizModel::actividad($this->c, $actividadId);
+        if (!QuizModel::tipoConPreguntas($actividad["tipo"] ?? "")) {
+            Panel::volver($volver, "error", "Solo las actividades de tipo " . implode(", ", QuizModel::TIPOS_CON_PREGUNTAS) . " llevan preguntas.");
+        }
+
+        $datos = QuizModel::datosPregunta($_POST);
+        if (is_string($datos)) Panel::volver($volver, "error", $datos);
+
+        try {
+            QuizModel::guardarPregunta($this->c, $actividadId, $preguntaId, $datos);
+        } catch (PDOException $e) {
+            error_log("[BiGlobal][admin guardar pregunta] " . $e->getMessage());
+            Panel::volver($volver, "error", "No se pudo guardar la pregunta. Inténtalo de nuevo.");
+        }
+        Panel::volver($volver, "ok", $preguntaId > 0 ? "Pregunta actualizada." : "Pregunta agregada.");
+    }
+
+    public function eliminarPregunta(): void
+    {
+        verificarCsrfFormulario($_POST["csrf_token"] ?? "");
+
+        [$actividadId, $preguntaId, $volver] = $this->preguntaElegida();
+        if ($preguntaId <= 0) Panel::volver($volver, "error", "No se encontró la pregunta.");
+
+        try {
+            $error = QuizModel::eliminarPregunta($this->c, $actividadId, $preguntaId);
+        } catch (PDOException $e) {
+            error_log("[BiGlobal][admin eliminar pregunta] " . $e->getMessage());
+            $error = "No se pudo borrar la pregunta. Inténtalo de nuevo.";
+        }
+        Panel::volver($volver, $error ? "error" : "ok", $error ?? "Pregunta borrada.");
+    }
+
+    /**
+     * Lee actividad_id y pregunta_id del POST y revisa que existan y que
+     * la pregunta sea de esa actividad. Devuelve [actividadId, preguntaId, urlVolver].
+     */
+    private function preguntaElegida(): array
+    {
+        if (!QuizModel::disponible($this->c)) {
+            Panel::volver("index.php?page=actividades", "error", "Las preguntas aún no están disponibles.");
+        }
+
+        $actividadId = (int) ($_POST["actividad_id"] ?? 0);
+        $preguntaId  = (int) ($_POST["pregunta_id"] ?? 0);
+
+        if (!QuizModel::actividad($this->c, $actividadId)) {
+            Panel::volver("index.php?page=actividades", "error", "No se encontró la actividad.");
+        }
+
+        $volver = "index.php?page=preguntas&id=" . $actividadId;
+        if ($preguntaId > 0 && QuizModel::actividadDePregunta($this->c, $preguntaId) !== $actividadId) {
+            Panel::volver($volver, "error", "No se encontró la pregunta.");
+        }
+
+        return [$actividadId, $preguntaId, $volver];
     }
 }

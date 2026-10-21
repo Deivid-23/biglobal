@@ -1,5 +1,5 @@
 <?php
-/** Actividades. Variables: $actividades, $porTipo, $modal */
+/** Actividades. Variables: $actividades, $porTipo, $numPreguntas (null = sin tablas de preguntas), $modal */
 $tipoNuevo = "actividades";
 ?>
 
@@ -23,7 +23,7 @@ $tipoNuevo = "actividades";
     <?php else: ?>
         <div class="pnl-tabla-caja">
             <table class="pnl-tabla">
-                <thead><tr><th>ID</th><th>Título</th><th>Tipo</th><th>Lección</th><th>Descripción</th><th class="col-acciones">Acciones</th></tr></thead>
+                <thead><tr><th>ID</th><th>Título</th><th>Tipo</th><th>Lección</th><th>Descripción</th><?php if ($numPreguntas !== null): ?><th>Preguntas</th><?php endif; ?><th class="col-acciones">Acciones</th></tr></thead>
                 <tbody>
                     <?php foreach ($actividades as $a): ?>
                         <tr>
@@ -32,6 +32,19 @@ $tipoNuevo = "actividades";
                             <td><span class="chip chip--neutro"><?= e($a["tipo"] ?: "Sin tipo") ?></span></td>
                             <td class="col-suave"><?= e($a["leccion"]) ?></td>
                             <td class="col-suave pnl-tabla__celda-larga" title="<?= e($a["descripcion"]) ?>"><?= e($a["descripcion"] ?: "—") ?></td>
+                            <?php if ($numPreguntas !== null): ?>
+                                <td>
+                                    <?php if (QuizModel::tipoConPreguntas($a["tipo"])): ?>
+                                        <a class="boton boton--secundario boton--sm" href="index.php?page=preguntas&amp;id=<?= (int) $a["id"] ?>">
+                                            <i class="fa-solid fa-circle-question" aria-hidden="true"></i>
+                                            <?= (int) ($numPreguntas[(int) $a["id"]] ?? 0) ?>
+                                            <span class="sr-only">preguntas de <?= e($a["titulo"]) ?></span>
+                                        </a>
+                                    <?php else: ?>
+                                        <span class="col-suave">—</span>
+                                    <?php endif; ?>
+                                </td>
+                            <?php endif; ?>
                             <td class="col-acciones">
                                 <?php $acciones = [
                                     "nombre" => $a["titulo"], "modal" => "modal-editar", "action" => "index.php",

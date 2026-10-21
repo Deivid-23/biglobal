@@ -859,3 +859,41 @@ select.entrada { cursor: pointer; }
 .pnl-acciones-fila { justify-content: flex-end; flex-wrap: nowrap; }
 .pnl-acciones-fila form { display: contents; }
 .pnl-item .pnl-acciones-fila { flex: 0 0 auto; }
+
+/* ---------- Preguntas de una actividad (editor) ---------- */
+.pnl-preguntas { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--esp-3); }
+
+.pnl-pregunta {
+    padding: var(--esp-4) var(--esp-5);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio);
+    background: var(--fondo-app);
+}
+
+.pnl-pregunta__cabecera { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--esp-3); }
+.pnl-pregunta__cabecera form { flex: 0 0 auto; }
+.pnl-pregunta__enunciado { font-weight: 700; line-height: 1.5; overflow-wrap: anywhere; min-width: 0; }
+.pnl-pregunta__numero { color: var(--texto-suave); }
+
+.pnl-pregunta__opciones { list-style: none; margin: var(--esp-3) 0 0; padding: 0; display: grid; gap: var(--esp-1); }
+.pnl-pregunta__opciones li { display: flex; align-items: baseline; gap: var(--esp-2); color: var(--texto-suave); overflow-wrap: anywhere; }
+.pnl-pregunta__opciones li i { font-size: 0.75rem; color: var(--texto-tenue); }
+.pnl-pregunta__opciones li.es-correcta { color: var(--verde-700); font-weight: 700; }
+.pnl-pregunta__opciones li.es-correcta i { color: var(--verde-700); }
+
+.pnl-pregunta__editar { margin-top: var(--esp-3); }
+.pnl-pregunta__editar summary {
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    font-weight: 700;
+    color: var(--azul-700);
+    cursor: pointer;
+}
+.pnl-pregunta__editar[open] summary { margin-bottom: var(--esp-3); }
+
+.pnl-opciones { border: 0; margin: 0; padding: 0; min-width: 0; display: grid; gap: var(--esp-2); }
+.pnl-opciones legend { margin-bottom: var(--esp-2); padding: 0; }
+.pnl-opcion { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: var(--esp-3); }
+.pnl-opcion input[type="radio"] { width: 20px; height: 20px; margin: 0; accent-color: var(--verde-600); }
+.pnl-campo-corto .entrada { max-width: 120px; }

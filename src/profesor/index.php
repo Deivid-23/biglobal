@@ -9,6 +9,7 @@
 
 require_once __DIR__ . "/../../app/bootstrap.php";
 require_once __DIR__ . "/../../app/Models/ContenidoModel.php";
+require_once __DIR__ . "/../../app/Models/QuizModel.php";
 
 protegerRol("docente");
 
@@ -51,7 +52,7 @@ unset($_SESSION["flash_docente"]);
    PÁGINA ACTUAL
 ========================================================= */
 $pagina = $_GET["page"] ?? "inicio";
-$paginasValidas = ["inicio", "cursos", "curso", "lecciones", "actividades", "perfil"];
+$paginasValidas = ["inicio", "cursos", "curso", "lecciones", "actividades", "preguntas", "perfil"];
 if (!in_array($pagina, $paginasValidas, true)) $pagina = "inicio";
 
 $cursoIdActual = isset($_GET["id"]) ? (int) $_GET["id"] : 0;
@@ -170,6 +171,7 @@ $titulos = [
     "curso"       => $cursoActual["nombre"] ?? "Curso",
     "lecciones"   => "Lecciones",
     "actividades" => "Actividades",
+    "preguntas"   => "Preguntas",
     "perfil"      => "Mi perfil",
 ];
 
@@ -187,8 +189,13 @@ if ($cursoActual && !empty($leccionesCurso)) {
     $actividadesCurso = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-// En el menú, "curso" se marca como "Mis cursos"
-$activa = $pagina === "curso" ? "cursos" : $pagina;
+// En el menú, "curso" se marca como "Mis cursos" y "preguntas" como "Actividades"
+$activa = $pagina === "curso" ? "cursos" : ($pagina === "preguntas" ? "actividades" : $pagina);
+
+/* Número de preguntas de cada actividad del docente (null = aún no existen las tablas) */
+$numPreguntas = QuizModel::disponible($conexion)
+    ? QuizModel::contarPreguntas($conexion, array_column($actividadesDocente, "id"))
+    : null;
 
 $idiomasActivos = ContenidoModel::idiomasActivos($conexion);
 
@@ -196,10 +203,37 @@ $datosVista = compact(
     "idiomasActivos",
     "docente", "nombreDocente", "totalCursos", "totalLecciones", "totalActividades",
     "cursosDocente", "leccionesDocente", "actividadesDocente",
-    "cursoActual", "leccionesCurso", "actividadesCurso", "labelsLecciones", "valoresLecciones", "csrfToken"
+    "cursoActual", "leccionesCurso", "actividadesCurso", "labelsLecciones", "valoresLecciones", "csrfToken",
+    "numPreguntas"
 );
 
-if ($pagina === "perfil") {
+/* Preguntas de una actividad (?page=preguntas&actividad=...): solo si es de un curso del docente */
+if ($pagina === "preguntas") {
+    $actividadId = (int) ($_GET["actividad"] ?? 0);
+    $cursoDeActividad = ContenidoModel::actividadDelDocente($conexion, $actividadId, $docenteId);
+
+    if ($numPreguntas === null || !$cursoDeActividad) {
+        $_SESSION["flash_docente"] = [
+            "tipo" => "error",
+            "mensaje" => $numPreguntas === null
+                ? "Las preguntas aún no están disponibles."
+                : "La actividad no existe o no es tuya.",
+        ];
+        header("Location: index.php?page=actividades");
+        exit;
+    }
+
+    $datosVista += [
+        "actividad"      => QuizModel::actividad($conexion, $actividadId),
+        "preguntas"      => QuizModel::preguntas($conexion, $actividadId),
+        "intentos"       => QuizModel::contarIntentos($conexion, $actividadId),
+        "volverUrl"      => "index.php?page=actividades&id=" . $cursoDeActividad,
+        "formAction"     => "acciones.php",
+        "accionGuardar"  => "guardar_pregunta",
+        "accionEliminar" => "eliminar_pregunta",
+    ];
+    $vista = __DIR__ . "/../../app/Views/panel/preguntas.php";
+} elseif ($pagina === "perfil") {
     require_once __DIR__ . "/../../app/Models/AdminModel.php";
     $datosVista["perfil"] = AdminModel::perfil($conexion, $docenteId);
     $datosVista["reglas"] = Seguridad::reglasPassword();

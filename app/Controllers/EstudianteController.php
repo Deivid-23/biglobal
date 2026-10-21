@@ -3,6 +3,7 @@
 require_once __DIR__ . "/../Models/EstudianteModel.php";
 require_once __DIR__ . "/../Models/GamificacionModel.php";
 require_once __DIR__ . "/../Models/PerfilModel.php";
+require_once __DIR__ . "/../Models/QuizModel.php";
 
 /**
  * EstudianteController
@@ -20,6 +21,7 @@ require_once __DIR__ . "/../Models/PerfilModel.php";
  *   estudiante/index.php?page=certificados  -> certificados() (también certificados.php)
  *   estudiante/index.php?page=perfil        -> perfil()       (GET muestra, POST guarda)
  *   estudiante/completar_leccion.php (POST) -> completarLeccion()
+ *   estudiante/responder_actividad.php (POST) -> responderActividad()
  */
 class EstudianteController
 {
@@ -408,7 +410,19 @@ class EstudianteController
 
         $actividades = EstudianteModel::obtenerActividadesDeLeccion($this->conexion, $leccionId);
 
-        $this->render("leccion", "mis-cursos", $leccion["titulo"], compact("leccion", "actividades"));
+        // Actividades con preguntas (quiz) y el resultado del último envío
+        $quiz = QuizModel::disponible($this->conexion)
+            ? QuizModel::estadoLeccion($this->conexion, $actividades, $this->usuarioId)
+            : [];
+        $pendientes = count(array_filter($quiz, fn($q) => !$q["aprobada"]));
+
+        $resultado = $_SESSION["resultado_quiz"] ?? null;
+        unset($_SESSION["resultado_quiz"]);
+        if ($resultado && !isset($quiz[(int) $resultado["actividad_id"]])) {
+            $resultado = null;
+        }
+
+        $this->render("leccion", "mis-cursos", $leccion["titulo"], compact("leccion", "actividades", "quiz", "pendientes", "resultado"));
     }
 
     /* =========================================================
@@ -452,6 +466,20 @@ class EstudianteController
         // No se puede completar una lección saltándose la anterior
         if (!EstudianteModel::leccionDesbloqueada($conexion, $leccionId, $usuarioId)) {
             $this->redirigirLeccionBloqueada($cursoId);
+        }
+
+        // Ni sin aprobar sus actividades con preguntas (si ya estaba hecha, se respeta)
+        if (QuizModel::disponible($conexion)
+            && !EstudianteModel::leccionYaCompletada($conexion, $usuarioId, $leccionId)) {
+            $faltan = QuizModel::pendientesEnLeccion($conexion, $leccionId, $usuarioId);
+            if ($faltan > 0) {
+                $_SESSION["flash_estudiante"] = ["tipo" => "info",
+                    "mensaje" => $faltan === 1
+                        ? "Te falta aprobar 1 actividad para terminar esta lección."
+                        : "Te faltan aprobar {$faltan} actividades para terminar esta lección."];
+                header("Location: index.php?page=leccion&id=" . $leccionId . "#titulo-actividades");
+                exit;
+            }
         }
 
         $conGamificacion = GamificacionModel::disponible($conexion);
@@ -530,6 +558,114 @@ class EstudianteController
             }
             manejarErrorBD($e, "No pudimos guardar tu progreso. Vuelve atrás e inténtalo de nuevo.");
         }
+    }
+
+    /* =========================================================
+       RESPONDER UNA ACTIVIDAD CON PREGUNTAS (POST)
+       Se califica aquí, en el servidor. El resultado se muestra en
+       la lección (se guarda una sola vez en la sesión).
+    ========================================================= */
+    public function responderActividad(): void
+    {
+        if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+            header("Location: index.php?page=mis-cursos");
+            exit;
+        }
+
+        verificarCsrfFormulario($_POST["csrf_token"] ?? "");
+
+        $conexion = $this->conexion;
+        $usuarioId = $this->usuarioId;
+        $actividadId = filter_input(INPUT_POST, "actividad_id", FILTER_VALIDATE_INT);
+
+        if (!$actividadId || !QuizModel::disponible($conexion)) {
+            header("Location: index.php?page=mis-cursos");
+            exit;
+        }
+
+        // La actividad tiene que ser de una lección publicada que el estudiante pueda ver
+        $actividad = QuizModel::actividad($conexion, $actividadId);
+        $leccion = $actividad
+            ? EstudianteModel::obtenerLeccionPublicada($conexion, (int) $actividad["leccion_id"], $usuarioId)
+            : false;
+
+        if (!$leccion || !QuizModel::tipoConPreguntas($actividad["tipo"])) {
+            header("Location: index.php?page=mis-cursos");
+            exit;
+        }
+
+        $leccionId = (int) $leccion["id"];
+        $volver = "index.php?page=leccion&id=" . $leccionId . "#actividad-" . $actividadId;
+
+        if ((int) $leccion["completado"] !== 1
+            && !EstudianteModel::leccionDesbloqueada($conexion, $leccionId, $usuarioId)) {
+            $this->redirigirLeccionBloqueada((int) $leccion["curso_id"]);
+        }
+
+        // Tope para que nadie pruebe respuestas a toda velocidad
+        if (!LimiteIntentos::permitir("actividad:usuario:" . $usuarioId, 30, 600)) {
+            $_SESSION["flash_estudiante"] = ["tipo" => "error",
+                "mensaje" => "Enviaste muchas respuestas seguidas. Espera unos minutos y vuelve a intentarlo."];
+            header("Location: " . $volver);
+            exit;
+        }
+
+        $respuestas = is_array($_POST["respuestas"] ?? null) ? $_POST["respuestas"] : [];
+        $nota = QuizModel::calificar($conexion, $actividadId, $respuestas);
+
+        if ($nota["total"] === 0) {
+            header("Location: " . $volver);
+            exit;
+        }
+
+        $aprobado = QuizModel::aprueba($nota["aciertos"], $nota["total"]);
+
+        try {
+            $conexion->beginTransaction();
+
+            $yaAprobada = QuizModel::yaAprobada($conexion, $actividadId, $usuarioId);
+            QuizModel::guardarIntento($conexion, $usuarioId, $actividadId, $nota["aciertos"], $nota["total"], $aprobado);
+
+            // XP solo la primera vez que la aprueba (también cuenta para la racha)
+            $xpGanado = 0;
+            $medallasNuevas = [];
+            if ($aprobado && !$yaAprobada && GamificacionModel::disponible($conexion)) {
+                $racha = GamificacionModel::registrarActividad(
+                    $conexion, $usuarioId, QuizModel::XP_ACTIVIDAD, "actividad", $actividadId
+                );
+                $xpGanado = QuizModel::XP_ACTIVIDAD;
+
+                $codigos = [];
+                if ($racha >= 3) $codigos[] = "racha_3";
+                if ($racha >= 7) $codigos[] = "racha_7";
+                foreach ($codigos as $codigo) {
+                    $nombre = GamificacionModel::otorgarMedalla($conexion, $usuarioId, $codigo);
+                    if ($nombre !== null) {
+                        $medallasNuevas[] = $nombre;
+                    }
+                }
+            }
+
+            $conexion->commit();
+        } catch (PDOException $e) {
+            if ($conexion->inTransaction()) {
+                $conexion->rollBack();
+            }
+            manejarErrorBD($e, "No pudimos guardar tus respuestas. Vuelve atrás e inténtalo de nuevo.");
+        }
+
+        $_SESSION["resultado_quiz"] = [
+            "actividad_id" => $actividadId,
+            "aciertos"     => $nota["aciertos"],
+            "total"        => $nota["total"],
+            "aprobado"     => $aprobado,
+            "detalle"      => $nota["detalle"],
+            "xp"           => $xpGanado,
+            "medallas"     => $medallasNuevas,
+        ];
+
+        header("Location: " . $volver);
+        exit;
     }
 
     /* =========================================================

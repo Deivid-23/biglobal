@@ -2,6 +2,7 @@
 
 require_once __DIR__ . "/../../app/bootstrap.php";
 require_once __DIR__ . "/../../app/Models/ContenidoModel.php";
+require_once __DIR__ . "/../../app/Models/QuizModel.php";
 
 protegerRol("docente");
 require_once __DIR__ . "/verificar_aprobado.php";
@@ -288,6 +289,50 @@ try {
 
             ContenidoModel::actualizarActividad($conexion, $actividadId, $datos);
             volverCon("ok", "Actividad actualizada.", "index.php?page=actividades&id=" . $cursoId);
+
+        /* =========================================================
+           PREGUNTAS DE UNA ACTIVIDAD (solo si es de un curso del docente)
+        ========================================================= */
+        case "guardar_pregunta":
+        case "eliminar_pregunta":
+
+            $actividadId = (int) ($_POST["actividad_id"] ?? 0);
+            $preguntaId  = (int) ($_POST["pregunta_id"] ?? 0);
+
+            if (!QuizModel::disponible($conexion)) {
+                volverCon("error", "Las preguntas aún no están disponibles.", "index.php?page=actividades");
+            }
+            if (!ContenidoModel::actividadDelDocente($conexion, $actividadId, $docenteId)) {
+                volverCon("error", "La actividad no existe o no es tuya.", "index.php?page=actividades");
+            }
+
+            $volver = "index.php?page=preguntas&actividad=" . $actividadId;
+
+            /* La pregunta tiene que ser de esta misma actividad */
+            if ($preguntaId > 0 && QuizModel::actividadDePregunta($conexion, $preguntaId) !== $actividadId) {
+                volverCon("error", "No se encontró la pregunta.", $volver);
+            }
+
+            if ($accion === "eliminar_pregunta") {
+                if ($preguntaId <= 0) {
+                    volverCon("error", "No se encontró la pregunta.", $volver);
+                }
+                $error = QuizModel::eliminarPregunta($conexion, $actividadId, $preguntaId);
+                volverCon($error ? "error" : "ok", $error ?? "Pregunta borrada.", $volver);
+            }
+
+            $actividad = QuizModel::actividad($conexion, $actividadId);
+            if (!QuizModel::tipoConPreguntas($actividad["tipo"] ?? "")) {
+                volverCon("error", "Solo las actividades de tipo " . implode(", ", QuizModel::TIPOS_CON_PREGUNTAS) . " llevan preguntas.", $volver);
+            }
+
+            $datos = QuizModel::datosPregunta($_POST);
+            if (is_string($datos)) {
+                volverCon("error", $datos, $volver);
+            }
+
+            QuizModel::guardarPregunta($conexion, $actividadId, $preguntaId, $datos);
+            volverCon("ok", $preguntaId > 0 ? "Pregunta actualizada." : "Pregunta agregada.", $volver);
 
         default:
 

@@ -1,5 +1,5 @@
 <?php
-/** Actividades del docente. Variables: $cursoActual, $leccionesCurso, $actividadesCurso, $actividadesDocente, $csrfToken */
+/** Actividades del docente. Variables: $cursoActual, $leccionesCurso, $actividadesCurso, $actividadesDocente, $numPreguntas, $csrfToken */
 ?>
 
 <?php if ($cursoActual): ?>
@@ -26,6 +26,12 @@
                                 <p class="pnl-item__titulo"><?= e($a["titulo"]) ?></p>
                                 <p class="pnl-item__texto"><span class="chip chip--neutro"><?= e($a["tipo"] ?: "Sin tipo") ?></span> <?= e($a["leccion"]) ?></p>
                             </div>
+                            <?php if ($numPreguntas !== null && QuizModel::tipoConPreguntas($a["tipo"])): ?>
+                                <a class="boton boton--secundario boton--sm" href="index.php?page=preguntas&amp;actividad=<?= (int) $a["id"] ?>">
+                                    <i class="fa-solid fa-circle-question" aria-hidden="true"></i> Preguntas (<?= (int) ($numPreguntas[(int) $a["id"]] ?? 0) ?>)
+                                    <span class="sr-only">de <?= e($a["titulo"]) ?></span>
+                                </a>
+                            <?php endif; ?>
                             <?php $acciones = [
                                 "nombre" => $a["titulo"], "modal" => "modal-editar", "action" => "acciones.php",
                                 "datos" => ["actividad_id" => $a["id"], "titulo" => $a["titulo"], "descripcion" => $a["descripcion"], "tipo" => $a["tipo"]],
@@ -99,7 +105,7 @@
         <?php else: ?>
             <div class="pnl-tabla-caja">
                 <table class="pnl-tabla">
-                    <thead><tr><th>Título</th><th>Tipo</th><th>Lección</th><th>Curso</th></tr></thead>
+                    <thead><tr><th>Título</th><th>Tipo</th><th>Lección</th><th>Curso</th><?php if ($numPreguntas !== null): ?><th>Preguntas</th><?php endif; ?></tr></thead>
                     <tbody>
                         <?php foreach ($actividadesDocente as $a): ?>
                             <tr>
@@ -107,6 +113,16 @@
                                 <td><span class="chip chip--neutro"><?= e($a["tipo"] ?: "—") ?></span></td>
                                 <td class="col-suave"><?= e($a["leccion"]) ?></td>
                                 <td class="col-suave"><?= e($a["curso"]) ?></td>
+                                <?php if ($numPreguntas !== null): ?>
+                                    <td>
+                                        <?php if ($numPreguntas !== null && QuizModel::tipoConPreguntas($a["tipo"])): ?>
+                                            <a class="boton boton--secundario boton--sm" href="index.php?page=preguntas&amp;actividad=<?= (int) $a["id"] ?>">
+                                                <i class="fa-solid fa-circle-question" aria-hidden="true"></i> Preguntas (<?= (int) ($numPreguntas[(int) $a["id"]] ?? 0) ?>)
+                                                <span class="sr-only">de <?= e($a["titulo"]) ?></span>
+                                            </a>
+                                        <?php endif; ?>
+                                    </td>
+                                <?php endif; ?>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
