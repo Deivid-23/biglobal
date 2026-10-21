@@ -61,7 +61,7 @@ header("X-Robots-Tag: noindex");
     <script src="js/tema.js"></script>
     <title><?= $estado === "valido" ? "Certificado de " . e($nombreCompleto) : "Verificar certificado" ?> | <?= e($sitio) ?></title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Manrope:wght@600;700;800&display=swap">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha384-PPIZEGYM1v8zp5Py7UjFb79S58UeqCL9pYVnVPURKEqvioPROaVAJKKLzvH2rDnI" crossorigin="anonymous" referrerpolicy="no-referrer">
     <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/componentes.css">
     <link rel="stylesheet" href="css/paginas.css">
@@ -219,25 +219,14 @@ header("X-Robots-Tag: noindex");
         </article>
 
         <div class="verificar__acciones">
-            <button class="boton boton--primario" type="button" onclick="window.print()">
+            <button class="boton boton--primario" type="button" data-imprimir>
                 <i class="fa-solid fa-print" aria-hidden="true"></i> Imprimir o guardar en PDF
             </button>
         </div>
     <?php endif; ?>
 </main>
 
-<script>
-/* Código QR del certificado: lleva a esta misma página de verificación.
-   Si la librería no carga, el cuadro queda vacío y el código sigue visible. */
-window.addEventListener("load", function () {
-    var caja = document.querySelector("[data-qr]");
-    if (!caja || typeof QRCode === "undefined") { if (caja) caja.hidden = true; return; }
-    var url = caja.dataset.qr;
-    if (url.charAt(0) === "/") url = location.origin + url;
-    new QRCode(caja, { text: url, width: 112, height: 112, colorDark: "#1E3A8A", colorLight: "#FFFFFF", correctLevel: QRCode.CorrectLevel.M });
-    caja.removeAttribute("title");
-});
-</script>
+<script src="js/certificado.js"></script>
 
 <footer class="pagina-pie">
     © 2026 <?= e($sitio) ?> ·

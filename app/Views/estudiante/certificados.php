@@ -41,22 +41,4 @@
         Comparte el enlace de verificación: quien lo abra puede comprobar que tu certificado es real.
     </p>
 
-    <script>
-    /* "Copiar enlace": copia la dirección pública de verificación del certificado */
-    document.querySelectorAll("[data-copiar-certificado]").forEach(function (boton) {
-        boton.addEventListener("click", function () {
-            var url = new URL("../certificado.php?codigo=" + encodeURIComponent(boton.dataset.copiarCertificado), location.href).href;
-            var texto = boton.querySelector("span");
-            var listo = function () {
-                texto.textContent = "¡Enlace copiado!";
-                setTimeout(function () { texto.textContent = "Copiar enlace"; }, 2500);
-            };
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(url).then(listo, function () { window.prompt("Copia este enlace:", url); });
-            } else {
-                window.prompt("Copia este enlace:", url);
-            }
-        });
-    });
-    </script>
 <?php endif; ?>

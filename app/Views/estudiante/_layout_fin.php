@@ -15,18 +15,6 @@
     <?php endforeach; ?>
 </nav>
 
-<script>
-/* El aviso flotante se oculta solo a los 4 segundos (o al tocarlo). */
-(function () {
-    var toast = document.querySelector("[data-toast]");
-    if (!toast) return;
-    function ocultar() {
-        toast.dataset.oculto = "true";
-        setTimeout(function () { toast.remove(); }, 300);
-    }
-    toast.addEventListener("click", ocultar);
-    setTimeout(ocultar, 4000);
-})();
-</script>
+<script src="js/estudiante.js"></script>
 </body>
 </html>

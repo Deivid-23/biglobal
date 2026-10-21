@@ -152,14 +152,3 @@ $textoReglas = "Mínimo {$reglas['minimo']} caracteres"
     </form>
 </section>
 
-<script>
-/* Muestra el campo "contraseña actual" solo cuando el correo cambia. */
-(function () {
-    var correo = document.getElementById("correo");
-    var bloque = document.getElementById("confirmar-correo");
-    if (!correo || !bloque) return;
-    correo.addEventListener("input", function () {
-        bloque.hidden = correo.value.trim().toLowerCase() === correo.dataset.original;
-    });
-})();
-</script>
