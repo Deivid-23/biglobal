@@ -243,8 +243,16 @@ class QuizModel
             return "Esta actividad ya tiene {$intentos} " . ($intentos === 1 ? "intento" : "intentos")
                 . " de estudiantes, así que sus preguntas no se borran. Puedes editarla.";
         }
+        $stmt = $c->prepare("
+            SELECT CONCAT(LEFT(p.enunciado, 120), ' · ', a.titulo) FROM actividad_preguntas p
+            INNER JOIN actividades a ON a.id = p.actividad_id WHERE p.id = ? AND p.actividad_id = ?
+        ");
+        $stmt->execute([$preguntaId, $actividadId]);
+        $nombre = (string) ($stmt->fetchColumn() ?: "#" . $preguntaId);
+
         $c->prepare("DELETE FROM actividad_preguntas WHERE id = ? AND actividad_id = ?")
           ->execute([$preguntaId, $actividadId]);
+        Auditoria::registrar("pregunta.eliminar", "pregunta", $preguntaId, $nombre);
         return null;
     }
 

@@ -22,6 +22,26 @@ function redirigirCon(string $tab, string $tipo, string $mensaje): void
     Panel::volver("index.php?page=configuracion&tab=" . urlencode($tab), $tipo, $mensaje);
 }
 
+/**
+ * Guarda las claves y deja en la auditoría CUÁLES cambiaron
+ * (solo los nombres, nunca los valores: puede haber contraseñas).
+ */
+function guardarConfig(string $tab, array $datos): void
+{
+    $cambiadas = [];
+    foreach ($datos as $clave => $valor) {
+        if ((string) Config::get($clave, "") !== (string) $valor) {
+            $cambiadas[] = $clave;
+        }
+    }
+
+    Config::setMany($datos);
+
+    if ($cambiadas) {
+        Auditoria::registrar("config.cambiar", "configuracion", null, $tab, null, implode(", ", $cambiadas));
+    }
+}
+
 /* =========================================================
    SOLO POST
 ========================================================= */
@@ -59,7 +79,7 @@ try {
                 redirigirCon("general", "error", "El correo de contacto no es válido.");
             }
 
-            Config::setMany($datos);
+            guardarConfig($accion, $datos);
 
             redirigirCon("general", "ok", "Configuración general guardada.");
 
@@ -87,7 +107,7 @@ try {
                 redirigirCon("apariencia", "error", "Ese color no es válido.");
             }
 
-            Config::setMany([
+            guardarConfig($accion, [
                 "tema_default"  => $tema,
                 "color_acento"  => $acento,
             ]);
@@ -107,7 +127,7 @@ try {
             foreach (Notificador::TIPOS as $clave) {
                 $preferencias[$clave] = isset($_POST[$clave]) ? "1" : "0";
             }
-            Config::setMany($preferencias);
+            guardarConfig($accion, $preferencias);
 
             redirigirCon("notificaciones", "ok", "Preferencias de notificaciones guardadas.");
 
@@ -125,7 +145,7 @@ try {
             if ($intentos < 1 || $intentos > 20)         $intentos = 5;
             if ($bloqueoMin < 1 || $bloqueoMin > 120)    $bloqueoMin = 1;
 
-            Config::setMany([
+            guardarConfig($accion, [
                 "seg_min_password"       => (string) $minPassword,
                 "seg_requiere_mayuscula" => isset($_POST["seg_requiere_mayuscula"]) ? "1" : "0",
                 "seg_requiere_numero"    => isset($_POST["seg_requiere_numero"])    ? "1" : "0",
@@ -159,7 +179,7 @@ try {
                 $datos["smtp_password"] = Config::get("smtp_password", "");
             }
 
-            Config::setMany($datos);
+            guardarConfig($accion, $datos);
 
             redirigirCon("correo", "ok", "Configuración SMTP guardada.");
 

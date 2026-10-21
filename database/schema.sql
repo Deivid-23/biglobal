@@ -13,7 +13,6 @@
 --       2 = docente pendiente de aprobación
 --     La columna usuarios.estado existe pero NO se usa (compatibilidad).
 --   - cursos.estado, lecciones.estado, idiomas.estado: 1 = activo/publicado, 0 = no.
---   - usuario_roles existe en la BD pero el código no la usa.
 -- =============================================================
 
 CREATE DATABASE IF NOT EXISTS biglobal
@@ -121,16 +120,6 @@ CREATE TABLE `roles` (
   `nombre` varchar(50) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `nombre` (`nombre`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-CREATE TABLE `usuario_roles` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `usuario_id` int(11) NOT NULL,
-  `rol_id` int(11) NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `usuario_id` (`usuario_id`),
-  KEY `rol_id` (`rol_id`),
-  CONSTRAINT `usuario_roles_ibfk_1` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `usuario_roles_ibfk_2` FOREIGN KEY (`rol_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE `usuarios` (
   `id` int(11) NOT NULL AUTO_INCREMENT,

@@ -897,3 +897,9 @@ select.entrada { cursor: pointer; }
 .pnl-opcion { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: var(--esp-3); }
 .pnl-opcion input[type="radio"] { width: 20px; height: 20px; margin: 0; accent-color: var(--verde-600); }
 .pnl-campo-corto .entrada { max-width: 120px; }
+
+/* ---------- Filtro simple (Auditoría) ---------- */
+.pnl-filtro { display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-2) var(--esp-3); margin-bottom: var(--esp-4); }
+.pnl-filtro .campo__etiqueta { margin: 0; }
+.pnl-filtro .pnl-selector { min-width: 0; max-width: 100%; }
+.pnl-tabla__fecha { white-space: nowrap; }

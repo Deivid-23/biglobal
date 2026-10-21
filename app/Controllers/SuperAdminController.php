@@ -11,6 +11,7 @@ require_once __DIR__ . "/../Helpers/Correo.php";
  * un admin que escriba la URL a mano recibe "Acceso denegado" (403).
  *
  * Páginas: inicio (resumen del sistema), cuentas (roles, estado, borrado),
+ *          auditoria (registro de cambios, solo lectura),
  *          configuracion (general, apariencia, notificaciones, seguridad,
  *          correo, sistema).
  *
@@ -101,6 +102,23 @@ class SuperAdminController
         ]);
     }
 
+    /* =========================================================
+       AUDITORÍA (solo lectura)
+    ========================================================= */
+    public function auditoria(): void
+    {
+        $filtro = (string) ($_GET["accion"] ?? "");
+        if (!isset(Auditoria::ACCIONES[$filtro])) {
+            $filtro = "";
+        }
+
+        $this->render("auditoria", "super-auditoria", "Auditoría", [
+            "registros"  => Auditoria::recientes($this->c, $filtro ?: null),
+            "filtro"     => $filtro,
+            "disponible" => Auditoria::disponible($this->c),
+        ]);
+    }
+
     /** Cuántos super administradores activos hay (sin contar a $excepto). */
     private function superAdminsActivos(int $excepto = 0): int
     {
@@ -140,6 +158,7 @@ class SuperAdminController
         }
 
         $esSuperYActivo = $cuenta["rol"] === "superadmin" && (int) $cuenta["activo"] === 1;
+        $nombreCuenta = Auditoria::nombreCuenta($this->c, $id);
 
         try {
             switch ($accion) {
@@ -157,6 +176,9 @@ class SuperAdminController
                     }
 
                     $this->c->prepare("UPDATE usuarios SET rol_id = ? WHERE id = ?")->execute([$rolId, $id]);
+                    if ($nuevoRol !== $cuenta["rol"]) {
+                        Auditoria::registrar("cuenta.rol", "cuenta", $id, $nombreCuenta, $cuenta["rol"], $nuevoRol);
+                    }
                     Panel::volver($volver, "ok", "Rol actualizado a «{$nuevoRol}».");
 
                 case "cambiar_estado":
@@ -165,6 +187,10 @@ class SuperAdminController
                         Panel::volver($volver, "error", "No puedes desactivar el último super administrador.");
                     }
                     $this->c->prepare("UPDATE usuarios SET activo = ? WHERE id = ?")->execute([$activo, $id]);
+                    if ($activo !== (int) $cuenta["activo"]) {
+                        Auditoria::registrar("cuenta.estado", "cuenta", $id, $nombreCuenta,
+                            Auditoria::ESTADOS[(int) $cuenta["activo"]] ?? (string) $cuenta["activo"], Auditoria::ESTADOS[$activo]);
+                    }
                     Panel::volver($volver, "ok", $activo ? "Cuenta activada." : "Cuenta desactivada.");
 
                 case "eliminar":
@@ -172,6 +198,7 @@ class SuperAdminController
                         Panel::volver($volver, "error", "No puedes eliminar el último super administrador.");
                     }
                     $this->c->prepare("DELETE FROM usuarios WHERE id = ?")->execute([$id]);
+                    Auditoria::registrar("cuenta.eliminar", "cuenta", $id, $nombreCuenta, $cuenta["rol"], null);
                     Panel::volver($volver, "ok", "Cuenta eliminada definitivamente.");
 
                 default:

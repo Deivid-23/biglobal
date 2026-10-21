@@ -200,7 +200,8 @@ class AdminController
 
         // El rol debe estar en la lista permitida PARA QUIEN CREA:
         // un admin no puede crear administradores aunque edite el formulario.
-        $permitidos = array_column(AdminModel::rolesPermitidos($this->c, esSuperAdmin()), "id");
+        $nombresRoles = array_column(AdminModel::rolesPermitidos($this->c, esSuperAdmin()), "nombre", "id");
+        $permitidos = array_keys($nombresRoles);
         if (!in_array($rolId, array_map("intval", $permitidos), true)) {
             http_response_code(403);
             Panel::volver($volver, "error", "No tienes permiso para crear usuarios con ese rol.");
@@ -217,6 +218,10 @@ class AdminController
             VALUES (?, ?, ?, ?, ?, 1, 1)
         ");
         $stmt->execute([$nombre, $apellido, $correo, password_hash($password, PASSWORD_DEFAULT), $rolId]);
+
+        Auditoria::registrar("cuenta.crear", "cuenta", (int) $this->c->lastInsertId(),
+            trim("{$nombre} {$apellido}") . " ({$correo})", null, $nombresRoles[$rolId] ?? (string) $rolId);
+
         Panel::volver($volver, "ok", "Usuario creado correctamente.");
     }
 

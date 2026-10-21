@@ -41,28 +41,36 @@ try {
 
     /* Solo se actúa sobre cuentas que de verdad son de docente */
     $stmt = $conexion->prepare("
-        SELECT u.id FROM usuarios u
+        SELECT u.id, u.activo FROM usuarios u
         INNER JOIN roles r ON u.rol_id = r.id
         WHERE u.id = ? AND r.nombre = 'docente'
         LIMIT 1
     ");
     $stmt->execute([$id]);
+    $docente = $stmt->fetch();
 
-    if (!$stmt->fetch()) {
+    if (!$docente) {
         Panel::volver($volver, "error", "Docente no encontrado.");
     }
+
+    /* Para el registro de auditoría (Super admin → Auditoría) */
+    $nombreDocente = Auditoria::nombreCuenta($conexion, $id);
+    $estadoAntes = Auditoria::ESTADOS[(int) $docente["activo"]] ?? (string) $docente["activo"];
 
     switch ($accion) {
         case "aprobar":
             $conexion->prepare("UPDATE usuarios SET activo = 1 WHERE id = ?")->execute([$id]);
+            Auditoria::registrar("docente.aprobar", "cuenta", $id, $nombreDocente, $estadoAntes, Auditoria::ESTADOS[1]);
             Panel::volver($volver, "ok", "Docente aprobado. Ya puede entrar a su panel.");
 
         case "rechazar":
             $conexion->prepare("UPDATE usuarios SET activo = 0 WHERE id = ?")->execute([$id]);
+            Auditoria::registrar("docente.rechazar", "cuenta", $id, $nombreDocente, $estadoAntes, Auditoria::ESTADOS[0]);
             Panel::volver($volver, "ok", "Docente desactivado.");
 
         case "eliminar":
             $conexion->prepare("DELETE FROM usuarios WHERE id = ?")->execute([$id]);
+            Auditoria::registrar("cuenta.eliminar", "cuenta", $id, $nombreDocente, "docente", null);
             Panel::volver($volver, "ok", "Cuenta eliminada definitivamente.");
 
         default:

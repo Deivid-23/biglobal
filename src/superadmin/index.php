@@ -17,7 +17,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     exit;
 }
 
-$paginas = ["inicio", "cuentas", "configuracion"];
+$paginas = ["inicio", "cuentas", "configuracion", "auditoria"];
 $pagina = $_GET["page"] ?? "inicio";
 
 $controlador->{in_array($pagina, $paginas, true) ? $pagina : "inicio"}();

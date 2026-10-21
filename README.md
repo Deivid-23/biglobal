@@ -50,7 +50,7 @@ BiGlobal/
 | Progreso | `progreso` | una fila por lección completada |
 | Recuperar contraseña | `recuperacion_password` | el token se guarda como huella SHA-256 |
 
-`usuarios.estado` y `usuario_roles` existen en la BD pero **el código no los usa**.
+`usuarios.estado` existe en la BD pero **el código no lo usa** (solo se llena al crear la cuenta).
 
 ## 3. Instalación local (XAMPP)
 

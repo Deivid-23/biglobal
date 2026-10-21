@@ -165,6 +165,7 @@ class Panel
                 ["super-inicio",  "Resumen del sistema", "fa-gauge-high",     "../superadmin/index.php"],
                 ["super-cuentas", "Cuentas y roles",     "fa-user-shield",    "../superadmin/index.php?page=cuentas"],
                 ["super-config",  "Configuración",       "fa-sliders",        "../superadmin/index.php?page=configuracion"],
+                ["super-auditoria", "Auditoría",         "fa-clipboard-list", "../superadmin/index.php?page=auditoria"],
             ];
         }
 

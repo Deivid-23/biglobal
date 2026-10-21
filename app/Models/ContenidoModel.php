@@ -260,7 +260,9 @@ class ContenidoModel
             return plural_panel($avance, "estudiante tiene", "estudiantes tienen")
                 . " avance o certificado en este curso. Pásalo a «Borrador» para ocultarlo sin borrar su progreso.";
         }
+        $nombre = self::nombreDe($c, "SELECT nombre FROM cursos WHERE id = ?", $id);
         $c->prepare("DELETE FROM cursos WHERE id = ?")->execute([$id]);
+        Auditoria::registrar("curso.eliminar", "curso", $id, $nombre);
         return null;
     }
 
@@ -271,7 +273,11 @@ class ContenidoModel
             return plural_panel($avance, "estudiante ya avanzó", "estudiantes ya avanzaron")
                 . " en esta lección. Pásala a «Borrador» para ocultarla sin borrar su progreso.";
         }
+        $nombre = self::nombreDe($c, "
+            SELECT CONCAT(l.titulo, ' · ', cu.nombre) FROM lecciones l
+            INNER JOIN cursos cu ON cu.id = l.curso_id WHERE l.id = ?", $id);
         $c->prepare("DELETE FROM lecciones WHERE id = ?")->execute([$id]);
+        Auditoria::registrar("leccion.eliminar", "leccion", $id, $nombre);
         return null;
     }
 
@@ -287,7 +293,19 @@ class ContenidoModel
                     . " esta actividad. Puedes editarla, pero no borrarla.";
             }
         }
+        $nombre = self::nombreDe($c, "
+            SELECT CONCAT(a.titulo, ' · ', l.titulo) FROM actividades a
+            INNER JOIN lecciones l ON l.id = a.leccion_id WHERE a.id = ?", $id);
         $c->prepare("DELETE FROM actividades WHERE id = ?")->execute([$id]);
+        Auditoria::registrar("actividad.eliminar", "actividad", $id, $nombre);
         return null;
+    }
+
+    /** Nombre en texto de un registro antes de borrarlo (para la auditoría). */
+    private static function nombreDe(PDO $c, string $sql, int $id): string
+    {
+        $stmt = $c->prepare($sql);
+        $stmt->execute([$id]);
+        return (string) ($stmt->fetchColumn() ?: "#" . $id);
     }
 }
