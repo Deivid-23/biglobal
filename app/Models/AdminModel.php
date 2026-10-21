@@ -134,7 +134,7 @@ class AdminModel
     public static function lecciones(PDO $c): array
     {
         return self::lista($c, "
-            SELECT l.id, l.curso_id, l.titulo, l.descripcion, l.contenido, l.orden, l.estado, cu.nombre AS curso
+            SELECT l.id, l.curso_id, l.titulo, l.descripcion, l.contenido, l.video_url, l.orden, l.estado, cu.nombre AS curso
             FROM lecciones l INNER JOIN cursos cu ON cu.id = l.curso_id
             ORDER BY l.id DESC LIMIT 200");
     }

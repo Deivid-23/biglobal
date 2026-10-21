@@ -73,14 +73,16 @@ try {
         ========================================================= */
         case "crear_leccion":
 
-            $cursoId     = (int) ($_POST["curso_id"] ?? 0);
-            $titulo      = trim($_POST["titulo"] ?? "");
-            $descripcion = trim($_POST["descripcion"] ?? "");
-            $contenido   = trim($_POST["contenido"] ?? "");
-            $orden       = (int) ($_POST["orden"] ?? 1);
+            $cursoId = (int) ($_POST["curso_id"] ?? 0);
 
-            if ($cursoId <= 0 || $titulo === "") {
+            if ($cursoId <= 0) {
                 volverCon("error", "El título es obligatorio.");
+            }
+
+            /* Mismas reglas que al editar (título, video de YouTube o Vimeo...) */
+            $datos = ContenidoModel::datosLeccion($_POST);
+            if (is_string($datos)) {
+                volverCon("error", $datos, "index.php?page=lecciones&id=" . $cursoId);
             }
 
             /* Verificar que el curso pertenece al docente */
@@ -92,15 +94,16 @@ try {
             }
 
             $stmt = $conexion->prepare("
-                INSERT INTO lecciones (curso_id, titulo, descripcion, contenido, orden, estado)
-                VALUES (:curso_id, :titulo, :descripcion, :contenido, :orden, 1)
+                INSERT INTO lecciones (curso_id, titulo, descripcion, contenido, video_url, orden, estado)
+                VALUES (:curso_id, :titulo, :descripcion, :contenido, :video_url, :orden, 1)
             ");
             $stmt->execute([
                 ":curso_id"    => $cursoId,
-                ":titulo"      => $titulo,
-                ":descripcion" => $descripcion,
-                ":contenido"   => $contenido,
-                ":orden"       => max(1, $orden),
+                ":titulo"      => $datos["titulo"],
+                ":descripcion" => $datos["descripcion"],
+                ":contenido"   => $datos["contenido"],
+                ":video_url"   => $datos["video_url"],
+                ":orden"       => $datos["orden"],
             ]);
 
             volverCon("ok", "Lección creada correctamente.", "index.php?page=lecciones&id=" . $cursoId);

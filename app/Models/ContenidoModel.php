@@ -57,10 +57,17 @@ class ContenidoModel
             return "El título es obligatorio (máximo 150 caracteres).";
         }
 
+        // Video opcional: solo YouTube o Vimeo (ver app/Helpers/Video.php)
+        $video = Video::normalizar((string) ($post["video_url"] ?? ""));
+        if (is_string($video)) {
+            return $video;
+        }
+
         return [
             "titulo"      => $titulo,
             "descripcion" => trim($post["descripcion"] ?? ""),
             "contenido"   => trim($post["contenido"] ?? ""),
+            "video_url"   => $video["url"] ?? null,
             "orden"       => max(1, (int) ($post["orden"] ?? 1)),
             "estado"      => (int) ($post["estado"] ?? 1) === 1 ? 1 : 0,
         ];
@@ -216,12 +223,12 @@ class ContenidoModel
     public static function actualizarLeccion(PDO $c, int $id, array $d, ?int $cursoId = null): void
     {
         if ($cursoId === null) {
-            $stmt = $c->prepare("UPDATE lecciones SET titulo = ?, descripcion = ?, contenido = ?, orden = ?, estado = ? WHERE id = ?");
-            $stmt->execute([$d["titulo"], $d["descripcion"], $d["contenido"], $d["orden"], $d["estado"], $id]);
+            $stmt = $c->prepare("UPDATE lecciones SET titulo = ?, descripcion = ?, contenido = ?, video_url = ?, orden = ?, estado = ? WHERE id = ?");
+            $stmt->execute([$d["titulo"], $d["descripcion"], $d["contenido"], $d["video_url"], $d["orden"], $d["estado"], $id]);
             return;
         }
-        $stmt = $c->prepare("UPDATE lecciones SET curso_id = ?, titulo = ?, descripcion = ?, contenido = ?, orden = ?, estado = ? WHERE id = ?");
-        $stmt->execute([$cursoId, $d["titulo"], $d["descripcion"], $d["contenido"], $d["orden"], $d["estado"], $id]);
+        $stmt = $c->prepare("UPDATE lecciones SET curso_id = ?, titulo = ?, descripcion = ?, contenido = ?, video_url = ?, orden = ?, estado = ? WHERE id = ?");
+        $stmt->execute([$cursoId, $d["titulo"], $d["descripcion"], $d["contenido"], $d["video_url"], $d["orden"], $d["estado"], $id]);
     }
 
     /** $leccionId: null = dejar la actividad en su lección. */

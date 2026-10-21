@@ -30,7 +30,7 @@
                             <?php $acciones = [
                                 "nombre" => $l["titulo"], "modal" => "modal-editar", "action" => "acciones.php",
                                 "datos" => ["leccion_id" => $l["id"], "titulo" => $l["titulo"], "descripcion" => $l["descripcion"],
-                                            "contenido" => $l["contenido"], "orden" => $l["orden"], "estado" => $l["estado"]],
+                                            "contenido" => $l["contenido"], "video_url" => $l["video_url"] ?? null, "orden" => $l["orden"], "estado" => $l["estado"]],
                                 "eliminar" => ["accion" => "eliminar_leccion", "campos" => ["leccion_id" => $l["id"]],
                                                "confirmar" => "¿Eliminar la lección «" . $l["titulo"] . "» y sus actividades? Solo se puede si ningún estudiante ha avanzado."],
                             ]; require __DIR__ . "/../panel/_acciones_fila.php"; ?>
@@ -57,6 +57,11 @@
                 <div class="campo">
                     <label class="campo__etiqueta" for="l-cont">Contenido</label>
                     <textarea class="entrada" id="l-cont" name="contenido" rows="6" placeholder="El texto que leerán tus estudiantes"></textarea>
+                </div>
+                <div class="campo">
+                    <label class="campo__etiqueta" for="l-video">Video <span class="campo__ayuda">(opcional)</span></label>
+                    <input class="entrada" type="url" id="l-video" name="video_url" maxlength="255" inputmode="url" placeholder="https://youtu.be/… o https://vimeo.com/…" aria-describedby="l-video-ayuda">
+                    <p class="campo__ayuda" id="l-video-ayuda">Enlace de YouTube o Vimeo. Ideal para Lengua de Señas: el estudiante lo ve arriba del texto.</p>
                 </div>
                 <div class="campo" style="max-width: 160px;">
                     <label class="campo__etiqueta" for="l-orden">Orden</label>

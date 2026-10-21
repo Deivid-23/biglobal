@@ -79,6 +79,11 @@ if (!isset($configEditar[$editarTipo])) return;
                     <label class="campo__etiqueta" for="e-contenido">Contenido</label>
                     <textarea class="entrada" id="e-contenido" name="contenido" rows="8"></textarea>
                 </div>
+                <div class="campo">
+                    <label class="campo__etiqueta" for="e-video">Video <span class="campo__ayuda">(opcional)</span></label>
+                    <input class="entrada" type="url" id="e-video" name="video_url" maxlength="255" inputmode="url" placeholder="https://youtu.be/… o https://vimeo.com/…" aria-describedby="e-video-ayuda">
+                    <p class="campo__ayuda" id="e-video-ayuda">Enlace de YouTube o Vimeo. Ideal para Lengua de Señas: el estudiante lo ve arriba del texto.</p>
+                </div>
                 <div class="pnl-form__fila">
                     <div class="campo">
                         <label class="campo__etiqueta" for="e-orden">Orden</label>

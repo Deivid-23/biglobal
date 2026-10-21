@@ -366,7 +366,7 @@ class EstudianteModel
     {
         $stmt = $conexion->prepare("
             SELECT
-                l.id, l.curso_id, l.titulo, l.descripcion, l.contenido, l.orden,
+                l.id, l.curso_id, l.titulo, l.descripcion, l.contenido, l.video_url, l.orden,
                 c.nombre AS curso_nombre,
                 (SELECT p.completado FROM progreso p
                   WHERE p.usuario_id = :usuario_id AND p.leccion_id = l.id

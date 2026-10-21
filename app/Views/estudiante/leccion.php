@@ -38,6 +38,26 @@ foreach ($quiz as $idQuiz => $q) {
         <?php endif; ?>
     </header>
 
+    <?php
+    // Video de YouTube o Vimeo (la dirección la arma Video::reproductor, nunca el texto guardado)
+    $video = Video::reproductor($leccion["video_url"] ?? null);
+    if ($video): ?>
+        <figure class="leccion__video">
+            <div class="leccion__video-marco">
+                <iframe src="<?= e($video["src"]) ?>"
+                        title="Video de la lección: <?= e($leccion["titulo"]) ?>"
+                        loading="lazy"
+                        referrerpolicy="strict-origin-when-cross-origin"
+                        allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                        allowfullscreen></iframe>
+            </div>
+            <figcaption class="texto-suave">
+                <i class="fa-solid fa-circle-play" aria-hidden="true"></i>
+                Video en <?= e($video["proveedor"]) ?>. Puedes verlo en pantalla completa.
+            </figcaption>
+        </figure>
+    <?php endif; ?>
+
     <div class="leccion__contenido">
         <?php if (trim((string) $leccion["contenido"]) !== ""): ?>
             <?= nl2br(e($leccion["contenido"])) ?>

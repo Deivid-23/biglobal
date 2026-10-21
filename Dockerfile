@@ -25,7 +25,9 @@ RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
 # CSP (Content-Security-Policy): el navegador solo ejecuta scripts de este
 # sitio y de cdnjs/jsdelivr (siempre con integrity). Ningún <script> ni
 # onclick="" en línea: van en archivos .js. Los estilos en línea (style="")
-# sí se permiten. Si agregas un CDN, una fuente o un servicio nuevo, súmalo aquí.
+# sí se permiten. Iframes: solo los reproductores de YouTube (sin cookies) y
+# Vimeo, para los videos de las lecciones (app/Helpers/Video.php).
+# Si agregas un CDN, una fuente o un servicio nuevo, súmalo aquí.
 # HSTS: el navegador recuerda por 1 año que este sitio solo va por HTTPS.
 RUN { \
         echo "ServerTokens Prod"; \
@@ -36,7 +38,7 @@ RUN { \
         echo "Header always set X-Content-Type-Options \"nosniff\""; \
         echo "Header always set X-Frame-Options \"SAMEORIGIN\""; \
         echo "Header always set Referrer-Policy \"strict-origin-when-cross-origin\""; \
-        echo "Header always set Content-Security-Policy \"default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests\""; \
+        echo "Header always set Content-Security-Policy \"default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data:; connect-src 'self'; frame-src https://www.youtube-nocookie.com https://player.vimeo.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests\""; \
         echo "Header always set Strict-Transport-Security \"max-age=31536000\""; \
         echo "Header always set Permissions-Policy \"camera=(), microphone=(), geolocation=(), payment=(), usb=()\""; \
         echo "Header always set Cross-Origin-Opener-Policy \"same-origin\""; \

@@ -36,7 +36,7 @@ $tipoNuevo = "lecciones";
                                 <?php $acciones = [
                                     "nombre" => $l["titulo"], "modal" => "modal-editar", "action" => "index.php",
                                     "datos" => ["id" => $l["id"], "curso_id" => $l["curso_id"], "titulo" => $l["titulo"], "descripcion" => $l["descripcion"],
-                                                "contenido" => $l["contenido"], "orden" => $l["orden"], "estado" => $l["estado"]],
+                                                "contenido" => $l["contenido"], "video_url" => $l["video_url"] ?? null, "orden" => $l["orden"], "estado" => $l["estado"]],
                                     "eliminar" => ["accion" => "eliminar", "campos" => ["registro" => "lecciones", "id" => $l["id"]],
                                                    "confirmar" => "¿Eliminar la lección «" . $l["titulo"] . "» y sus actividades? Solo se puede si ningún estudiante ha avanzado."],
                                 ]; require __DIR__ . "/../panel/_acciones_fila.php"; ?>

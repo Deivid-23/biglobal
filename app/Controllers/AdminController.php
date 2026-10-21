@@ -282,22 +282,19 @@ class AdminController
     private function crearLeccion(string $volver): void
     {
         $cursoId = (int) ($_POST["curso_id"] ?? 0);
-        $titulo  = trim($_POST["titulo"] ?? "");
-        if ($cursoId <= 0 || $titulo === "") {
+        if ($cursoId <= 0) {
             Panel::volver($volver, "error", "El curso y el título son obligatorios.");
+        }
+        $datos = ContenidoModel::datosLeccion($_POST);
+        if (is_string($datos)) {
+            Panel::volver($volver, "error", $datos);
         }
 
         $stmt = $this->c->prepare("
-            INSERT INTO lecciones (curso_id, titulo, descripcion, contenido, orden, estado)
-            VALUES (?, ?, ?, ?, ?, 1)
+            INSERT INTO lecciones (curso_id, titulo, descripcion, contenido, video_url, orden, estado)
+            VALUES (?, ?, ?, ?, ?, ?, 1)
         ");
-        $stmt->execute([
-            $cursoId,
-            $titulo,
-            trim($_POST["descripcion"] ?? ""),
-            trim($_POST["contenido"] ?? ""),
-            max(1, (int) ($_POST["orden"] ?? 1)),
-        ]);
+        $stmt->execute([$cursoId, $datos["titulo"], $datos["descripcion"], $datos["contenido"], $datos["video_url"], $datos["orden"]]);
         Panel::volver($volver, "ok", "Lección creada correctamente.");
     }
 

@@ -138,6 +138,11 @@ $titulosNuevo = [
                         <textarea class="entrada" id="n-contenido" name="contenido" rows="4"></textarea>
                     </div>
                     <div class="campo">
+                        <label class="campo__etiqueta" for="n-video">Video <span class="campo__ayuda">(opcional)</span></label>
+                        <input class="entrada" type="url" id="n-video" name="video_url" maxlength="255" inputmode="url" placeholder="https://youtu.be/… o https://vimeo.com/…" aria-describedby="n-video-ayuda">
+                        <p class="campo__ayuda" id="n-video-ayuda">Enlace de YouTube o Vimeo. Ideal para Lengua de Señas: el estudiante lo ve arriba del texto.</p>
+                    </div>
+                    <div class="campo">
                         <label class="campo__etiqueta" for="n-orden">Orden</label>
                         <input class="entrada" type="number" id="n-orden" name="orden" value="1" min="1" style="max-width: 140px;">
                     </div>
