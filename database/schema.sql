@@ -175,7 +175,6 @@ INSERT INTO configuracion (clave, valor, tipo) VALUES
     ('sitio_zona', 'America/Bogota', 'text'),
     ('smtp_encriptacion', 'tls', 'text'),
     ('smtp_host', 'smtp.gmail.com', 'text'),
-    ('smtp_password', '', 'text'),
     ('smtp_puerto', '587', 'int'),
     ('smtp_remitente', 'no-reply@biglobal.com', 'text'),
     ('smtp_usuario', '', 'text');

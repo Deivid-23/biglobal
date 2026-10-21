@@ -238,12 +238,7 @@ $g = fn(string $clave, $defecto = "") => Config::get($clave, $defecto);
             <label class="campo__etiqueta" for="m-usuario">Usuario</label>
             <input class="entrada" id="m-usuario" name="smtp_usuario" autocomplete="off" value="<?= e($g("smtp_usuario")) ?>">
         </div>
-        <div class="campo">
-            <label class="campo__etiqueta" for="m-clave">Contraseña</label>
-            <input class="entrada" type="password" id="m-clave" name="smtp_password" autocomplete="new-password"
-                   placeholder="<?= $g("smtp_password") !== "" ? "•••••••• (guardada)" : "" ?>">
-            <p class="campo__ayuda">Déjala vacía para no cambiarla. Más seguro: ponerla como SMTP_PASS en Render.</p>
-        </div>
+        <p class="campo__ayuda">La contraseña SMTP es un secreto: no se guarda aquí. Ponla en la variable <code>SMTP_PASS</code> de Render (o del .env en tu computador).</p>
         <div class="campo">
             <label class="campo__etiqueta" for="m-rem">Correo remitente</label>
             <input class="entrada" type="email" id="m-rem" name="smtp_remitente" value="<?= e($g("smtp_remitente")) ?>">

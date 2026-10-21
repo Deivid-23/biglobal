@@ -1,0 +1,53 @@
+# Revisión de código de BiGlobal
+# En cada push a main (y en cada pull request) GitHub revisa que ningún
+# archivo PHP ni JS tenga errores de sintaxis. Si algo falla, la marca
+# del commit sale en rojo en GitHub.
+#
+# Para que Render NO despliegue un commit roto: en Render → biglobal →
+# Settings → Build & Deploy → Auto-Deploy, elegir "After CI Checks Pass".
+
+name: Revisión de código
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  sintaxis:
+    name: Sintaxis PHP y JS
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      # La misma versión de PHP que usa el Dockerfile (php:8.2-apache)
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          coverage: none
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: php -l en todos los PHP
+        run: |
+          fallos=0
+          while IFS= read -r archivo; do
+            salida=$(php -l "$archivo" 2>&1) || { echo "$salida"; fallos=$((fallos + 1)); }
+          done < <(git ls-files '*.php')
+          echo "Archivos PHP con error: $fallos"
+          test "$fallos" -eq 0
+
+      - name: node --check en todos los JS
+        run: |
+          fallos=0
+          while IFS= read -r archivo; do
+            node --check "$archivo" || fallos=$((fallos + 1))
+          done < <(git ls-files '*.js')
+          echo "Archivos JS con error: $fallos"
+          test "$fallos" -eq 0

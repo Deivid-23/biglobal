@@ -16,8 +16,9 @@
  *   - Remitente: CORREO_REMITENTE o SMTP_FROM del entorno, o el campo
  *     "Correo remitente" de Configuración > Correo. En Brevo debe ser un
  *     remitente verificado en tu cuenta.
- *   - SMTP: variables SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS,
- *     SMTP_ENCRYPTION o, si no existen, la pestaña Configuración > Correo.
+ *   - SMTP: variables SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_ENCRYPTION o, si
+ *     no existen, la pestaña Configuración > Correo. La contraseña (SMTP_PASS)
+ *     es un secreto: SOLO variable de entorno, nunca va a la BD.
  *
  * Uso:
  *   Correo::enviar("ana@correo.com", "Asunto", "<p>Hola</p>", "Hola");
@@ -70,7 +71,7 @@ class Correo
         return (string) (obtenerConfig()["correo"]["brevo_api_key"] ?? "");
     }
 
-    /** Junta la configuración SMTP (entorno primero, luego BD). */
+    /** Junta la configuración SMTP (entorno primero, luego BD; la clave solo del entorno). */
     private static function datosSmtp(): array
     {
         $env = obtenerConfig()["smtp"];
@@ -79,7 +80,7 @@ class Correo
             "host"         => $env["host"]         ?? Config::get("smtp_host", ""),
             "puerto"       => (int) ($env["puerto"] ?? Config::get("smtp_puerto", 587)),
             "usuario"      => $env["usuario"]      ?? Config::get("smtp_usuario", ""),
-            "clave"        => $env["clave"]        ?? Config::get("smtp_password", ""),
+            "clave"        => (string) ($env["clave"] ?? ""),
             "encriptacion" => strtolower($env["encriptacion"] ?? Config::get("smtp_encriptacion", "tls")),
         ];
     }

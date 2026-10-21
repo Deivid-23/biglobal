@@ -165,18 +165,12 @@ try {
                 "smtp_host"         => trim($_POST["smtp_host"]         ?? ""),
                 "smtp_puerto"       => trim($_POST["smtp_puerto"]       ?? "587"),
                 "smtp_usuario"      => trim($_POST["smtp_usuario"]      ?? ""),
-                "smtp_password"     => $_POST["smtp_password"]          ?? "",
                 "smtp_encriptacion" => trim($_POST["smtp_encriptacion"] ?? "tls"),
                 "smtp_remitente"    => trim($_POST["smtp_remitente"]    ?? ""),
             ];
 
             if ($datos["smtp_remitente"] !== "" && !filter_var($datos["smtp_remitente"], FILTER_VALIDATE_EMAIL)) {
                 redirigirCon("correo", "error", "El correo remitente no es válido.");
-            }
-
-            /* Si la contraseña llega vacía, conservar la anterior */
-            if ($datos["smtp_password"] === "") {
-                $datos["smtp_password"] = Config::get("smtp_password", "");
             }
 
             guardarConfig($accion, $datos);
