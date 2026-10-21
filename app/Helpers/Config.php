@@ -12,7 +12,7 @@
  *   Config::set('sitio_nombre', 'Nuevo')     → guarda
  *   Config::all()                            → array completo
  *   Config::getBool('notif_nuevo_usuario')   → true / false
- *   Config::getInt('seg_min_password')       → 6
+ *   Config::getInt('seg_min_password')       → 8
  */
 class Config
 {

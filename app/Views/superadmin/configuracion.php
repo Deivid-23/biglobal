@@ -141,7 +141,7 @@ $g = fn(string $clave, $defecto = "") => Config::get($clave, $defecto);
         <div class="pnl-form__fila">
             <div class="campo">
                 <label class="campo__etiqueta" for="s-min">Largo mínimo de contraseña</label>
-                <input class="entrada" type="number" id="s-min" name="seg_min_password" min="6" max="32" value="<?= Config::getInt("seg_min_password", 6) ?>">
+                <input class="entrada" type="number" id="s-min" name="seg_min_password" min="<?= Seguridad::MIN_PASSWORD ?>" max="<?= Seguridad::MAX_PASSWORD ?>" value="<?= Seguridad::minimoPassword() ?>">
             </div>
             <div class="campo">
                 <label class="campo__etiqueta" for="s-int">Intentos antes de bloquear</label>

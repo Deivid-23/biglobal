@@ -137,11 +137,11 @@ try {
         ===================================================== */
         case "seguridad":
 
-            $minPassword  = (int) ($_POST["seg_min_password"]    ?? 6);
+            $minPassword  = (int) ($_POST["seg_min_password"]    ?? Seguridad::MIN_PASSWORD);
             $intentos     = (int) ($_POST["seg_intentos_login"]  ?? 5);
             $bloqueoMin   = (int) ($_POST["seg_bloqueo_minutos"] ?? 1);
 
-            if ($minPassword < 4 || $minPassword > 32)   $minPassword = 6;
+            $minPassword = max(Seguridad::MIN_PASSWORD, min(Seguridad::MAX_PASSWORD, $minPassword));
             if ($intentos < 1 || $intentos > 20)         $intentos = 5;
             if ($bloqueoMin < 1 || $bloqueoMin > 120)    $bloqueoMin = 1;
 

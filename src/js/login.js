@@ -25,7 +25,7 @@ const MENSAJES_OK = {
     password_actualizada: "¡Listo! Tu contraseña se actualizó. Ya puedes iniciar sesión."
 };
 
-let reglasPassword = { minimo: 6, mayuscula: false, numero: false };
+let reglasPassword = { minimo: 8, mayuscula: false, numero: false };
 
 /* ---------------------------------------------------------
    Mensaje dentro de la tarjeta
