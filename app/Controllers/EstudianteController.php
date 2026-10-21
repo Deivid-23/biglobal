@@ -88,7 +88,8 @@ class EstudianteController
         $cuenta = PerfilModel::obtener($conexion, $id);
 
         if (!$cuenta) {
-            header("Location: ../auth/logout.php");
+            cerrarSesion();
+            header("Location: ../index.html");
             exit;
         }
 

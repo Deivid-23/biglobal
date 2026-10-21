@@ -903,3 +903,7 @@ select.entrada { cursor: pointer; }
 .pnl-filtro .campo__etiqueta { margin: 0; }
 .pnl-filtro .pnl-selector { min-width: 0; max-width: 100%; }
 .pnl-tabla__fecha { white-space: nowrap; }
+
+/* ---------- "Cerrar sesión" es un formulario POST: el botón se ve como los enlaces del menú ---------- */
+.pnl-salir { margin: 0; }
+button.pnl-nav__enlace { width: 100%; border: 0; background: none; cursor: pointer; text-align: left; }

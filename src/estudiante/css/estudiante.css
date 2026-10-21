@@ -994,3 +994,7 @@ a.est-perfil.es-activo { background: var(--azul-100); }
 @media (min-width: 640px) { .certificado__acciones { grid-column: 2 / -1; } }
 
 .certificados__nota { margin-top: var(--esp-4); font-size: var(--texto-sm); }
+
+/* "Cerrar sesión" es un formulario POST: el botón se ve como los enlaces del menú */
+.est-salir-form { margin: 0; }
+button.est-nav__enlace { width: 100%; border: 0; background: none; cursor: pointer; text-align: left; }

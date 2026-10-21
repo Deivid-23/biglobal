@@ -331,26 +331,24 @@ class AuthController
         }
     }
 
+    /**
+     * Cerrar sesión.
+     * Solo por POST con el token CSRF: así otra página no puede sacarte
+     * de tu cuenta con un simple enlace o una imagen.
+     * Por GET (o con un token vencido) se muestra una pantalla para
+     * confirmar con un botón.
+     */
     public function logout(): void
     {
-        $_SESSION = [];
+        $sinSesion = empty($_SESSION["usuario_id"]);
 
-        if (ini_get("session.use_cookies")) {
-            $parametros = session_get_cookie_params();
-            setcookie(
-                session_name(),
-                "",
-                time() - 42000,
-                $parametros["path"],
-                $parametros["domain"],
-                $parametros["secure"],
-                $parametros["httponly"]
-            );
+        if ($sinSesion || ($_SERVER["REQUEST_METHOD"] === "POST" && csrfValido((string) ($_POST["csrf_token"] ?? "")))) {
+            cerrarSesion();
+            header("Location: ../index.html");
+            exit;
         }
 
-        session_destroy();
-
-        header("Location: ../index.html");
+        require __DIR__ . "/../Views/auth/confirmar_salida.php";
         exit;
     }
 

@@ -144,9 +144,12 @@ $textoReglas = "Mínimo {$reglas['minimo']} caracteres"
         <p class="perfil-salir__titulo">Cerrar sesión</p>
         <p class="perfil-tarjeta__ayuda">Hazlo si usas un computador compartido. Tu progreso queda guardado.</p>
     </div>
-    <a class="boton boton--peligro" href="../auth/logout.php">
-        <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i> Cerrar sesión
-    </a>
+    <form method="POST" action="../auth/logout.php">
+        <?= campoCsrf() ?>
+        <button class="boton boton--peligro" type="submit">
+            <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i> Cerrar sesión
+        </button>
+    </form>
 </section>
 
 <script>

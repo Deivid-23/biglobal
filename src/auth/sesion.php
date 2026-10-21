@@ -27,3 +27,24 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 
     session_start();
 }
+
+/**
+ * Cierra la sesión por completo: borra los datos, la cookie y la
+ * sesión del servidor. La usan logout.php (POST con CSRF) y las
+ * páginas que deben sacar a alguien (cuenta borrada o desactivada).
+ */
+if (!function_exists("cerrarSesion")) {
+    function cerrarSesion(): void
+    {
+        $_SESSION = [];
+
+        if (ini_get("session.use_cookies")) {
+            $p = session_get_cookie_params();
+            setcookie(session_name(), "", time() - 42000, $p["path"], $p["domain"], $p["secure"], $p["httponly"]);
+        }
+
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_destroy();
+        }
+    }
+}

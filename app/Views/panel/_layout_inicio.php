@@ -73,9 +73,12 @@
             <a class="pnl-nav__enlace <?= $paginaActiva === "perfil" ? "es-activo" : "" ?>" href="<?= e($perfilUrl) ?>">
                 <i class="fa-solid fa-user" aria-hidden="true"></i><span>Mi perfil</span>
             </a>
-            <a class="pnl-nav__enlace" href="../auth/logout.php">
-                <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i><span>Cerrar sesión</span>
-            </a>
+            <form class="pnl-salir" method="POST" action="../auth/logout.php">
+                <?= campoCsrf() ?>
+                <button class="pnl-nav__enlace" type="submit">
+                    <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i><span>Cerrar sesión</span>
+                </button>
+            </form>
         </div>
     </aside>
     <div class="pnl-velo" data-cerrar-menu></div>

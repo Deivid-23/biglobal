@@ -71,10 +71,13 @@ $menu = [
                     <small>Mi perfil</small>
                 </span>
             </a>
-            <a class="est-nav__enlace est-salir" href="../auth/logout.php">
-                <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
-                <span>Cerrar sesión</span>
-            </a>
+            <form class="est-salir-form" method="POST" action="../auth/logout.php">
+                <?= campoCsrf() ?>
+                <button class="est-nav__enlace est-salir" type="submit">
+                    <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
+                    <span>Cerrar sesión</span>
+                </button>
+            </form>
         </div>
     </aside>
 

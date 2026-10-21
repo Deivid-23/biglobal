@@ -38,7 +38,8 @@ if ($activo === 1) {
 
 /* Si fue rechazado/bloqueado → cerrar sesión */
 if ($activo === 0) {
-    header("Location: ../auth/logout.php");
+    cerrarSesion();
+    header("Location: ../auth/login.html");
     exit;
 }
 
@@ -88,9 +89,12 @@ $nombre = $_SESSION["nombre"] ?? "Docente";
         </div>
 
         <div class="auth-actions">
-            <a class="boton boton--primario" href="../auth/logout.php">
-                <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i> Cerrar sesión
-            </a>
+            <form method="POST" action="../auth/logout.php">
+                <?= campoCsrf() ?>
+                <button class="boton boton--primario" type="submit">
+                    <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i> Cerrar sesión
+                </button>
+            </form>
             <a class="boton boton--secundario" href="../index.html">Volver al inicio</a>
         </div>
     </section>

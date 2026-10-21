@@ -18,6 +18,7 @@ if ($estadoDocente === 2) {
 }
 
 if ($estadoDocente !== 1) {
-    header("Location: ../auth/logout.php");
+    cerrarSesion();
+    header("Location: ../auth/login.html");
     exit;
 }
