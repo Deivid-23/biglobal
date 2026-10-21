@@ -27,11 +27,13 @@ class CertificadoModel
             SELECT ce.codigo, ce.fecha_emision,
                    u.nombre, u.apellido,
                    cu.nombre AS curso, cu.nivel,
-                   i.nombre AS idioma
+                   i.nombre AS idioma, i.codigo AS idioma_codigo,
+                   d.nombre AS docente_nombre, d.apellido AS docente_apellido
             FROM certificados ce
             INNER JOIN usuarios u ON u.id = ce.usuario_id
             INNER JOIN cursos cu  ON cu.id = ce.curso_id
             LEFT JOIN idiomas i   ON i.id = cu.idioma_id
+            LEFT JOIN usuarios d  ON d.id = cu.instructor_id
             WHERE ce.codigo = ?
             LIMIT 1
         ");

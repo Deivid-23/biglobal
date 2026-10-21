@@ -66,6 +66,11 @@ header("X-Robots-Tag: noindex");
     <link rel="stylesheet" href="css/componentes.css">
     <link rel="stylesheet" href="css/paginas.css">
     <link rel="stylesheet" href="css/certificado.css">
+    <?php if ($estado === "valido"): ?>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
+                integrity="sha384-3zSEDfvllQohrq0PHL1fOXJuC/jSOO34H46t6UQfobFOmxE5BpjjaIJY5F2/bMnU"
+                crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
+    <?php endif; ?>
 </head>
 <body class="pagina-body">
 <a class="saltar-contenido" href="#contenido">Saltar al contenido</a>
@@ -125,38 +130,91 @@ header("X-Robots-Tag: noindex");
         </div>
 
         <!-- El certificado: es lo único que sale al imprimir -->
+        <?php
+        // Docente del curso (firma). Sin docente asignado, firma la plataforma.
+        $docente = trim(($cert["docente_nombre"] ?? "") . " "
+            . (($cert["docente_apellido"] ?? "") === "No especificado" ? "" : ($cert["docente_apellido"] ?? "")));
+        $codigoIdioma = $cert["idioma_codigo"] ?? "";
+
+        // Sello: estrella de 32 puntas dibujada como polígono (sin imágenes externas)
+        $puntas = [];
+        for ($k = 0; $k < 64; $k++) {
+            $radio = $k % 2 === 0 ? 60 : 53;
+            $angulo = M_PI * $k / 32 - M_PI / 2;
+            $puntas[] = round(60 + $radio * cos($angulo), 2) . "," . round(60 + $radio * sin($angulo), 2);
+        }
+        ?>
         <article class="diploma" aria-label="Certificado de <?= e($nombreCompleto) ?>">
-            <div class="diploma__marco">
-                <header class="diploma__cabecera">
+            <div class="diploma__hoja">
+
+                <!-- Franja lateral: marca, idioma y verificación -->
+                <aside class="diploma__franja">
                     <span class="diploma__marca">
-                        <img src="img/logo-Biglobal.png" alt="" width="36" height="36"> <?= e($sitio) ?>
+                        <img src="img/logo-Biglobal.png" alt="" width="40" height="40">
+                        <span><?= e($sitio) ?></span>
                     </span>
-                    <span class="diploma__sello" aria-hidden="true"><i class="fa-solid fa-award"></i></span>
-                </header>
 
-                <p class="diploma__tipo">Certificado de finalización</p>
-                <p class="diploma__texto">Se certifica que</p>
-                <h2 class="diploma__nombre"><?= e($nombreCompleto) ?></h2>
-                <p class="diploma__texto">completó todas las lecciones del curso</p>
-                <p class="diploma__curso"><?= e($cert["curso"]) ?></p>
-                <p class="diploma__detalle">
-                    <?= e(implode(" · ", array_filter([$cert["idioma"] ?? "", $cert["nivel"] ?? ""]))) ?>
-                </p>
+                    <?php if ($codigoIdioma !== ""): ?>
+                        <div class="diploma__idioma">
+                            <span class="diploma__idioma-codigo"><?= e($codigoIdioma) ?></span>
+                            <span class="diploma__idioma-nombre"><?= e($cert["idioma"]) ?></span>
+                        </div>
+                    <?php endif; ?>
 
-                <footer class="diploma__pie">
-                    <div>
-                        <span class="diploma__etiqueta">Fecha de emisión</span>
-                        <span class="diploma__valor"><?= e(fechaLarga($cert["fecha_emision"])) ?></span>
+                    <div class="diploma__verificacion">
+                        <div class="diploma__qr" data-qr="<?= e($enlace) ?>" role="img" aria-label="Código QR para verificar este certificado"></div>
+                        <span class="diploma__etiqueta diploma__etiqueta--clara">Código de verificación</span>
+                        <span class="diploma__codigo"><?= e($cert["codigo"]) ?></span>
                     </div>
-                    <div>
-                        <span class="diploma__etiqueta">Código de verificación</span>
-                        <span class="diploma__valor diploma__codigo"><?= e($cert["codigo"]) ?></span>
-                    </div>
-                    <div class="diploma__verificar">
-                        <span class="diploma__etiqueta">Verifícalo en</span>
-                        <span class="diploma__valor diploma__enlace"><?= e($enlace) ?></span>
-                    </div>
-                </footer>
+                </aside>
+
+                <!-- Cuerpo del certificado -->
+                <div class="diploma__cuerpo">
+                    <header class="diploma__titulo">
+                        <h2>Certificado</h2>
+                        <p>de finalización de curso</p>
+                    </header>
+
+                    <p class="diploma__otorgado">Se otorga a</p>
+                    <p class="diploma__nombre"><?= e($nombreCompleto) ?></p>
+
+                    <p class="diploma__motivo">
+                        por completar todas las lecciones del curso
+                        <strong class="diploma__curso"><?= e($cert["curso"]) ?></strong>
+                        <?php $detalle = implode(" · ", array_filter([$cert["idioma"] ?? "", $cert["nivel"] ?? ""])); ?>
+                        <?php if ($detalle !== ""): ?><span class="diploma__detalle">(<?= e($detalle) ?>)</span><?php endif; ?>
+                        en <?= e($sitio) ?>.
+                    </p>
+
+                    <footer class="diploma__pie">
+                        <div class="diploma__firma">
+                            <span class="diploma__firma-nombre"><?= e($docente !== "" ? $docente : $sitio) ?></span>
+                            <span class="diploma__linea" aria-hidden="true"></span>
+                            <span class="diploma__etiqueta"><?= $docente !== "" ? "Docente del curso" : "Plataforma de aprendizaje" ?></span>
+                        </div>
+
+                        <svg class="diploma__sello" viewBox="0 0 120 150" aria-hidden="true">
+                            <defs>
+                                <path id="sello-circulo" d="M60,60 m-38,0 a38,38 0 1,1 76,0 a38,38 0 1,1 -76,0"></path>
+                            </defs>
+                            <path class="diploma__cinta" d="M38 92 L28 146 L42 136 L50 148 L58 98 Z"></path>
+                            <path class="diploma__cinta" d="M82 92 L92 146 L78 136 L70 148 L62 98 Z"></path>
+                            <polygon class="diploma__estrella" points="<?= implode(" ", $puntas) ?>"></polygon>
+                            <circle class="diploma__aro" cx="60" cy="60" r="46"></circle>
+                            <circle class="diploma__centro" cx="60" cy="60" r="30"></circle>
+                            <text class="diploma__sello-texto"><textPath href="#sello-circulo" startOffset="0">LOGRO VERIFICADO · <?= e(mb_strtoupper($sitio)) ?> ·</textPath></text>
+                            <path class="diploma__check" d="M48 60 l8 8 l16 -17"></path>
+                        </svg>
+
+                        <div class="diploma__firma">
+                            <span class="diploma__firma-nombre"><?= e(fechaLarga($cert["fecha_emision"])) ?></span>
+                            <span class="diploma__linea" aria-hidden="true"></span>
+                            <span class="diploma__etiqueta">Fecha de emisión</span>
+                        </div>
+                    </footer>
+
+                    <p class="diploma__enlace">Verifica su autenticidad en <?= e($enlace) ?></p>
+                </div>
             </div>
         </article>
 
@@ -167,6 +225,19 @@ header("X-Robots-Tag: noindex");
         </div>
     <?php endif; ?>
 </main>
+
+<script>
+/* Código QR del certificado: lleva a esta misma página de verificación.
+   Si la librería no carga, el cuadro queda vacío y el código sigue visible. */
+window.addEventListener("load", function () {
+    var caja = document.querySelector("[data-qr]");
+    if (!caja || typeof QRCode === "undefined") { if (caja) caja.hidden = true; return; }
+    var url = caja.dataset.qr;
+    if (url.charAt(0) === "/") url = location.origin + url;
+    new QRCode(caja, { text: url, width: 112, height: 112, colorDark: "#1E3A8A", colorLight: "#FFFFFF", correctLevel: QRCode.CorrectLevel.M });
+    caja.removeAttribute("title");
+});
+</script>
 
 <footer class="pagina-pie">
     © 2026 <?= e($sitio) ?> ·
