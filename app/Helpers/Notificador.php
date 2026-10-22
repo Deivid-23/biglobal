@@ -83,14 +83,14 @@ class Notificador
      * Aviso para UNA persona (no para el equipo): campana + correo.
      * Ej.: resultado de un pago, Premium por vencer.
      *
-     * @param bool $porCorreo false = solo la campana. Los avisos importantes
-     *                        (pagos, cuenta) siempre van también por correo.
+     * El correo depende de Notificador::CANAL y de la preferencia del usuario.
+     * @param bool $porCorreo false = solo la campana aunque el tipo lleve correo.
      */
     public static function aUsuario(int $usuarioId, string $tipo, string $titulo, string $mensaje = "", ?string $enlace = null, bool $porCorreo = true): void
     {
         try {
             $conexion = Conexion::conectar();
-            $stmt = $conexion->prepare("SELECT id, correo FROM usuarios WHERE id = ? LIMIT 1");
+            $stmt = $conexion->prepare("SELECT " . self::columnasCorreo($conexion) . " FROM usuarios WHERE id = ? LIMIT 1");
             $stmt->execute([$usuarioId]);
             $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
             if (!$usuario) {
@@ -99,12 +99,101 @@ class Notificador
 
             self::guardar($conexion, [$usuario], $tipo, $titulo, $mensaje, $enlace);
 
-            if ($porCorreo && filter_var($usuario["correo"], FILTER_VALIDATE_EMAIL)) {
+            if ($porCorreo && self::quiereCorreo($tipo, $usuario)) {
                 self::mandarCorreo([$usuario["correo"]], $titulo, $mensaje, $enlace,
                     "Recibes este correo porque tienes una cuenta en BiGlobal.");
             }
         } catch (Throwable $e) {
             error_log("[BiGlobal][Notificador][aUsuario] " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Por dónde sale cada aviso PERSONAL (aUsuario / aVarios):
+     *   "esencial" -> campana + correo siempre (pagos, cuenta, aprobación de docente)
+     *   "opcional" -> campana + correo, salvo que la persona apague los correos
+     *                 no esenciales (usuarios.correos_opcionales = 0)
+     *   "campana"  -> solo la campana, nunca correo
+     * Un tipo que no esté aquí va solo a la campana.
+     */
+    public const CANAL = [
+        "pago_aprobado"      => "esencial",
+        "pago_rechazado"     => "esencial",
+        "premium_terminado"  => "esencial",
+        "docente_aprobado"   => "esencial",
+        "docente_rechazado"  => "esencial",
+        "cuenta_eliminacion" => "esencial",
+        "premium_por_vencer" => "opcional",
+        "clase_cupo"         => "opcional",
+        "clase_invitacion"   => "opcional",
+        "contenido_revisado" => "opcional",
+        "clase_cancelada"    => "campana",
+    ];
+
+    /** ¿Existe usuarios.correos_opcionales? (antes del SQL: todos reciben) */
+    private static function hayPreferencia(PDO $conexion): bool
+    {
+        static $hay = null;
+        if ($hay === null) {
+            try {
+                $hay = (int) $conexion->query("
+                    SELECT COUNT(*) FROM information_schema.columns
+                    WHERE table_schema = DATABASE() AND table_name = 'usuarios' AND column_name = 'correos_opcionales'
+                ")->fetchColumn() === 1;
+            } catch (Throwable $e) {
+                $hay = false;
+            }
+        }
+        return $hay;
+    }
+
+    /** Columnas para saber si a cada usuario se le puede mandar este tipo por correo. */
+    private static function columnasCorreo(PDO $conexion): string
+    {
+        return "id, correo" . (self::hayPreferencia($conexion) ? ", correos_opcionales" : ", 1 AS correos_opcionales");
+    }
+
+    /** ¿Este usuario recibe este tipo de aviso por correo? */
+    private static function quiereCorreo(string $tipo, array $usuario): bool
+    {
+        $canal = self::CANAL[$tipo] ?? "campana";
+        if ($canal === "campana") {
+            return false;
+        }
+        if ($canal === "opcional" && (int) ($usuario["correos_opcionales"] ?? 1) === 0) {
+            return false;
+        }
+        return (bool) filter_var($usuario["correo"] ?? "", FILTER_VALIDATE_EMAIL);
+    }
+
+    /** ¿Recibe los correos no esenciales? (true si la columna aún no existe) */
+    public static function recibeOpcionales(int $usuarioId): bool
+    {
+        try {
+            $c = Conexion::conectar();
+            if (!self::hayPreferencia($c)) {
+                return true;
+            }
+            $stmt = $c->prepare("SELECT correos_opcionales FROM usuarios WHERE id = ? LIMIT 1");
+            $stmt->execute([$usuarioId]);
+            return (int) $stmt->fetchColumn() === 1;
+        } catch (Throwable $e) {
+            return true;
+        }
+    }
+
+    public static function guardarPreferencia(int $usuarioId, bool $recibir): bool
+    {
+        try {
+            $c = Conexion::conectar();
+            if (!self::hayPreferencia($c)) {
+                return false;
+            }
+            $c->prepare("UPDATE usuarios SET correos_opcionales = ? WHERE id = ?")->execute([$recibir ? 1 : 0, $usuarioId]);
+            return true;
+        } catch (Throwable $e) {
+            error_log("[BiGlobal][Notificador][preferencia] " . $e->getMessage());
+            return false;
         }
     }
 
@@ -133,7 +222,7 @@ class Notificador
 
             foreach (array_chunk($ids, 200) as $bloque) {
                 $marcas = implode(",", array_fill(0, count($bloque), "?"));
-                $stmt = $conexion->prepare("SELECT id, correo FROM usuarios WHERE id IN ($marcas)");
+                $stmt = $conexion->prepare("SELECT " . self::columnasCorreo($conexion) . " FROM usuarios WHERE id IN ($marcas)");
                 $stmt->execute($bloque);
                 $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 self::guardar($conexion, $usuarios, $tipo, $titulo, $mensaje, $enlace);
@@ -142,7 +231,7 @@ class Notificador
                 // Valor guardado: "AAAAMMDD:cantidad" (una sola clave; se reinicia cada día)
                 [$dia, $cuenta] = array_pad(explode(":", (string) Config::get("correos_masivos_hoy", "")), 2, "0");
                 $usados = $dia === date("Ymd") ? (int) $cuenta : 0;
-                $correos = array_values(array_filter(array_column($usuarios, "correo"), fn($c) => filter_var($c, FILTER_VALIDATE_EMAIL)));
+                $correos = array_values(array_column(array_filter($usuarios, fn($u) => self::quiereCorreo($tipo, $u)), "correo"));
                 $correos = array_slice($correos, 0, max(0, self::TOPE_CORREOS_MASIVOS_DIA - $usados));
 
                 foreach (array_chunk($correos, 50) as $grupo) {

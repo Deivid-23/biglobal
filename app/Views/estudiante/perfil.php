@@ -175,6 +175,9 @@ $textoReglas = "Mínimo {$reglas['minimo']} caracteres"
 
 <div style="margin-top: var(--esp-5);">
     <?php $claseTarjeta = "perfil-tarjeta"; require __DIR__ . "/../panel/_personalizacion.php"; ?>
+
+    <!-- ================= CORREOS ================= -->
+    <?php $claseTarjeta = "perfil-tarjeta"; require __DIR__ . "/../panel/_correos.php"; ?>
 </div>
 
 <!-- ================= SESIÓN ================= -->

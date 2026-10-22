@@ -1143,3 +1143,77 @@ button.est-nav__enlace { width: 100%; border: 0; background: none; cursor: point
 .invitacion__titulo { font-family: var(--fuente-titulo); font-weight: 800; overflow-wrap: anywhere; }
 .invitacion__acciones { display: flex; gap: var(--esp-2); }
 .invitacion__acciones form { margin: 0; }
+
+/* ---------- Campana (abre la página de notificaciones) ---------- */
+.est-campana {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    color: var(--texto-suave);
+    text-decoration: none;
+    transition: background-color var(--dur) ease, color var(--dur) ease;
+}
+@media (hover: hover) and (pointer: fine) { .est-campana:hover { background: var(--azul-50); color: var(--azul-700); } }
+.est-campana__contador {
+    position: absolute;
+    top: 2px;
+    right: 0;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    background: var(--rojo-600);
+    color: #FFFFFF;
+    font-size: 0.65rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+/* ---------- Página de notificaciones ---------- */
+.avisos { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--esp-2); max-width: 760px; }
+.aviso-item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--esp-3);
+    padding: var(--esp-4);
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio-lg);
+}
+.aviso-item--nuevo { border-color: var(--azul-300); background: var(--azul-50); }
+.aviso-item__icono {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radio);
+    background: var(--azul-100);
+    color: var(--azul-700);
+}
+.aviso-item__titulo { display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-2); font-family: var(--fuente-titulo); font-weight: 800; overflow-wrap: anywhere; }
+.aviso-item__titulo a { color: inherit; }
+.aviso-item__texto { margin-top: var(--esp-1); color: var(--texto-suave); font-size: var(--texto-sm); line-height: 1.6; overflow-wrap: anywhere; }
+.aviso-item__fecha { display: block; margin-top: var(--esp-1); color: var(--texto-tenue); font-size: var(--texto-xs); }
+@media (prefers-reduced-motion: reduce) { .est-campana { transition: none; } }
+
+/* ---------- Perfil: tarjeta "Correos" (no hay panel.css en el estudiante) ---------- */
+.tarjeta-correos h2 { font-size: var(--texto-xl); font-weight: 800; }
+.correos-opcion {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--esp-3);
+    margin: var(--esp-4) 0;
+    padding: var(--esp-4);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio);
+    cursor: pointer;
+}
+.correos-opcion input { width: 20px; height: 20px; margin: 2px 0 0; flex: 0 0 auto; accent-color: var(--azul-600); }
+.correos-opcion strong { display: block; font-family: var(--fuente-titulo); }
+.correos-opcion small { color: var(--texto-suave); font-size: var(--texto-sm); }

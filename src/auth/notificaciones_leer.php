@@ -1,7 +1,7 @@
 <?php
 /**
  * Marca notificaciones de la campana como leídas.
- * Solo POST, con sesión de admin o super admin y token CSRF.
+ * Solo POST, con sesión (cualquier rol) y token CSRF.
  * Cada persona solo puede marcar las suyas (el WHERE usa su usuario_id).
  *
  *   id=5          → marca solo esa
@@ -22,9 +22,6 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST" || !isset($_SESSION["usuario_id"])) {
     $responder(401, ["ok" => false]);
 }
 
-if (!in_array(rolActual(), ["admin", "superadmin"], true)) {
-    $responder(403, ["ok" => false]);
-}
 
 if (!csrfValido($_POST["csrf_token"] ?? "")) {
     $responder(419, ["ok" => false, "mensaje" => "Tu sesión expiró. Recarga la página."]);

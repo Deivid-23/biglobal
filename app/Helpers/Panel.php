@@ -199,9 +199,9 @@ class Panel
         $conGraficos  = !empty($opciones["graficos"]);
         $perfilUrl    = $usuarioPanel["rol"] === "docente" ? "../profesor/index.php?page=perfil" : "../admin/index.php?page=perfil";
 
-        // Campana de notificaciones: solo para admin y super admin
+        // Campana de notificaciones: admin, super admin y docente (cada quien ve solo las suyas)
         $campanaPanel = null;
-        if (in_array($usuarioPanel["rol"], ["admin", "superadmin"], true)) {
+        if (in_array($usuarioPanel["rol"], ["admin", "superadmin", "docente"], true)) {
             $idUsuario = (int) $_SESSION["usuario_id"];
             $campanaPanel = [
                 "noLeidas" => Notificador::noLeidas($idUsuario),

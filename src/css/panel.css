@@ -917,3 +917,6 @@ button.pnl-nav__enlace { width: 100%; border: 0; background: none; cursor: point
 /* ---------- Clase en vivo: casilla "Gratuita para todos" ---------- */
 .clase-abierta { justify-content: flex-start; margin: var(--esp-4) 0; cursor: pointer; }
 .clase-abierta input { order: -1; accent-color: var(--azul-600); }
+.tarjeta-correos h2 { font-size: var(--texto-lg); font-weight: 800; margin-bottom: var(--esp-2); }
+.correos-opcion { justify-content: flex-start; margin: var(--esp-4) 0; cursor: pointer; }
+.correos-opcion input { order: -1; accent-color: var(--azul-600); }

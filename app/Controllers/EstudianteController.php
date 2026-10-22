@@ -66,6 +66,9 @@ class EstudianteController
             "iniciales"     => mb_strtoupper(mb_substr($usuario["nombre"] ?? "E", 0, 1) . mb_substr($apellido, 0, 1)) ?: "E",
         ];
 
+        // Contador de la campana
+        $avisosSinLeer = Notificador::noLeidas($this->usuarioId);
+
         // Mensaje de una sola vez (ej. "¡Lección completada!")
         $flash = $_SESSION["flash_estudiante"] ?? null;
         unset($_SESSION["flash_estudiante"]);
@@ -709,6 +712,21 @@ class EstudianteController
 
         header("Location: index.php?page=plan&ref=" . rawurlencode($pago["referencia"]));
         exit;
+    }
+
+    /* =========================================================
+       NOTIFICACIONES (la campana)
+       Muestra las últimas y, al abrirlas, quedan como leídas.
+    ========================================================= */
+    public function avisos(): void
+    {
+        $avisos = Notificador::recientes($this->usuarioId, 50);
+        try {
+            Notificador::marcarLeidas($this->usuarioId);
+        } catch (Throwable $e) {
+            error_log("[BiGlobal][avisos] " . $e->getMessage());
+        }
+        $this->render("avisos", "avisos", "Notificaciones", ["avisos" => $avisos]);
     }
 
     /* =========================================================

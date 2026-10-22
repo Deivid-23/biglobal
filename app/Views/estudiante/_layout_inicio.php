@@ -2,7 +2,7 @@
 /**
  * Parte superior del layout del estudiante.
  * Variables que llegan desde EstudianteController::render():
- *   $titulo, $paginaActiva, $estudiante, $flash
+ *   $titulo, $paginaActiva, $estudiante, $flash, $avisosSinLeer
  */
 
 require_once __DIR__ . "/_helpers.php";
@@ -45,10 +45,18 @@ $menu = [
                 <img src="../img/logo-Biglobal.png" alt="" width="36" height="36">
                 <span>BiGlobal</span>
             </a>
+            <div class="cabecera-acciones">
+<?php /* Campana: abre la página de notificaciones */ ?>
+            <a class="est-campana" href="index.php?page=avisos"
+               aria-label="<?= $avisosSinLeer > 0 ? "Notificaciones: " . $avisosSinLeer . " sin leer" : "Notificaciones" ?>">
+                <i class="fa-solid fa-bell" aria-hidden="true"></i>
+                <?php if ($avisosSinLeer > 0): ?><span class="est-campana__contador" aria-hidden="true"><?= $avisosSinLeer > 9 ? "9+" : $avisosSinLeer ?></span><?php endif; ?>
+            </a>
             <button class="boton-tema" type="button" data-alternar-tema aria-label="Cambiar a modo oscuro">
                 <i class="fa-solid fa-sun icono-sol" aria-hidden="true"></i>
                 <i class="fa-solid fa-moon icono-luna" aria-hidden="true"></i>
             </button>
+            </div>
         </div>
 
         <nav class="est-nav" aria-label="Principal">
@@ -92,6 +100,12 @@ $menu = [
                 <span>BiGlobal</span>
             </a>
             <div class="cabecera-acciones">
+<?php /* Campana: abre la página de notificaciones */ ?>
+            <a class="est-campana" href="index.php?page=avisos"
+               aria-label="<?= $avisosSinLeer > 0 ? "Notificaciones: " . $avisosSinLeer . " sin leer" : "Notificaciones" ?>">
+                <i class="fa-solid fa-bell" aria-hidden="true"></i>
+                <?php if ($avisosSinLeer > 0): ?><span class="est-campana__contador" aria-hidden="true"><?= $avisosSinLeer > 9 ? "9+" : $avisosSinLeer ?></span><?php endif; ?>
+            </a>
                 <button class="boton-tema" type="button" data-alternar-tema aria-label="Cambiar a modo oscuro">
                     <i class="fa-solid fa-sun icono-sol" aria-hidden="true"></i>
                     <i class="fa-solid fa-moon icono-luna" aria-hidden="true"></i>

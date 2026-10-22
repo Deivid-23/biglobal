@@ -21,6 +21,7 @@ $rutas = [
     "perfil"       => "perfil",
     "plan"         => "plan",
     "clases"       => "clases",
+    "avisos"       => "avisos",
 ];
 
 $pagina = $_GET["page"] ?? "inicio";

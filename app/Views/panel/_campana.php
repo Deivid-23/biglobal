@@ -1,6 +1,6 @@
 <?php
 /**
- * Campana de notificaciones de la barra superior (solo admin y super admin).
+ * Campana de notificaciones de la barra superior (admin, super admin y docente).
  * Variable: $campanaPanel = ["noLeidas" => int, "lista" => [...]] (desde Panel::render)
  *
  * Sin JavaScript también funciona: cada aviso es un enlace y
@@ -34,7 +34,9 @@ $etiquetaCampana = $noLeidas > 0
             <div class="pnl-campana__vacio">
                 <i class="fa-regular fa-bell" aria-hidden="true"></i>
                 <p>Todavía no hay avisos.</p>
-                <small>Aquí verás los registros nuevos, los docentes por aprobar y los cursos creados.</small>
+                <small><?= in_array(rolActual(), ["admin", "superadmin"], true)
+                    ? "Aquí verás los registros nuevos, los docentes por aprobar y los cursos creados."
+                    : "Aquí verás la revisión de tus cursos y lecciones y otros avisos." ?></small>
             </div>
         <?php else: ?>
             <ul class="pnl-campana__lista">
