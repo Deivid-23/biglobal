@@ -384,11 +384,17 @@ try {
 
             if ($accion === "crear_clase") {
                 $nuevaId = ClaseModel::crear($conexion, $docenteId, $datos);
-                volverCon("ok", "Clase creada. Los estudiantes ya pueden inscribirse.", "index.php?page=clases&clase=" . $nuevaId);
+                $invitados = $datos["abierta"] ? ClaseModel::invitarGratuitos($conexion, $nuevaId) : 0;
+                volverCon("ok", "Clase creada. Los estudiantes ya pueden inscribirse."
+                    . ($invitados ? " Invitamos a " . plural_panel($invitados, "estudiante", "estudiantes") . " del plan Gratuito." : ""),
+                    "index.php?page=clases&clase=" . $nuevaId);
             }
 
             ClaseModel::editar($conexion, $claseId, $datos);
-            volverCon("ok", "Clase actualizada.", $volverClase);
+            // Si recién la marcó como gratuita para todos, se invita al plan Gratuito
+            $invitados = ($datos["abierta"] && (int) $clase["abierta_para_todos"] === 0) ? ClaseModel::invitarGratuitos($conexion, $claseId) : 0;
+            volverCon("ok", "Clase actualizada."
+                . ($invitados ? " Invitamos a " . plural_panel($invitados, "estudiante", "estudiantes") . " del plan Gratuito." : ""), $volverClase);
 
         default:
 

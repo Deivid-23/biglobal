@@ -34,6 +34,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         case "guardar_pregunta":  $controlador->guardarPregunta();  exit;
         case "eliminar_pregunta": $controlador->eliminarPregunta(); exit;
         case "cancelar_clase":    $controlador->cancelarClase();    exit;
+        case "abrir_clase":       $controlador->abrirClase();       exit;
     }
 }
 

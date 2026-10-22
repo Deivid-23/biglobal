@@ -54,6 +54,11 @@ $formulario = function (?array $cl) use ($idiomasActivos): void { ?>
                value="<?= e($cl["enlace"] ?? "") ?>" placeholder="https://meet.google.com/..." aria-describedby="c-enlace-ayuda">
         <p class="campo__ayuda" id="c-enlace-ayuda">Google Meet, Zoom, Teams… Solo lo ven los inscritos, <?= ClaseModel::MINUTOS_ANTES ?> minutos antes de empezar.</p>
     </div>
+    <label class="pnl-interruptor clase-abierta">
+        <input type="checkbox" name="abierta_para_todos" value="1" <?= (int) ($cl["abierta_para_todos"] ?? 0) === 1 ? "checked" : "" ?>>
+        <span><strong>Gratuita para todos</strong>
+            <small>También pueden unirse los estudiantes del plan Gratuito, y les llega una invitación (campana y correo) para aceptar o rechazar.</small></span>
+    </label>
     <div class="campo">
         <label class="campo__etiqueta" for="c-desc">Descripción <span class="campo__ayuda">(opcional)</span></label>
         <textarea class="entrada" id="c-desc" name="descripcion" rows="3" placeholder="Qué van a practicar y qué deben preparar"><?= e($cl["descripcion"] ?? "") ?></textarea>

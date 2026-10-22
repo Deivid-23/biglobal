@@ -87,6 +87,8 @@ class ClaseModel
             "enlace"       => $enlace,
             "cupo"         => $cupo,
             "idioma_id"    => $idiomaId,
+            // Gratuita para todos: también la ve (y recibe invitación) el plan Gratuito
+            "abierta"      => !empty($post["abierta_para_todos"]) ? 1 : 0,
         ];
     }
 
@@ -105,9 +107,9 @@ class ClaseModel
     public static function crear(PDO $c, int $docenteId, array $d): int
     {
         $c->prepare("
-            INSERT INTO clases_vivo (docente_id, idioma_id, titulo, descripcion, inicio, duracion_min, enlace, cupo)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ")->execute([$docenteId, $d["idioma_id"], $d["titulo"], $d["descripcion"], $d["inicio"], $d["duracion_min"], $d["enlace"], $d["cupo"]]);
+            INSERT INTO clases_vivo (docente_id, idioma_id, titulo, descripcion, inicio, duracion_min, enlace, cupo, abierta_para_todos)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ")->execute([$docenteId, $d["idioma_id"], $d["titulo"], $d["descripcion"], $d["inicio"], $d["duracion_min"], $d["enlace"], $d["cupo"], $d["abierta"]]);
         return (int) $c->lastInsertId();
     }
 
@@ -117,9 +119,9 @@ class ClaseModel
         $c->beginTransaction();
         try {
             $c->prepare("
-                UPDATE clases_vivo SET idioma_id = ?, titulo = ?, descripcion = ?, inicio = ?, duracion_min = ?, enlace = ?, cupo = ?
+                UPDATE clases_vivo SET idioma_id = ?, titulo = ?, descripcion = ?, inicio = ?, duracion_min = ?, enlace = ?, cupo = ?, abierta_para_todos = ?
                 WHERE id = ?
-            ")->execute([$d["idioma_id"], $d["titulo"], $d["descripcion"], $d["inicio"], $d["duracion_min"], $d["enlace"], $d["cupo"], $claseId]);
+            ")->execute([$d["idioma_id"], $d["titulo"], $d["descripcion"], $d["inicio"], $d["duracion_min"], $d["enlace"], $d["cupo"], $d["abierta"], $claseId]);
             $clase = self::bloquear($c, $claseId);
             $avisos = self::promover($c, $clase);
             $c->commit();
@@ -208,6 +210,127 @@ class ClaseModel
             Notificador::aUsuario($u, "clase_cancelada", "Clase cancelada", $texto, "estudiante/index.php?page=clases");
         }
         return count($usuarios);
+    }
+
+    /* =========================================================
+       CLASES GRATUITAS PARA TODOS (invitaciones)
+    ========================================================= */
+
+    public static function invitacionesDisponibles(PDO $c): bool
+    {
+        static $disponible = null;
+        if ($disponible === null) {
+            try {
+                $disponible = (int) $c->query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'clase_invitaciones'")->fetchColumn() === 1;
+            } catch (Throwable $e) {
+                $disponible = false;
+            }
+        }
+        return $disponible;
+    }
+
+    /** Marca o desmarca la clase como gratuita para todos. Si la abre, invita. Devuelve cuántos invitó. */
+    public static function marcarAbierta(PDO $c, int $claseId, bool $abierta): int
+    {
+        $c->prepare("UPDATE clases_vivo SET abierta_para_todos = ? WHERE id = ?")->execute([$abierta ? 1 : 0, $claseId]);
+        return $abierta ? self::invitarGratuitos($c, $claseId) : 0;
+    }
+
+    /**
+     * Invita a cada estudiante activo del plan Gratuito que todavía no esté
+     * en la clase (una sola vez por persona). Campana + correo.
+     */
+    public static function invitarGratuitos(PDO $c, int $claseId): int
+    {
+        if (!self::invitacionesDisponibles($c)) {
+            return 0;
+        }
+        $clase = self::porId($c, $claseId);
+        if (!$clase || $clase["estado"] !== "programada" || (int) $clase["abierta_para_todos"] !== 1 || (int) $clase["terminada"] === 1) {
+            return 0;
+        }
+
+        $stmt = $c->prepare("
+            SELECT u.id FROM usuarios u
+            INNER JOIN roles r ON r.id = u.rol_id
+            WHERE r.nombre = 'estudiante' AND u.activo = 1
+              AND NOT EXISTS (SELECT 1 FROM clase_inscripciones ci
+                              WHERE ci.clase_id = ? AND ci.usuario_id = u.id AND ci.estado IN ('inscrito', 'espera'))
+        ");
+        $stmt->execute([$claseId]);
+        $candidatos = array_map("intval", $stmt->fetchAll(PDO::FETCH_COLUMN));
+
+        // Solo el plan Gratuito: los Premium ya pueden unirse a todas
+        $invitados = [];
+        $insertar = $c->prepare("INSERT IGNORE INTO clase_invitaciones (clase_id, usuario_id) VALUES (?, ?)");
+        foreach (array_chunk($candidatos, 300) as $bloque) {
+            $premium = Plan::planesDe($c, $bloque);
+            foreach ($bloque as $uid) {
+                if (isset($premium[$uid])) {
+                    continue;
+                }
+                $insertar->execute([$claseId, $uid]);
+                if ($insertar->rowCount() === 1) {
+                    $invitados[] = $uid;   // a quien ya se invitó antes no se le repite
+                }
+            }
+        }
+
+        if ($invitados) {
+            Notificador::aVarios($invitados, "clase_invitacion", "Te invitamos a una clase en vivo gratis",
+                "«{$clase["titulo"]}» el " . self::fechaHora($clase["inicio"]) . " ({$clase["duracion_min"]} min). "
+                . "Es gratuita para todos: entra a Clases en vivo y acepta o rechaza la invitación. Cupo de {$clase["cupo"]} personas.",
+                "estudiante/index.php?page=clases");
+        }
+        return count($invitados);
+    }
+
+    /** Invitaciones pendientes de clases que siguen abiertas y por venir. */
+    public static function invitacionesPendientes(PDO $c, int $usuarioId): array
+    {
+        if (!self::invitacionesDisponibles($c)) {
+            return [];
+        }
+        $stmt = $c->prepare("
+            SELECT cv.id, cv.titulo, cv.inicio, cv.duracion_min, cv.cupo, CONCAT(u.nombre, ' ', COALESCE(u.apellido, '')) AS docente,
+                   (SELECT COUNT(*) FROM clase_inscripciones ci WHERE ci.clase_id = cv.id AND ci.estado = 'inscrito') AS inscritos
+            FROM clase_invitaciones inv
+            INNER JOIN clases_vivo cv ON cv.id = inv.clase_id
+            INNER JOIN usuarios u ON u.id = cv.docente_id
+            WHERE inv.usuario_id = ? AND inv.estado = 'pendiente'
+              AND cv.estado = 'programada' AND cv.abierta_para_todos = 1
+              AND cv.inicio + INTERVAL cv.duracion_min MINUTE > NOW()
+              AND NOT EXISTS (SELECT 1 FROM clase_inscripciones ci WHERE ci.clase_id = cv.id AND ci.usuario_id = inv.usuario_id AND ci.estado IN ('inscrito', 'espera'))
+            ORDER BY cv.inicio
+        ");
+        $stmt->execute([$usuarioId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /** Aceptar (= inscribirse, con cupo y lista de espera) o rechazar una invitación. */
+    public static function responderInvitacion(PDO $c, int $claseId, int $usuarioId, bool $aceptar): array
+    {
+        if (!self::invitacionesDisponibles($c)) {
+            return ["ok" => false, "mensaje" => "Esta invitación ya no está disponible."];
+        }
+        $stmt = $c->prepare("SELECT estado FROM clase_invitaciones WHERE clase_id = ? AND usuario_id = ? LIMIT 1");
+        $stmt->execute([$claseId, $usuarioId]);
+        if ($stmt->fetchColumn() !== "pendiente") {
+            return ["ok" => false, "mensaje" => "Esta invitación ya no está disponible."];
+        }
+
+        if (!$aceptar) {
+            $c->prepare("UPDATE clase_invitaciones SET estado = 'rechazada', respondida_en = NOW() WHERE clase_id = ? AND usuario_id = ?")
+              ->execute([$claseId, $usuarioId]);
+            return ["ok" => true, "estado" => "rechazada", "mensaje" => "Listo, rechazaste la invitación. Si cambias de idea, puedes unirte desde Próximas clases mientras haya cupo."];
+        }
+
+        $r = self::inscribir($c, $claseId, $usuarioId);
+        if ($r["ok"]) {
+            $c->prepare("UPDATE clase_invitaciones SET estado = 'aceptada', respondida_en = NOW() WHERE clase_id = ? AND usuario_id = ?")
+              ->execute([$claseId, $usuarioId]);
+        }
+        return $r;
     }
 
     /* =========================================================

@@ -139,6 +139,24 @@ class AdminController
         Panel::volver($volver, "ok", "Clase cancelada. Avisamos a " . plural_panel($avisados, "estudiante", "estudiantes") . ".");
     }
 
+    /** Marca o quita "gratuita para todos". Al marcarla se invita al plan Gratuito. */
+    public function abrirClase(): void
+    {
+        verificarCsrfFormulario($_POST["csrf_token"] ?? "");
+        $volver = "index.php?page=clases";
+        $clase = ClaseModel::disponible($this->c) ? ClaseModel::porId($this->c, (int) ($_POST["clase_id"] ?? 0)) : null;
+        if (!$clase || $clase["estado"] === "cancelada" || (int) $clase["terminada"] === 1) {
+            Panel::volver($volver, "error", "La clase no existe, se canceló o ya terminó.");
+        }
+        $abrir = (int) ($_POST["abierta"] ?? 0) === 1;
+        $invitados = ClaseModel::marcarAbierta($this->c, (int) $clase["id"], $abrir);
+        Auditoria::registrar("clase.abierta", "clase", (int) $clase["id"], $clase["titulo"] . " · " . ClaseModel::fechaHora($clase["inicio"]),
+            (int) $clase["abierta_para_todos"] === 1 ? "gratuita para todos" : "solo Premium", $abrir ? "gratuita para todos" : "solo Premium");
+        Panel::volver($volver, "ok", $abrir
+            ? "La clase ahora es gratuita para todos." . ($invitados ? " Invitamos a " . plural_panel($invitados, "estudiante", "estudiantes") . " del plan Gratuito." : "")
+            : "La clase vuelve a ser solo para Premium. Los inscritos del plan Gratuito no pueden entrar.");
+    }
+
     /** Preguntas de una actividad (?page=preguntas&id=...). */
     public function preguntas(): void
     {

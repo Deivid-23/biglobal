@@ -1,7 +1,8 @@
 <?php
 /**
  * Clases en vivo (estudiante).
- * Variables: $disponible, $clases (próximas, con mi_estado, mi_posicion, permitida, enlace_abierto), $premium
+ * Variables: $disponible, $clases (próximas, con mi_estado, mi_posicion, permitida, enlace_abierto), $premium,
+ *            $invitaciones (clases gratuitas a las que lo invitaron y no ha respondido)
  *
  * El enlace nunca está en esta página: "Entrar" pasa por entrar_clase.php,
  * que revisa en el servidor si estás inscrito y si ya es la hora.
@@ -97,6 +98,39 @@ function plural_estudiante(int $n, string $uno, string $varios): string
     <p>Practica con docentes en clases por Meet o Zoom de hasta <?= ClaseModel::CUPO_MAX ?> estudiantes.
         <?= $premium ? "Con tu plan Premium puedes unirte a todas." : "Con el plan Gratuito te unes a las abiertas para todos; con Premium, a todas." ?></p>
 </header>
+
+<?php if (!empty($invitaciones)): ?>
+    <section class="invitaciones" aria-labelledby="titulo-invitaciones">
+        <h2 id="titulo-invitaciones"><i class="fa-solid fa-gift" aria-hidden="true"></i> Te invitaron a <?= count($invitaciones) === 1 ? "una clase gratis" : count($invitaciones) . " clases gratis" ?></h2>
+        <ul class="invitaciones__lista">
+            <?php foreach ($invitaciones as $inv): $libres = max(0, (int) $inv["cupo"] - (int) $inv["inscritos"]); ?>
+                <li class="invitacion">
+                    <div>
+                        <p class="invitacion__titulo"><?= e($inv["titulo"]) ?></p>
+                        <p class="clase__meta">
+                            <?= e(ClaseModel::fechaHora($inv["inicio"])) ?> · <?= (int) $inv["duracion_min"] ?> min · <?= e(trim($inv["docente"])) ?>
+                            · <?= $libres > 0 ? $libres . " cupos libres" : "llena: entrarías a la lista de espera" ?>
+                        </p>
+                    </div>
+                    <div class="invitacion__acciones">
+                        <form method="POST" action="clase.php">
+                            <?= campoCsrf() ?>
+                            <input type="hidden" name="accion" value="aceptar_invitacion">
+                            <input type="hidden" name="clase_id" value="<?= (int) $inv["id"] ?>">
+                            <button class="boton boton--primario boton--sm" type="submit">Aceptar</button>
+                        </form>
+                        <form method="POST" action="clase.php">
+                            <?= campoCsrf() ?>
+                            <input type="hidden" name="accion" value="rechazar_invitacion">
+                            <input type="hidden" name="clase_id" value="<?= (int) $inv["id"] ?>">
+                            <button class="boton boton--fantasma boton--sm" type="submit">Rechazar</button>
+                        </form>
+                    </div>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+    </section>
+<?php endif; ?>
 
 <?php if (!$disponible): ?>
     <div class="vacio"><p>Las clases en vivo llegan muy pronto.</p></div>

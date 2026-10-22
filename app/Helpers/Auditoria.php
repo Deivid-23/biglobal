@@ -32,6 +32,7 @@ class Auditoria
         "plan.cortesia"      => "Dio Premium de cortesía",
         "plan.quitar"        => "Quitó Premium de cortesía",
         "clase.cancelar"     => "Canceló una clase en vivo",
+        "clase.abierta"      => "Cambió si una clase es gratuita",
     ];
 
     /** Texto del estado de una cuenta (usuarios.activo). */

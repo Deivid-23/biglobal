@@ -4,7 +4,7 @@
 <header class="pnl-encabezado">
     <div>
         <h1>Clases en vivo</h1>
-        <p>Las programan los docentes. Aquí ves todas y puedes cancelar cualquiera: avisamos a los inscritos y a la lista de espera.</p>
+        <p>Las programan los docentes. Aquí ves todas, puedes hacerlas gratuitas para todos (se invita al plan Gratuito) o cancelarlas (se avisa a los inscritos y a la lista de espera).</p>
     </div>
 </header>
 
@@ -39,6 +39,16 @@
                                 <td><span class="chip <?= $cls ?>"><?= $txt ?></span></td>
                                 <td class="col-acciones">
                                     <?php if ($cl["estado"] !== "cancelada" && !$terminada): ?>
+                                        <form method="POST" action="index.php"
+                                              <?= (int) $cl["abierta_para_todos"] === 1 ? "" : 'data-confirmar="¿Hacer gratuita para todos la clase «' . e($cl["titulo"]) . '»? Invitaremos a todos los estudiantes del plan Gratuito."' ?>>
+                                            <?= campoCsrf() ?>
+                                            <input type="hidden" name="accion" value="abrir_clase">
+                                            <input type="hidden" name="clase_id" value="<?= (int) $cl["id"] ?>">
+                                            <input type="hidden" name="abierta" value="<?= (int) $cl["abierta_para_todos"] === 1 ? 0 : 1 ?>">
+                                            <button class="boton boton--secundario boton--sm" type="submit">
+                                                <?= (int) $cl["abierta_para_todos"] === 1 ? "Quitar gratuita" : "Hacer gratuita" ?>
+                                            </button>
+                                        </form>
                                         <form method="POST" action="index.php" data-confirmar="¿Cancelar la clase «<?= e($cl["titulo"]) ?>»? Avisaremos a los inscritos y a la lista de espera.">
                                             <?= campoCsrf() ?>
                                             <input type="hidden" name="accion" value="cancelar_clase">

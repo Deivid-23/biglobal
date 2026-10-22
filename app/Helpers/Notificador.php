@@ -39,6 +39,7 @@ class Notificador
         "premium_por_vencer"=> "fa-clock",
         "clase_cupo"        => "fa-video",
         "clase_cancelada"   => "fa-calendar-xmark",
+        "clase_invitacion"  => "fa-gift",
     ];
 
     /**
@@ -104,6 +105,58 @@ class Notificador
             }
         } catch (Throwable $e) {
             error_log("[BiGlobal][Notificador][aUsuario] " . $e->getMessage());
+        }
+    }
+
+    /** Correos masivos por día (el plan gratis de Brevo permite 300 en total). */
+    public const TOPE_CORREOS_MASIVOS_DIA = 200;
+
+    /**
+     * El mismo aviso para MUCHAS personas (ej. invitación a una clase gratuita).
+     * - La campana siempre le llega a todos.
+     * - El correo sale en grupos de 50 con copia oculta y con un tope diario
+     *   (TOPE_CORREOS_MASIVOS_DIA) para no gastar el cupo de Brevo que necesitan
+     *   los correos importantes (pagos, cuenta). Quien quede fuera del tope
+     *   igual tiene el aviso en la campana.
+     * Devuelve cuántos correos salieron.
+     */
+    public static function aVarios(array $usuarioIds, string $tipo, string $titulo, string $mensaje = "", ?string $enlace = null): int
+    {
+        $ids = array_values(array_unique(array_filter(array_map("intval", $usuarioIds))));
+        if (!$ids) {
+            return 0;
+        }
+
+        try {
+            $conexion = Conexion::conectar();
+            $enviados = 0;
+
+            foreach (array_chunk($ids, 200) as $bloque) {
+                $marcas = implode(",", array_fill(0, count($bloque), "?"));
+                $stmt = $conexion->prepare("SELECT id, correo FROM usuarios WHERE id IN ($marcas)");
+                $stmt->execute($bloque);
+                $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                self::guardar($conexion, $usuarios, $tipo, $titulo, $mensaje, $enlace);
+
+                // Tope diario de correos masivos (se lleva la cuenta en la tabla configuracion)
+                // Valor guardado: "AAAAMMDD:cantidad" (una sola clave; se reinicia cada día)
+                [$dia, $cuenta] = array_pad(explode(":", (string) Config::get("correos_masivos_hoy", "")), 2, "0");
+                $usados = $dia === date("Ymd") ? (int) $cuenta : 0;
+                $correos = array_values(array_filter(array_column($usuarios, "correo"), fn($c) => filter_var($c, FILTER_VALIDATE_EMAIL)));
+                $correos = array_slice($correos, 0, max(0, self::TOPE_CORREOS_MASIVOS_DIA - $usados));
+
+                foreach (array_chunk($correos, 50) as $grupo) {
+                    self::mandarCorreo($grupo, $titulo, $mensaje, $enlace, "Recibes este correo porque tienes una cuenta en BiGlobal.");
+                    $enviados += count($grupo);
+                }
+                if ($correos) {
+                    Config::set("correos_masivos_hoy", date("Ymd") . ":" . ($usados + count($correos)));
+                }
+            }
+            return $enviados;
+        } catch (Throwable $e) {
+            error_log("[BiGlobal][Notificador][aVarios] " . $e->getMessage());
+            return 0;
         }
     }
 

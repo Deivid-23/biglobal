@@ -724,6 +724,7 @@ class EstudianteController
         $this->render("clases", "clases", "Clases en vivo", [
             "disponible" => $disponible,
             "clases"     => $disponible ? ClaseModel::paraEstudiante($c, $this->usuarioId) : [],
+            "invitaciones" => $disponible ? ClaseModel::invitacionesPendientes($c, $this->usuarioId) : [],
             "premium"    => Plan::esPremium($c, $this->usuarioId),
         ]);
     }
@@ -754,6 +755,9 @@ class EstudianteController
         if ($accion === "inscribir") {
             $r = ClaseModel::inscribir($c, $claseId, $this->usuarioId);
             $_SESSION["flash_estudiante"] = ["tipo" => !$r["ok"] ? "error" : ($r["estado"] === "inscrito" ? "exito" : "info"), "mensaje" => $r["mensaje"]];
+        } elseif ($accion === "aceptar_invitacion" || $accion === "rechazar_invitacion") {
+            $r = ClaseModel::responderInvitacion($c, $claseId, $this->usuarioId, $accion === "aceptar_invitacion");
+            $_SESSION["flash_estudiante"] = ["tipo" => !$r["ok"] ? "error" : (($r["estado"] ?? "") === "inscrito" ? "exito" : "info"), "mensaje" => $r["mensaje"]];
         } elseif ($accion === "retirar") {
             $ok = ClaseModel::retirar($c, $claseId, $this->usuarioId);
             $_SESSION["flash_estudiante"] = ["tipo" => $ok ? "exito" : "error",
