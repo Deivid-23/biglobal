@@ -24,6 +24,7 @@ class Notificador
         "docente_pendiente" => "notif_docente_pendiente",
         "nuevo_curso"       => "notif_nuevo_curso",
         "resumen_semanal"   => "notif_resumen_semanal",
+        "contenido_revision"=> "notif_contenido_revision",
     ];
 
     /** Ícono de Font Awesome de cada tipo (para la campana). */
@@ -32,6 +33,11 @@ class Notificador
         "docente_pendiente" => "fa-user-clock",
         "nuevo_curso"       => "fa-book",
         "resumen_semanal"   => "fa-chart-simple",
+        "contenido_revision"=> "fa-clipboard-check",
+        "contenido_revisado"=> "fa-clipboard-check",
+        "docente_aprobado"  => "fa-user-check",
+        "docente_rechazado" => "fa-user-xmark",
+        "cuenta_eliminacion"=> "fa-user-slash",
         // Avisos personales (ver aUsuario)
         "pago_aprobado"     => "fa-circle-check",
         "pago_rechazado"    => "fa-triangle-exclamation",

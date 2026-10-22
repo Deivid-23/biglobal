@@ -4,6 +4,15 @@ require_once __DIR__ . "/../../app/bootstrap.php";
 require_once __DIR__ . "/../../app/Models/ContenidoModel.php";
 require_once __DIR__ . "/../../app/Models/QuizModel.php";
 require_once __DIR__ . "/../../app/Models/ClaseModel.php";
+require_once __DIR__ . "/../../app/Models/RevisionModel.php";
+
+/** Si cambian las actividades de una lección publicada, la lección vuelve a revisión (sigue visible). */
+function leccionCambio(PDO $conexion, int $leccionId): void
+{
+    if ($leccionId > 0) {
+        RevisionModel::alEditarDocente($conexion, "leccion", $leccionId);
+    }
+}
 
 protegerRol("docente");
 require_once __DIR__ . "/verificar_aprobado.php";
@@ -59,6 +68,9 @@ try {
                 ":instructor"  => $docenteId,
             ]);
 
+            $nuevoCursoId = (int) $conexion->lastInsertId();
+            RevisionModel::alCrearDocente($conexion, "curso", $nuevoCursoId);
+
             /* Aviso al equipo de administración (campana + correo) */
             Notificador::avisar(
                 "nuevo_curso",
@@ -67,7 +79,9 @@ try {
                 "admin/index.php?page=cursos"
             );
 
-            volverCon("ok", "Curso creado correctamente.");
+            volverCon("ok", RevisionModel::disponible($conexion)
+                ? "Curso creado como borrador. Agrega sus lecciones y envíalo a revisión cuando esté listo."
+                : "Curso creado correctamente.", "index.php?page=curso&id=" . $nuevoCursoId);
 
         /* =========================================================
            CREAR LECCIÓN
@@ -107,7 +121,10 @@ try {
                 ":orden"       => $datos["orden"],
             ]);
 
-            volverCon("ok", "Lección creada correctamente.", "index.php?page=lecciones&id=" . $cursoId);
+            RevisionModel::alCrearDocente($conexion, "leccion", (int) $conexion->lastInsertId());
+            volverCon("ok", RevisionModel::disponible($conexion)
+                ? "Lección creada como borrador. Envíala a revisión cuando esté lista."
+                : "Lección creada correctamente.", "index.php?page=lecciones&id=" . $cursoId);
 
         /* =========================================================
            ELIMINAR LECCIÓN
@@ -183,6 +200,7 @@ try {
                 ":tipo"        => $tipo,
             ]);
 
+            leccionCambio($conexion, $leccionId);
             volverCon("ok", "Actividad creada correctamente.", "index.php?page=actividades&id=" . $cursoId);
 
         /* =========================================================
@@ -236,8 +254,11 @@ try {
                 volverCon("error", $errorIdioma, "index.php?page=curso&id=" . $cursoId);
             }
 
+            // La visibilidad (estado) no la decide el docente: se conserva la actual
+            $datos["estado"] = (int) RevisionModel::fila($conexion, "curso", $cursoId)["estado"];
             ContenidoModel::actualizarCurso($conexion, $cursoId, $datos);
-            volverCon("ok", "Curso actualizado.", "index.php?page=curso&id=" . $cursoId);
+            $volvio = RevisionModel::alEditarDocente($conexion, "curso", $cursoId);
+            volverCon("ok", $volvio ? "Curso actualizado. Como estaba publicado, vuelve a revisión (sigue visible)." : "Curso actualizado.", "index.php?page=curso&id=" . $cursoId);
 
         /* =========================================================
            ELIMINAR CURSO (solo si es del docente y nadie ha avanzado)
@@ -271,8 +292,10 @@ try {
                 volverCon("error", $datos, "index.php?page=lecciones&id=" . $cursoId);
             }
 
+            $datos["estado"] = (int) RevisionModel::fila($conexion, "leccion", $leccionId)["estado"];
             ContenidoModel::actualizarLeccion($conexion, $leccionId, $datos);
-            volverCon("ok", "Lección actualizada.", "index.php?page=lecciones&id=" . $cursoId);
+            $volvio = RevisionModel::alEditarDocente($conexion, "leccion", $leccionId);
+            volverCon("ok", $volvio ? "Lección actualizada. Como estaba publicada, vuelve a revisión (sigue visible)." : "Lección actualizada.", "index.php?page=lecciones&id=" . $cursoId);
 
         /* =========================================================
            EDITAR ACTIVIDAD (solo si es de un curso del docente)
@@ -291,6 +314,7 @@ try {
             }
 
             ContenidoModel::actualizarActividad($conexion, $actividadId, $datos);
+            leccionCambio($conexion, (int) (QuizModel::actividad($conexion, $actividadId)["leccion_id"] ?? 0));
             volverCon("ok", "Actividad actualizada.", "index.php?page=actividades&id=" . $cursoId);
 
         /* =========================================================
@@ -335,7 +359,36 @@ try {
             }
 
             QuizModel::guardarPregunta($conexion, $actividadId, $preguntaId, $datos);
+            leccionCambio($conexion, (int) ($actividad["leccion_id"] ?? 0));
             volverCon("ok", $preguntaId > 0 ? "Pregunta actualizada." : "Pregunta agregada.", $volver);
+
+        /* =========================================================
+           REVISIÓN DE CONTENIDO: enviar a revisión o pasar a borrador
+           (solo cursos y lecciones del docente)
+        ========================================================= */
+        case "enviar_revision":
+        case "a_borrador":
+
+            $tipo = (string) ($_POST["tipo"] ?? "");
+            if (!RevisionModel::disponible($conexion) || !isset(RevisionModel::TABLAS[$tipo])) {
+                volverCon("error", "Acción no reconocida.");
+            }
+            $id = (int) ($_POST[$tipo === "curso" ? "curso_id" : "leccion_id"] ?? 0);
+            $cursoId = $tipo === "curso" ? ContenidoModel::cursoDelDocente($conexion, $id, $docenteId) : ContenidoModel::leccionDelDocente($conexion, $id, $docenteId);
+            if (!$cursoId) {
+                volverCon("error", "No existe o no es tuyo.");
+            }
+            $volver = (string) ($_POST["volver"] ?? "");
+            if (!preg_match('/^index\.php\?page=(curso|lecciones)&id=\d+$/', $volver)) {
+                $volver = "index.php?page=curso&id=" . $cursoId;
+            }
+
+            if ($accion === "a_borrador") {
+                RevisionModel::aBorrador($conexion, $tipo, $id);
+                volverCon("ok", "Pasó a borrador: los estudiantes ya no lo ven.", $volver);
+            }
+            $ok = RevisionModel::enviar($conexion, $tipo, $id);
+            volverCon($ok ? "ok" : "error", $ok ? "Enviado a revisión. Te avisaremos cuando el equipo lo revise." : "Esto ya estaba en revisión o publicado.", $volver);
 
         /* =========================================================
            CLASES EN VIVO (solo las del docente)

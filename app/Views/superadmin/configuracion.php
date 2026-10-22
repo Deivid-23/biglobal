@@ -116,6 +116,7 @@ $g = fn(string $clave, $defecto = "") => Config::get($clave, $defecto);
             "notif_nuevo_usuario"     => ["Nuevo usuario registrado",     "Cuando alguien crea una cuenta, con correo o con Google", true],
             "notif_docente_pendiente" => ["Docente pendiente de aprobar", "Cuando un docente se registra y espera tu aprobación", true],
             "notif_nuevo_curso"       => ["Nuevo curso creado",           "Cuando se crea un curso desde el panel de admin o de docente", true],
+            "notif_contenido_revision"=> ["Contenido por revisar",        "Cuando un docente envía un curso o una lección a revisión (o edita algo publicado)", true],
             "notif_resumen_semanal"   => ["Resumen semanal",              "Cada lunes: usuarios nuevos, docentes pendientes, cursos y lecciones completadas", false],
         ] as $clave => [$titulo, $texto, $porDefecto]): ?>
             <label class="pnl-interruptor">

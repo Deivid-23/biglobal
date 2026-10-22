@@ -57,13 +57,7 @@ if (!isset($configEditar[$editarTipo])) return;
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    <div class="campo">
-                        <label class="campo__etiqueta" for="e-estado">Estado</label>
-                        <select class="entrada" id="e-estado" name="estado">
-                            <option value="1">Publicado</option>
-                            <option value="0">Borrador (oculto)</option>
-                        </select>
-                    </div>
+
                 </div>
 
             <?php elseif ($editarTipo === "leccion"): ?>
@@ -89,13 +83,7 @@ if (!isset($configEditar[$editarTipo])) return;
                         <label class="campo__etiqueta" for="e-orden">Orden</label>
                         <input class="entrada" type="number" id="e-orden" name="orden" min="1" required>
                     </div>
-                    <div class="campo">
-                        <label class="campo__etiqueta" for="e-estado">Estado</label>
-                        <select class="entrada" id="e-estado" name="estado">
-                            <option value="1">Publicada</option>
-                            <option value="0">Borrador (oculta)</option>
-                        </select>
-                    </div>
+
                 </div>
 
             <?php else: ?>

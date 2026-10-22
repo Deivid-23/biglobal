@@ -16,7 +16,9 @@ if (!$cursoActual): ?>
         <p><?= e($cursoActual["descripcion"] ?: "Sin descripción.") ?></p>
     </div>
     <div class="pnl-item__acciones">
-        <?= (int) ($cursoActual["estado"] ?? 0) === 1 ? '<span class="chip chip--exito">Publicado</span>' : '<span class="chip chip--neutro">Borrador</span>' ?>
+        <?php if (!isset($cursoActual["revision"])): ?>
+            <?= (int) ($cursoActual["estado"] ?? 0) === 1 ? '<span class="chip chip--exito">Publicado</span>' : '<span class="chip chip--neutro">Borrador</span>' ?>
+        <?php endif; ?>
         <?php $acciones = [
             "nombre" => $cursoActual["nombre"], "modal" => "modal-editar", "action" => "acciones.php",
             "datos" => ["curso_id" => $cursoActual["id"], "nombre" => $cursoActual["nombre"], "descripcion" => $cursoActual["descripcion"],
@@ -28,6 +30,13 @@ if (!$cursoActual): ?>
 </header>
 
 <?php $editarTipo = "curso"; require __DIR__ . "/_modal_editar.php"; ?>
+
+<?php if (isset($cursoActual["revision"])): ?>
+    <section class="pnl-tarjeta revision-tarjeta" aria-label="Revisión del curso">
+        <p class="campo__ayuda">Los estudiantes ven el curso cuando el equipo lo aprueba. Cada lección también se envía a revisión.</p>
+        <?php $revTipo = "curso"; $revFila = $cursoActual; $revVolver = "index.php?page=curso&id=" . (int) $cursoActual["id"]; require __DIR__ . "/_revision.php"; ?>
+    </section>
+<?php endif; ?>
 
 <section class="pnl-datos" aria-label="Resumen del curso">
     <div class="pnl-dato">

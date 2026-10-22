@@ -33,6 +33,7 @@ class Auditoria
         "plan.quitar"        => "Quitó Premium de cortesía",
         "clase.cancelar"     => "Canceló una clase en vivo",
         "clase.abierta"      => "Cambió si una clase es gratuita",
+        "contenido.revision" => "Revisó contenido de un docente",
         "cuenta.solicita_eliminacion" => "Pidió eliminar su cuenta",
         "cuenta.recuperada"  => "Recuperó su cuenta",
         "cuenta.borrado_definitivo" => "Se borraron los datos de una cuenta",

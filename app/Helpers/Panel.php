@@ -145,7 +145,7 @@ class Panel
      * Menú lateral según el rol. Las rutas son relativas a una carpeta
      * de src/ (admin/, superadmin/ o profesor/): por eso empiezan con "../".
      */
-    public static function menu(string $rol, int $solicitudesPendientes = 0): array
+    public static function menu(string $rol, int $solicitudesPendientes = 0, int $revisionesPendientes = 0): array
     {
         if ($rol === "docente") {
             return [
@@ -182,6 +182,7 @@ class Panel
             ["actividades", "Actividades", "fa-list-check",  "../admin/index.php?page=actividades"],
             ["clases",      "Clases en vivo", "fa-video",    "../admin/index.php?page=clases"],
             ["solicitudes", "Solicitudes", "fa-user-clock",  "../admin/index.php?page=solicitudes", $solicitudesPendientes],
+            ["revision",    "Revisión de contenido", "fa-clipboard-check", "../admin/index.php?page=revision", $revisionesPendientes],
         ];
 
         return $menu;
@@ -195,7 +196,7 @@ class Panel
         $usuarioPanel = self::usuario($conexion);
         $tituloPagina = $opciones["titulo"] ?? "Panel";
         $paginaActiva = $opciones["activa"] ?? "";
-        $menuPanel    = $opciones["menu"] ?? self::menu($usuarioPanel["rol"], (int) ($opciones["pendientes"] ?? 0));
+        $menuPanel    = $opciones["menu"] ?? self::menu($usuarioPanel["rol"], (int) ($opciones["pendientes"] ?? 0), (int) ($opciones["revisiones"] ?? 0));
         $conGraficos  = !empty($opciones["graficos"]);
         $perfilUrl    = $usuarioPanel["rol"] === "docente" ? "../profesor/index.php?page=perfil" : "../admin/index.php?page=perfil";
 

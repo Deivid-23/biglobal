@@ -25,8 +25,9 @@
                             <div class="pnl-item__cuerpo">
                                 <p class="pnl-item__titulo"><?= e($l["titulo"]) ?></p>
                                 <p class="pnl-item__texto"><?= e($l["descripcion"] ?: "Sin descripción") ?></p>
+                                <?php $revTipo = "leccion"; $revFila = $l; $revVolver = "index.php?page=lecciones&id=" . (int) $cursoActual["id"]; require __DIR__ . "/_revision.php"; ?>
                             </div>
-                            <?php if ((int) $l["estado"] !== 1): ?><span class="chip chip--neutro">Borrador</span><?php endif; ?>
+                            <?php if (!isset($l["revision"]) && (int) $l["estado"] !== 1): ?><span class="chip chip--neutro">Borrador</span><?php endif; ?>
                             <?php $acciones = [
                                 "nombre" => $l["titulo"], "modal" => "modal-editar", "action" => "acciones.php",
                                 "datos" => ["leccion_id" => $l["id"], "titulo" => $l["titulo"], "descripcion" => $l["descripcion"],

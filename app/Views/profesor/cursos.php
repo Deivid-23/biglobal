@@ -22,6 +22,7 @@
                         <div class="pnl-item__cuerpo">
                             <p class="pnl-item__titulo"><?= e($c["nombre"]) ?></p>
                             <p class="pnl-item__texto"><?= e($c["nivel"] ?: "Sin nivel") ?> · creado el <?= e(fecha_panel($c["fecha_creacion"])) ?></p>
+                            <?php if (isset($c["revision"])): ?><p class="pnl-item__texto"><?= RevisionModel::chip($c["revision"]) ?></p><?php endif; ?>
                         </div>
                         <a class="boton boton--secundario boton--sm" href="index.php?page=curso&amp;id=<?= (int) $c["id"] ?>">Administrar</a>
                     </li>

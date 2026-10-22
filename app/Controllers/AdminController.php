@@ -5,6 +5,7 @@ require_once __DIR__ . "/../Models/ContenidoModel.php";
 require_once __DIR__ . "/../Models/QuizModel.php";
 require_once __DIR__ . "/../Models/ClaseModel.php";
 require_once __DIR__ . "/../Models/DocenteSolicitudModel.php";
+require_once __DIR__ . "/../Models/RevisionModel.php";
 
 /**
  * AdminController
@@ -37,6 +38,7 @@ class AdminController
             "activa"     => $activa,
             "graficos"   => $graficos,
             "pendientes" => AdminModel::solicitudesPendientes($this->c),
+            "revisiones" => RevisionModel::contarPendientes($this->c),
             "datos"      => $datos + [
                 "esSuper"   => esSuperAdmin(),
                 "modal"     => $this->datosModal(),
@@ -138,6 +140,44 @@ class AdminController
         $avisados = ClaseModel::cancelar($this->c, (int) $clase["id"], (string) ($_POST["motivo"] ?? ""));
         Auditoria::registrar("clase.cancelar", "clase", (int) $clase["id"], $clase["titulo"] . " · " . ClaseModel::fechaHora($clase["inicio"]));
         Panel::volver($volver, "ok", "Clase cancelada. Avisamos a " . plural_panel($avisados, "estudiante", "estudiantes") . ".");
+    }
+
+    /* =========================================================
+       REVISIÓN DE CONTENIDO (cursos y lecciones de los docentes)
+    ========================================================= */
+    public function revision(): void
+    {
+        $this->render("revision", "revision", "Revisión de contenido", [
+            "disponible" => RevisionModel::disponible($this->c),
+            "pendientes" => RevisionModel::pendientes($this->c),
+        ]);
+    }
+
+    public function revisar(): void
+    {
+        verificarCsrfFormulario($_POST["csrf_token"] ?? "");
+        $volver = "index.php?page=revision";
+        $tipo = (string) ($_POST["tipo"] ?? "");
+        $id = (int) ($_POST["id"] ?? 0);
+        $decision = (string) ($_POST["decision"] ?? "");
+
+        if (!RevisionModel::disponible($this->c) || !isset(RevisionModel::TABLAS[$tipo]) || $id <= 0) {
+            Panel::volver($volver, "error", "No se encontró el contenido.");
+        }
+        $fila = RevisionModel::fila($this->c, $tipo, $id);
+        $error = RevisionModel::revisar($this->c, $tipo, $id, $decision, (string) ($_POST["comentario"] ?? ""), (int) $_SESSION["usuario_id"]);
+        if ($error) {
+            Panel::volver($volver, "error", $error);
+        }
+
+        $nombre = ($tipo === "curso" ? "Curso: " : "Lección: ") . ($fila[$tipo === "curso" ? "nombre" : "titulo"] ?? "#{$id}");
+        $despues = ["aprobar" => "publicado", "cambios" => "cambios solicitados", "rechazar" => "rechazado"][$decision];
+        Auditoria::registrar("contenido.revision", $tipo, $id, $nombre, "en revisión", $despues);
+        Panel::volver($volver, "ok", [
+            "aprobar"  => "Aprobado: ya lo ven los estudiantes. Le avisamos al docente.",
+            "cambios"  => "Pediste cambios. Le enviamos tu comentario al docente.",
+            "rechazar" => "Rechazado. Le enviamos tu comentario al docente.",
+        ][$decision]);
     }
 
     /** Marca o quita "gratuita para todos". Al marcarla se invita al plan Gratuito. */
@@ -297,6 +337,7 @@ class AdminController
             $idiomaId,
             (int) ($_POST["instructor_id"] ?? 0) ?: null,
         ]);
+        RevisionModel::alGuardarAdmin($this->c, "curso", (int) $this->c->lastInsertId());
 
         // Aviso al resto del equipo (quien lo creó no se avisa a sí mismo)
         Notificador::avisar(
@@ -345,6 +386,7 @@ class AdminController
             VALUES (?, ?, ?, ?, ?, ?, 1)
         ");
         $stmt->execute([$cursoId, $datos["titulo"], $datos["descripcion"], $datos["contenido"], $datos["video_url"], $datos["orden"]]);
+        RevisionModel::alGuardarAdmin($this->c, "leccion", (int) $this->c->lastInsertId());
         Panel::volver($volver, "ok", "Lección creada correctamente.");
     }
 
@@ -400,6 +442,7 @@ class AdminController
                         Panel::volver($volver, "error", "Elige un docente activo de la lista.");
                     }
                     ContenidoModel::actualizarCurso($this->c, $id, $datos, $docente ?: null);
+                    RevisionModel::alGuardarAdmin($this->c, "curso", $id);
                     Panel::volver($volver, "ok", "Curso actualizado.");
 
                 case "lecciones":
@@ -410,6 +453,7 @@ class AdminController
                         Panel::volver($volver, "error", "Elige un curso de la lista.");
                     }
                     ContenidoModel::actualizarLeccion($this->c, $id, $datos, $cursoId);
+                    RevisionModel::alGuardarAdmin($this->c, "leccion", $id);
                     Panel::volver($volver, "ok", "Lección actualizada.");
 
                 case "actividades":

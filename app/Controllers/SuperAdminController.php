@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . "/../Models/AdminModel.php";
+require_once __DIR__ . "/../Models/RevisionModel.php";
 require_once __DIR__ . "/../Helpers/Correo.php";
 
 /**
@@ -38,6 +39,7 @@ class SuperAdminController
             "activa"     => $activa,
             "graficos"   => $graficos,
             "pendientes" => AdminModel::solicitudesPendientes($this->c),
+            "revisiones" => RevisionModel::contarPendientes($this->c),
             "datos"      => $datos,
         ]);
     }

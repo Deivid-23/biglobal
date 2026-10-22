@@ -11,6 +11,7 @@ require_once __DIR__ . "/../../app/bootstrap.php";
 require_once __DIR__ . "/../../app/Models/ContenidoModel.php";
 require_once __DIR__ . "/../../app/Models/QuizModel.php";
 require_once __DIR__ . "/../../app/Models/ClaseModel.php";
+require_once __DIR__ . "/../../app/Models/RevisionModel.php";
 
 protegerRol("docente");
 
@@ -78,7 +79,7 @@ $totalActividades = contarSeguroDoc($conexion, "
    LISTADOS
 ========================================================= */
 $cursosDocente = $conexion->query("
-    SELECT id, nombre, descripcion, nivel, fecha_creacion
+    SELECT *
     FROM cursos
     WHERE instructor_id = $docenteId
     ORDER BY fecha_creacion DESC
