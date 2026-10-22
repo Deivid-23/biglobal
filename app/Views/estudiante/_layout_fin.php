@@ -10,7 +10,7 @@
            href="index.php?page=<?= e($item["page"]) ?>"
            <?= $activo ? 'aria-current="page"' : "" ?>>
             <i class="fa-solid <?= e($item["icono"]) ?>" aria-hidden="true"></i>
-            <span><?= e($item["page"] === "cursos" ? "Explorar" : $item["texto"]) ?></span>
+            <span><?= e($item["page"] === "cursos" ? "Explorar" : ($item["corto"] ?? $item["texto"])) ?></span>
         </a>
     <?php endforeach; ?>
 </nav>

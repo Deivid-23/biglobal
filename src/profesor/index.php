@@ -10,6 +10,7 @@
 require_once __DIR__ . "/../../app/bootstrap.php";
 require_once __DIR__ . "/../../app/Models/ContenidoModel.php";
 require_once __DIR__ . "/../../app/Models/QuizModel.php";
+require_once __DIR__ . "/../../app/Models/ClaseModel.php";
 
 protegerRol("docente");
 
@@ -52,7 +53,7 @@ unset($_SESSION["flash_docente"]);
    PÁGINA ACTUAL
 ========================================================= */
 $pagina = $_GET["page"] ?? "inicio";
-$paginasValidas = ["inicio", "cursos", "curso", "lecciones", "actividades", "preguntas", "perfil"];
+$paginasValidas = ["inicio", "cursos", "curso", "lecciones", "actividades", "preguntas", "clases", "perfil"];
 if (!in_array($pagina, $paginasValidas, true)) $pagina = "inicio";
 
 $cursoIdActual = isset($_GET["id"]) ? (int) $_GET["id"] : 0;
@@ -172,6 +173,7 @@ $titulos = [
     "lecciones"   => "Lecciones",
     "actividades" => "Actividades",
     "preguntas"   => "Preguntas",
+    "clases"      => "Clases en vivo",
     "perfil"      => "Mi perfil",
 ];
 
@@ -206,6 +208,24 @@ $datosVista = compact(
     "cursoActual", "leccionesCurso", "actividadesCurso", "labelsLecciones", "valoresLecciones", "csrfToken",
     "numPreguntas"
 );
+
+/* Clases en vivo (?page=clases[&clase=ID]): solo las del docente */
+if ($pagina === "clases") {
+    $datosVista["clasesDisponibles"] = ClaseModel::disponible($conexion);
+    $datosVista["clases"] = $datosVista["clasesDisponibles"] ? ClaseModel::listado($conexion, $docenteId) : [];
+    $datosVista["claseActual"] = null;
+    $datosVista["participantes"] = [];
+    $claseId = (int) ($_GET["clase"] ?? 0);
+    if ($claseId > 0 && $datosVista["clasesDisponibles"]) {
+        $datosVista["claseActual"] = ClaseModel::deDocente($conexion, $claseId, $docenteId);
+        if (!$datosVista["claseActual"]) {
+            $_SESSION["flash_docente"] = ["tipo" => "error", "mensaje" => "La clase no existe o no es tuya."];
+            header("Location: index.php?page=clases");
+            exit;
+        }
+        $datosVista["participantes"] = ClaseModel::participantes($conexion, $claseId);
+    }
+}
 
 /* Preguntas de una actividad (?page=preguntas&actividad=...): solo si es de un curso del docente */
 if ($pagina === "preguntas") {

@@ -31,6 +31,7 @@ class Auditoria
         "config.cambiar"     => "Cambió la configuración",
         "plan.cortesia"      => "Dio Premium de cortesía",
         "plan.quitar"        => "Quitó Premium de cortesía",
+        "clase.cancelar"     => "Canceló una clase en vivo",
     ];
 
     /** Texto del estado de una cuenta (usuarios.activo). */

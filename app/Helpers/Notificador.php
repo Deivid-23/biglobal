@@ -37,6 +37,8 @@ class Notificador
         "pago_rechazado"    => "fa-triangle-exclamation",
         "premium_terminado" => "fa-crown",
         "premium_por_vencer"=> "fa-clock",
+        "clase_cupo"        => "fa-video",
+        "clase_cancelada"   => "fa-calendar-xmark",
     ];
 
     /**

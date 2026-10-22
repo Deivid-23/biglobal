@@ -154,6 +154,7 @@ class Panel
                     ["cursos",      "Mis cursos",  "fa-book",       "../profesor/index.php?page=cursos"],
                     ["lecciones",   "Lecciones",   "fa-book-open",  "../profesor/index.php?page=lecciones"],
                     ["actividades", "Actividades", "fa-list-check", "../profesor/index.php?page=actividades"],
+                    ["clases",      "Clases en vivo", "fa-video",   "../profesor/index.php?page=clases"],
                 ],
             ];
         }
@@ -179,6 +180,7 @@ class Panel
             ["idiomas",     "Idiomas",     "fa-language",    "../admin/index.php?page=idiomas"],
             ["lecciones",   "Lecciones",   "fa-book-open",   "../admin/index.php?page=lecciones"],
             ["actividades", "Actividades", "fa-list-check",  "../admin/index.php?page=actividades"],
+            ["clases",      "Clases en vivo", "fa-video",    "../admin/index.php?page=clases"],
             ["solicitudes", "Solicitudes", "fa-user-clock",  "../admin/index.php?page=solicitudes", $solicitudesPendientes],
         ];
 

@@ -3,6 +3,7 @@
 require_once __DIR__ . "/../../app/bootstrap.php";
 require_once __DIR__ . "/../../app/Models/ContenidoModel.php";
 require_once __DIR__ . "/../../app/Models/QuizModel.php";
+require_once __DIR__ . "/../../app/Models/ClaseModel.php";
 
 protegerRol("docente");
 require_once __DIR__ . "/verificar_aprobado.php";
@@ -335,6 +336,59 @@ try {
 
             QuizModel::guardarPregunta($conexion, $actividadId, $preguntaId, $datos);
             volverCon("ok", $preguntaId > 0 ? "Pregunta actualizada." : "Pregunta agregada.", $volver);
+
+        /* =========================================================
+           CLASES EN VIVO (solo las del docente)
+        ========================================================= */
+        case "crear_clase":
+        case "editar_clase":
+        case "cancelar_clase":
+
+            if (!ClaseModel::disponible($conexion)) {
+                volverCon("error", "Las clases en vivo aún no están disponibles.", "index.php?page=clases");
+            }
+
+            $claseId = (int) ($_POST["clase_id"] ?? 0);
+            $clase = null;
+            if ($accion !== "crear_clase") {
+                $clase = ClaseModel::deDocente($conexion, $claseId, $docenteId);
+                if (!$clase) {
+                    volverCon("error", "La clase no existe o no es tuya.", "index.php?page=clases");
+                }
+            }
+            $volverClase = "index.php?page=clases" . ($clase ? "&clase=" . $claseId : "");
+
+            if ($accion === "cancelar_clase") {
+                if ($clase["estado"] === "cancelada") {
+                    volverCon("error", "Esta clase ya estaba cancelada.", $volverClase);
+                }
+                $avisados = ClaseModel::cancelar($conexion, $claseId, (string) ($_POST["motivo"] ?? ""));
+                volverCon("ok", "Clase cancelada. Avisamos a " . plural_panel($avisados, "estudiante", "estudiantes") . ".", $volverClase);
+            }
+
+            $inscritos = 0;
+            if ($clase) {
+                if ($clase["estado"] === "cancelada") {
+                    volverCon("error", "Una clase cancelada no se puede editar.", $volverClase);
+                }
+                $inscritos = count(array_filter(ClaseModel::participantes($conexion, $claseId), fn($p) => $p["estado"] === "inscrito"));
+            }
+
+            $datos = ClaseModel::datosClase($conexion, $_POST, $inscritos);
+            if (is_string($datos)) {
+                volverCon("error", $datos, $volverClase);
+            }
+            if (ClaseModel::yaPaso($conexion, $datos["inicio"]) && (!$clase || $clase["inicio"] !== $datos["inicio"])) {
+                volverCon("error", "La fecha y hora de inicio deben ser en el futuro.", $volverClase);
+            }
+
+            if ($accion === "crear_clase") {
+                $nuevaId = ClaseModel::crear($conexion, $docenteId, $datos);
+                volverCon("ok", "Clase creada. Los estudiantes ya pueden inscribirse.", "index.php?page=clases&clase=" . $nuevaId);
+            }
+
+            ClaseModel::editar($conexion, $claseId, $datos);
+            volverCon("ok", "Clase actualizada.", $volverClase);
 
         default:
 

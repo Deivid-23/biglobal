@@ -489,8 +489,9 @@ a.pnl-dato:active { transform: translateY(1px); }
 /* ---------- Formularios ---------- */
 .pnl-form { display: grid; gap: var(--esp-4); max-width: 640px; }
 .pnl-form .campo + .campo { margin-top: 0; }
-.pnl-form__fila { display: grid; gap: var(--esp-4); }
-@media (min-width: 560px) { .pnl-form__fila { grid-template-columns: 1fr 1fr; } }
+/* 2 columnas solo si caben (depende del ancho de la tarjeta, no de la pantalla) */
+.pnl-form__fila { display: grid; gap: var(--esp-4); grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); }
+.pnl-form__fila .entrada { min-width: 0; }
 .pnl-form__acciones { display: flex; flex-wrap: wrap; gap: var(--esp-3); margin-top: var(--esp-2); }
 
 select.entrada { cursor: pointer; }

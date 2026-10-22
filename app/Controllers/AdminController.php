@@ -3,6 +3,7 @@
 require_once __DIR__ . "/../Models/AdminModel.php";
 require_once __DIR__ . "/../Models/ContenidoModel.php";
 require_once __DIR__ . "/../Models/QuizModel.php";
+require_once __DIR__ . "/../Models/ClaseModel.php";
 
 /**
  * AdminController
@@ -113,6 +114,29 @@ class AdminController
                 ? QuizModel::contarPreguntas($this->c, array_column($actividades, "id"))
                 : null,
         ], true);
+    }
+
+    /** Clases en vivo de todos los docentes (el admin supervisa y puede cancelar). */
+    public function clases(): void
+    {
+        $disponible = ClaseModel::disponible($this->c);
+        $this->render("clases", "clases", "Clases en vivo", [
+            "disponible" => $disponible,
+            "clases"     => $disponible ? ClaseModel::listado($this->c) : [],
+        ]);
+    }
+
+    public function cancelarClase(): void
+    {
+        verificarCsrfFormulario($_POST["csrf_token"] ?? "");
+        $volver = "index.php?page=clases";
+        $clase = ClaseModel::disponible($this->c) ? ClaseModel::porId($this->c, (int) ($_POST["clase_id"] ?? 0)) : null;
+        if (!$clase || $clase["estado"] === "cancelada") {
+            Panel::volver($volver, "error", "La clase no existe o ya estaba cancelada.");
+        }
+        $avisados = ClaseModel::cancelar($this->c, (int) $clase["id"], (string) ($_POST["motivo"] ?? ""));
+        Auditoria::registrar("clase.cancelar", "clase", (int) $clase["id"], $clase["titulo"] . " · " . ClaseModel::fechaHora($clase["inicio"]));
+        Panel::volver($volver, "ok", "Clase cancelada. Avisamos a " . plural_panel($avisados, "estudiante", "estudiantes") . ".");
     }
 
     /** Preguntas de una actividad (?page=preguntas&id=...). */

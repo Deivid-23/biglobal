@@ -33,9 +33,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         case "eliminar": $controlador->eliminar(); exit;
         case "guardar_pregunta":  $controlador->guardarPregunta();  exit;
         case "eliminar_pregunta": $controlador->eliminarPregunta(); exit;
+        case "cancelar_clase":    $controlador->cancelarClase();    exit;
     }
 }
 
-$paginas = ["inicio", "usuarios", "cursos", "idiomas", "lecciones", "actividades", "preguntas", "solicitudes", "perfil"];
+$paginas = ["inicio", "usuarios", "cursos", "idiomas", "lecciones", "actividades", "preguntas", "clases", "solicitudes", "perfil"];
 
 $controlador->{in_array($pagina, $paginas, true) ? $pagina : "inicio"}();

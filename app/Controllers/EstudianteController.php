@@ -5,6 +5,8 @@ require_once __DIR__ . "/../Models/GamificacionModel.php";
 require_once __DIR__ . "/../Models/PerfilModel.php";
 require_once __DIR__ . "/../Models/QuizModel.php";
 require_once __DIR__ . "/../Models/PagoModel.php";
+require_once __DIR__ . "/../Models/ClaseModel.php";
+require_once __DIR__ . "/../Models/ContenidoModel.php";
 require_once __DIR__ . "/../Views/estudiante/_helpers.php";
 
 /**
@@ -706,6 +708,76 @@ class EstudianteController
         PagoModel::guardarTransaccion($c, (int) $pago["id"], $transaccion, "Wompi no respondió al cobro.");
 
         header("Location: index.php?page=plan&ref=" . rawurlencode($pago["referencia"]));
+        exit;
+    }
+
+    /* =========================================================
+       CLASES EN VIVO
+       GET  index.php?page=clases
+       POST clase.php        (accion=inscribir|retirar, clase_id)
+       GET  entrar_clase.php?id=N  -> redirige al enlace solo si puede entrar
+    ========================================================= */
+    public function clases(): void
+    {
+        $c = $this->conexion;
+        $disponible = ClaseModel::disponible($c);
+        $this->render("clases", "clases", "Clases en vivo", [
+            "disponible" => $disponible,
+            "clases"     => $disponible ? ClaseModel::paraEstudiante($c, $this->usuarioId) : [],
+            "premium"    => Plan::esPremium($c, $this->usuarioId),
+        ]);
+    }
+
+    public function accionClase(): void
+    {
+        if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+            header("Location: index.php?page=clases");
+            exit;
+        }
+        verificarCsrfFormulario($_POST["csrf_token"] ?? "");
+
+        $c = $this->conexion;
+        $claseId = (int) ($_POST["clase_id"] ?? 0);
+        $volver = "index.php?page=clases#clase-" . $claseId;
+
+        if (!ClaseModel::disponible($c) || $claseId <= 0) {
+            header("Location: index.php?page=clases");
+            exit;
+        }
+        if (!LimiteIntentos::permitir("clases:usuario:" . $this->usuarioId, 40, 600)) {
+            $_SESSION["flash_estudiante"] = ["tipo" => "error", "mensaje" => "Hiciste muchos cambios seguidos. Espera unos minutos."];
+            header("Location: " . $volver);
+            exit;
+        }
+
+        $accion = (string) ($_POST["accion"] ?? "");
+        if ($accion === "inscribir") {
+            $r = ClaseModel::inscribir($c, $claseId, $this->usuarioId);
+            $_SESSION["flash_estudiante"] = ["tipo" => !$r["ok"] ? "error" : ($r["estado"] === "inscrito" ? "exito" : "info"), "mensaje" => $r["mensaje"]];
+        } elseif ($accion === "retirar") {
+            $ok = ClaseModel::retirar($c, $claseId, $this->usuarioId);
+            $_SESSION["flash_estudiante"] = ["tipo" => $ok ? "exito" : "error",
+                "mensaje" => $ok ? "Te retiraste de la clase. Si había lista de espera, tu cupo pasó a la siguiente persona." : "No estabas inscrito en esta clase."];
+        }
+
+        header("Location: " . $volver);
+        exit;
+    }
+
+    public function entrarClase(): void
+    {
+        $c = $this->conexion;
+        $claseId = (int) ($_GET["id"] ?? 0);
+        $r = ClaseModel::disponible($c) ? ClaseModel::enlaceParaEntrar($c, $claseId, $this->usuarioId) : ["mensaje" => "Las clases no están disponibles."];
+
+        if (isset($r["enlace"])) {
+            // El enlace solo sale aquí, después de revisar inscripción, plan y hora
+            header("Referrer-Policy: no-referrer");
+            header("Location: " . $r["enlace"]);
+            exit;
+        }
+        $_SESSION["flash_estudiante"] = ["tipo" => "info", "mensaje" => $r["mensaje"]];
+        header("Location: index.php?page=clases#clase-" . $claseId);
         exit;
     }
 
