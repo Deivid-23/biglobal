@@ -4,6 +4,8 @@ require_once __DIR__ . "/../Models/EstudianteModel.php";
 require_once __DIR__ . "/../Models/GamificacionModel.php";
 require_once __DIR__ . "/../Models/PerfilModel.php";
 require_once __DIR__ . "/../Models/QuizModel.php";
+require_once __DIR__ . "/../Models/PagoModel.php";
+require_once __DIR__ . "/../Views/estudiante/_helpers.php";
 
 /**
  * EstudianteController
@@ -22,6 +24,8 @@ require_once __DIR__ . "/../Models/QuizModel.php";
  *   estudiante/index.php?page=perfil        -> perfil()       (GET muestra, POST guarda)
  *   estudiante/completar_leccion.php (POST) -> completarLeccion()
  *   estudiante/responder_actividad.php (POST) -> responderActividad()
+ *   estudiante/index.php?page=plan          -> plan()   (Mi plan y pagos)
+ *   estudiante/pagar.php (POST)             -> pagar()
  */
 class EstudianteController
 {
@@ -562,6 +566,170 @@ class EstudianteController
             }
             manejarErrorBD($e, "No pudimos guardar tu progreso. Vuelve atrás e inténtalo de nuevo.");
         }
+    }
+
+    /* =========================================================
+       MI PLAN: Premium, pagos con Wompi e historial
+       GET  index.php?page=plan[&elegir=premium_anual][&ref=BG-...]
+       POST pagar.php (accion=tarjeta|checkout|cancelar_renovacion|reactivar_renovacion)
+    ========================================================= */
+    public function plan(): void
+    {
+        $c = $this->conexion;
+        $disponible = PagoModel::disponible($c);
+
+        $elegido = (string) ($_GET["elegir"] ?? Plan::MENSUAL);
+        if (!isset(Plan::PLANES[$elegido])) {
+            $elegido = Plan::MENSUAL;
+        }
+
+        $suscripcion = Plan::suscripcionVigente($c, $this->usuarioId);
+        $conRenovacion = $disponible ? PagoModel::suscripcionConRenovacion($c, $this->usuarioId) : null;
+
+        // Volvió de pagar: se muestra el estado del pago (lo decide el webhook, no esta página)
+        $pagoConsultado = null;
+        if ($disponible && !empty($_GET["ref"])) {
+            $pago = PagoModel::porReferencia($c, (string) $_GET["ref"]);
+            if ($pago && (int) $pago["usuario_id"] === $this->usuarioId) {
+                $pagoConsultado = $pago;
+            }
+        }
+
+        // Términos de Wompi: se muestran siempre antes de pagar
+        $puedeComprar = $disponible && Wompi::configurado() && !$conRenovacion;
+        $terminos = $puedeComprar ? Wompi::terminos() : null;
+
+        $this->render("plan", "perfil", "Mi plan", [
+            "disponible"     => $disponible,
+            "configurado"    => Wompi::configurado(),
+            "suscripcion"    => $suscripcion,
+            "conRenovacion"  => $conRenovacion,
+            "reactivable"    => $disponible ? $this->suscripcionReactivable() : null,
+            "pagoConsultado" => $pagoConsultado,
+            "historial"      => PagoModel::historial($c, $this->usuarioId),
+            "elegido"        => $elegido,
+            "puedeComprar"   => $puedeComprar,
+            "terminos"       => $terminos,
+            "wompiApi"       => Wompi::urlApi(),
+            "wompiPublica"   => Wompi::llavePublica(),
+        ]);
+    }
+
+    public function pagar(): void
+    {
+        if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+            header("Location: index.php?page=plan");
+            exit;
+        }
+        verificarCsrfFormulario($_POST["csrf_token"] ?? "");
+
+        $c = $this->conexion;
+        $volver = function (string $tipo, string $mensaje, string $extra = "") {
+            $_SESSION["flash_estudiante"] = ["tipo" => $tipo, "mensaje" => $mensaje];
+            header("Location: index.php?page=plan" . $extra);
+            exit;
+        };
+
+        if (!PagoModel::disponible($c)) {
+            $volver("error", "Los pagos todavía no están disponibles.");
+        }
+
+        $accion = (string) ($_POST["accion"] ?? "");
+
+        if ($accion === "cancelar_renovacion") {
+            $n = PagoModel::cancelarRenovacion($c, $this->usuarioId);
+            $s = Plan::suscripcionVigente($c, $this->usuarioId);
+            $volver($n ? "exito" : "info", $n
+                ? ($s ? "Cancelaste la renovación automática. Sigues siendo Premium hasta el " . fechaCorta($s["fin"]) . "." : "Cancelaste la renovación. Pasaste al plan Gratuito sin perder tu progreso.")
+                : "No tenías una renovación automática activa.");
+        }
+
+        if ($accion === "reactivar_renovacion") {
+            $n = PagoModel::reactivarRenovacion($c, $this->usuarioId);
+            $volver($n ? "exito" : "info", $n ? "Listo: tu Premium se renovará solo en la fecha de corte." : "No hay una suscripción para reactivar.");
+        }
+
+        if (!in_array($accion, ["tarjeta", "checkout"], true)) {
+            $volver("error", "Acción no reconocida.");
+        }
+
+        // ---------- Comprar Premium ----------
+        $plan = (string) ($_POST["plan"] ?? "");
+        if (!isset(Plan::PLANES[$plan])) {
+            $volver("error", "Elige el plan mensual o el anual.");
+        }
+        $elegir = "&elegir=" . $plan;
+
+        if (!Wompi::configurado()) {
+            $volver("error", "Los pagos todavía no están disponibles.", $elegir);
+        }
+        if (empty($_POST["acepta_terminos"]) || empty($_POST["acepta_datos"])) {
+            $volver("error", "Para pagar debes aceptar los términos y la autorización de datos de Wompi.", $elegir);
+        }
+        if (PagoModel::suscripcionConRenovacion($c, $this->usuarioId)) {
+            $volver("info", "Ya tienes Premium con renovación automática.");
+        }
+        if (!LimiteIntentos::permitir("pago:usuario:" . $this->usuarioId, 8, 3600)) {
+            $volver("error", "Hiciste muchos intentos de pago seguidos. Espera un rato y vuelve a intentarlo.", $elegir);
+        }
+
+        // Los tokens de aceptación se piden de nuevo aquí: no se confía en lo que mande el navegador
+        $terminos = Wompi::terminos();
+        if ($terminos === null) {
+            $volver("error", "No pudimos conectarnos con Wompi. Inténtalo en unos minutos.", $elegir);
+        }
+
+        $usuario = EstudianteModel::obtenerDatosUsuario($c, $this->usuarioId);
+        $correo = (string) ($usuario["correo"] ?? "");
+
+        if ($accion === "checkout") {
+            // PSE, Nequi, Botón Bancolombia (o tarjeta sin guardar): pago único en el checkout de Wompi
+            $pago = PagoModel::crear($c, $this->usuarioId, $plan, "inicial", "checkout", null, $terminos);
+            $volverA = $this->urlSitio() . "/estudiante/index.php?page=plan&ref=" . rawurlencode($pago["referencia"]);
+            header("Location: " . Wompi::urlCheckout($pago["referencia"], (int) $pago["centavos"], $correo, $volverA));
+            exit;
+        }
+
+        // Tarjeta con renovación automática: aquí solo llega el TOKEN (tok_...), nunca el número
+        $token = (string) ($_POST["token_tarjeta"] ?? "");
+        if (!preg_match('/^tok_[A-Za-z0-9_]{6,80}$/', $token)) {
+            $volver("error", "No recibimos los datos de la tarjeta. Revísalos e inténtalo de nuevo.", $elegir);
+        }
+
+        $fuente = Wompi::crearFuentePago($token, $correo, $terminos["aceptacion"]["token"], $terminos["datos"]["token"]);
+        if ($fuente === null) {
+            $volver("error", "Wompi no pudo validar la tarjeta. Revisa los datos o prueba con otro medio de pago.", $elegir);
+        }
+
+        $pago = PagoModel::crear($c, $this->usuarioId, $plan, "inicial", "tarjeta", null, $terminos, $fuente);
+        $transaccion = Wompi::cobrarFuente($fuente, (int) $pago["centavos"], $pago["referencia"], $correo);
+        PagoModel::guardarTransaccion($c, (int) $pago["id"], $transaccion, "Wompi no respondió al cobro.");
+
+        header("Location: index.php?page=plan&ref=" . rawurlencode($pago["referencia"]));
+        exit;
+    }
+
+    /** Suscripción cancelada que todavía se puede volver a renovar sola. */
+    private function suscripcionReactivable(): ?array
+    {
+        $stmt = $this->conexion->prepare("
+            SELECT * FROM suscripciones
+            WHERE usuario_id = ? AND estado = 'cancelada' AND fin > NOW() AND fuente_pago_id IS NOT NULL
+            ORDER BY fin DESC LIMIT 1
+        ");
+        $stmt->execute([$this->usuarioId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+
+    /** https://biglobal.onrender.com (APP_URL o, si falta, la dirección actual). */
+    private function urlSitio(): string
+    {
+        $base = obtenerConfig()["app"]["url"] ?? "";
+        if ($base !== "") {
+            return $base;
+        }
+        $https = (!empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] !== "off") || (($_SERVER["HTTP_X_FORWARDED_PROTO"] ?? "") === "https");
+        return ($https ? "https" : "http") . "://" . ($_SERVER["HTTP_HOST"] ?? "localhost");
     }
 
     /* =========================================================

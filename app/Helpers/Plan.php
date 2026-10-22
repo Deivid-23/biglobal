@@ -34,8 +34,18 @@ class Plan
         self::ANUAL   => ["nombre" => "Premium anual",   "centavos" => 19900000, "meses" => 12],
     ];
 
-    /** Estados de suscripción que dan Premium mientras "fin" no haya pasado. */
-    private const ESTADOS_VIGENTES = ["activa", "cancelada", "manual"];
+    /**
+     * Condición SQL de "esta suscripción da Premium ahora" (alias s.):
+     * - vigente y sin vencer, o
+     * - en reintento de cobro (la tarjeta falló; se reintenta 3 veces), o
+     * - renovación automática en curso: hasta 2 días después del corte,
+     *   mientras llega la respuesta (webhook) de Wompi.
+     */
+    private const SQL_VIGENTE = "(
+            (s.fin > NOW() AND s.estado IN ('activa', 'cancelada', 'manual'))
+            OR s.estado = 'en_reintento'
+            OR (s.estado = 'activa' AND s.renovacion_automatica = 1 AND s.fuente_pago_id IS NOT NULL AND s.fin > NOW() - INTERVAL 2 DAY)
+        )";
 
     /* =========================================================
        ¿Existe la tabla? (antes del SQL todos son Gratuito)
@@ -66,13 +76,12 @@ class Plan
         if (!self::disponible($c)) {
             return null;
         }
-        $marcas = implode(",", array_fill(0, count(self::ESTADOS_VIGENTES), "?"));
         $stmt = $c->prepare("
-            SELECT * FROM suscripciones
-            WHERE usuario_id = ? AND fin > NOW() AND estado IN ($marcas)
-            ORDER BY fin DESC LIMIT 1
+            SELECT s.* FROM suscripciones s
+            WHERE s.usuario_id = ? AND " . self::SQL_VIGENTE . "
+            ORDER BY s.fin DESC LIMIT 1
         ");
-        $stmt->execute(array_merge([$usuarioId], self::ESTADOS_VIGENTES));
+        $stmt->execute([$usuarioId]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
@@ -96,13 +105,12 @@ class Plan
             return [];
         }
         $marcasIds = implode(",", array_fill(0, count($ids), "?"));
-        $marcasEst = implode(",", array_fill(0, count(self::ESTADOS_VIGENTES), "?"));
         $stmt = $c->prepare("
-            SELECT usuario_id, plan, MAX(fin) AS fin FROM suscripciones
-            WHERE usuario_id IN ($marcasIds) AND fin > NOW() AND estado IN ($marcasEst)
-            GROUP BY usuario_id, plan
+            SELECT s.usuario_id, s.plan, MAX(s.fin) AS fin FROM suscripciones s
+            WHERE s.usuario_id IN ($marcasIds) AND " . self::SQL_VIGENTE . "
+            GROUP BY s.usuario_id, s.plan
         ");
-        $stmt->execute(array_merge($ids, self::ESTADOS_VIGENTES));
+        $stmt->execute($ids);
         $planes = [];
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $f) {
             $uid = (int) $f["usuario_id"];

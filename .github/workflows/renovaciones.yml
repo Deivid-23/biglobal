@@ -1,0 +1,31 @@
+# Renovaciones del plan Premium de BiGlobal
+# Todos los días a las 7:00 a. m. (hora de Colombia = 12:00 UTC) llama a la
+# tarea que cobra las renovaciones con tarjeta, vence lo que terminó y
+# manda los recordatorios. Usa el mismo secreto TAREAS_TOKEN del resumen semanal.
+#
+# También se puede lanzar a mano desde la pestaña Actions ("Run workflow").
+
+name: Renovaciones Premium
+
+on:
+  schedule:
+    - cron: "0 12 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  renovaciones:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Llamar a la tarea de renovaciones
+        env:
+          TAREAS_TOKEN: ${{ secrets.TAREAS_TOKEN }}
+        run: |
+          # El plan gratis de Render se duerme: el primer intento puede tardar en despertar
+          curl --fail-with-body --silent --show-error \
+               --retry 3 --retry-delay 20 --retry-all-errors --max-time 120 \
+               -X POST \
+               -H "X-Tarea-Token: ${TAREAS_TOKEN}" \
+               https://biglobal.onrender.com/tareas/renovaciones.php

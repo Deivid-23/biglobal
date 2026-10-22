@@ -46,6 +46,7 @@ $textoReglas = "Mínimo {$reglas['minimo']} caracteres"
                     Premium hasta el <strong><?= e(fechaCorta($suscripcion["fin"])) ?></strong>. Después pasas al plan Gratuito sin perder tu progreso.
                 <?php endif; ?>
             </p>
+            <a class="boton boton--secundario" href="index.php?page=plan">Ver mi plan y pagos</a>
         <?php else: ?>
             <div class="perfil-plan__cabecera">
                 <h2 id="titulo-plan">Tu plan</h2>
@@ -64,6 +65,7 @@ $textoReglas = "Mínimo {$reglas['minimo']} caracteres"
                     <span class="chip chip--exito">2 meses gratis</span>
                 </li>
             </ul>
+            <a class="boton boton--primario" href="index.php?page=plan"><i class="fa-solid fa-crown" aria-hidden="true"></i> Ver Premium</a>
         <?php endif; ?>
     </section>
 

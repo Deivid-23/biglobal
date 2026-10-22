@@ -32,6 +32,11 @@ class Notificador
         "docente_pendiente" => "fa-user-clock",
         "nuevo_curso"       => "fa-book",
         "resumen_semanal"   => "fa-chart-simple",
+        // Avisos personales (ver aUsuario)
+        "pago_aprobado"     => "fa-circle-check",
+        "pago_rechazado"    => "fa-triangle-exclamation",
+        "premium_terminado" => "fa-crown",
+        "premium_por_vencer"=> "fa-clock",
     ];
 
     /**
@@ -68,6 +73,35 @@ class Notificador
 
         } catch (Throwable $e) {
             error_log("[BiGlobal][Notificador] " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Aviso para UNA persona (no para el equipo): campana + correo.
+     * Ej.: resultado de un pago, Premium por vencer.
+     *
+     * @param bool $porCorreo false = solo la campana. Los avisos importantes
+     *                        (pagos, cuenta) siempre van también por correo.
+     */
+    public static function aUsuario(int $usuarioId, string $tipo, string $titulo, string $mensaje = "", ?string $enlace = null, bool $porCorreo = true): void
+    {
+        try {
+            $conexion = Conexion::conectar();
+            $stmt = $conexion->prepare("SELECT id, correo FROM usuarios WHERE id = ? LIMIT 1");
+            $stmt->execute([$usuarioId]);
+            $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$usuario) {
+                return;
+            }
+
+            self::guardar($conexion, [$usuario], $tipo, $titulo, $mensaje, $enlace);
+
+            if ($porCorreo && filter_var($usuario["correo"], FILTER_VALIDATE_EMAIL)) {
+                self::mandarCorreo([$usuario["correo"]], $titulo, $mensaje, $enlace,
+                    "Recibes este correo porque tienes una cuenta en BiGlobal.");
+            }
+        } catch (Throwable $e) {
+            error_log("[BiGlobal][Notificador][aUsuario] " . $e->getMessage());
         }
     }
 
@@ -196,7 +230,7 @@ class Notificador
     }
 
     /** Correo para todo el equipo en un solo envío (copia oculta). */
-    private static function mandarCorreo(array $correos, string $titulo, string $mensaje, ?string $enlace): void
+    private static function mandarCorreo(array $correos, string $titulo, string $mensaje, ?string $enlace, ?string $pie = null): void
     {
         if (!Correo::estaConfigurado()) {
             return; // sin SMTP solo queda la campana
@@ -211,9 +245,10 @@ class Notificador
             . '<p style="color:#2563EB;font-weight:bold;margin:0 0 12px">' . $esc($sitio) . '</p>'
             . '<h1 style="font-size:20px;margin:0 0 12px">' . $esc($titulo) . '</h1>'
             . ($mensaje !== "" ? '<p style="line-height:1.6;white-space:pre-line">' . $esc($mensaje) . '</p>' : "")
-            . ($url !== "" ? '<p style="margin:24px 0"><a href="' . $esc($url) . '" style="background:#2563EB;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:bold">Abrir en el panel</a></p>' : "")
-            . '<p style="color:#64748B;font-size:12px;margin-top:32px">Recibes este aviso porque eres parte del equipo de ' . $esc($sitio)
-            . '. Se puede apagar en Configuración → Notificaciones.</p>'
+            . ($url !== "" ? '<p style="margin:24px 0"><a href="' . $esc($url) . '" style="background:#2563EB;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:bold">Abrir en BiGlobal</a></p>' : "")
+            . '<p style="color:#64748B;font-size:12px;margin-top:32px">'
+            . ($pie !== null ? $esc($pie) : 'Recibes este aviso porque eres parte del equipo de ' . $esc($sitio) . '. Se puede apagar en Configuración → Notificaciones.')
+            . '</p>'
             . '</div>';
 
         $texto = $titulo . "\n\n" . $mensaje . ($url !== "" ? "\n\nAbrir en el panel: " . $url : "");

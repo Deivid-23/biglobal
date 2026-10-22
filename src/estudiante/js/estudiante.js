@@ -44,3 +44,12 @@
         });
     });
 })();
+
+/* Formularios con data-confirmar="¿Seguro…?": piden confirmación antes de enviarse. */
+document.querySelectorAll("form[data-confirmar]").forEach(function (form) {
+    form.addEventListener("submit", function (evento) {
+        if (!window.confirm(form.dataset.confirmar)) {
+            evento.preventDefault();
+        }
+    });
+});

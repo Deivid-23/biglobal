@@ -100,6 +100,16 @@ function obtenerConfig(): array
             // Remitente (en Brevo debe estar verificado)
             "remitente"     => env("CORREO_REMITENTE", env("SMTP_FROM")),
         ],
+        "wompi" => [
+            // Pasarela de pagos (plan Premium). Las 4 llaves van SOLO en el entorno
+            // (Render > Environment o .env local). Nunca en el código ni en la BD.
+            // Se sacan en comercios.wompi.co > Desarrolladores.
+            "ambiente"   => env("WOMPI_AMBIENTE", "sandbox"),   // "sandbox" (pruebas) o "produccion"
+            "publica"    => env("WOMPI_LLAVE_PUBLICA", ""),
+            "privada"    => env("WOMPI_LLAVE_PRIVADA", ""),
+            "eventos"    => env("WOMPI_LLAVE_EVENTOS", ""),
+            "integridad" => env("WOMPI_LLAVE_INTEGRIDAD", ""),
+        ],
         "smtp" => [
             // Si están vacías se usan las de la tabla configuracion (panel admin)
             "host"        => env("SMTP_HOST"),

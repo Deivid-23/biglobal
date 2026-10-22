@@ -207,6 +207,7 @@ textarea.entrada { min-height: 110px; padding: var(--esp-3) var(--esp-4); resize
 .chip--exito   { background: var(--verde-100);   color: var(--verde-700); }
 .chip--logro   { background: var(--naranja-100); color: var(--naranja-700); }
 .chip--neutro  { background: var(--neutro-100);          color: var(--texto-suave); }
+.chip--error   { background: var(--rojo-100);    color: var(--rojo-700); }
 
 /* ---------- BARRA DE PROGRESO ---------- */
 .progreso {

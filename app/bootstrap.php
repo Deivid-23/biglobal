@@ -25,6 +25,7 @@ require_once __DIR__ . "/Helpers/LimiteIntentos.php";
 require_once __DIR__ . "/Helpers/Auditoria.php";
 require_once __DIR__ . "/Helpers/Video.php";
 require_once __DIR__ . "/Helpers/Plan.php";
+require_once __DIR__ . "/Helpers/Wompi.php";
 
 // Rol y estado de la cuenta siempre al día (ver src/auth/proteger.php)
 refrescarSesionUsuario();
