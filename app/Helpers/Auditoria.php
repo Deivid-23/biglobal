@@ -29,6 +29,8 @@ class Auditoria
         "actividad.eliminar" => "Eliminó una actividad",
         "pregunta.eliminar"  => "Eliminó una pregunta",
         "config.cambiar"     => "Cambió la configuración",
+        "plan.cortesia"      => "Dio Premium de cortesía",
+        "plan.quitar"        => "Quitó Premium de cortesía",
     ];
 
     /** Texto del estado de una cuenta (usuarios.activo). */

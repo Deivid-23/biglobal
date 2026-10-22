@@ -1011,3 +1011,10 @@ a.est-perfil.es-activo { background: var(--azul-100); }
 /* "Cerrar sesión" es un formulario POST: el botón se ve como los enlaces del menú */
 .est-salir-form { margin: 0; }
 button.est-nav__enlace { width: 100%; border: 0; background: none; cursor: pointer; text-align: left; }
+
+/* ---------- Perfil: tarjeta "Tu plan" (Gratuito / Premium) ---------- */
+@media (min-width: 1000px) { .perfil-plan { grid-column: 1 / -1; } }
+.perfil-plan__cabecera { display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-3); }
+.perfil-plan__precios { list-style: none; margin: var(--esp-4) 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--esp-3) var(--esp-6); }
+.perfil-plan__precios li { display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-2); color: var(--texto-suave); }
+.perfil-plan__precios strong { font-family: var(--fuente-titulo); font-size: var(--texto-lg); color: var(--texto); }

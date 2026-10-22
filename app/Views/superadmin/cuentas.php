@@ -1,5 +1,5 @@
 <?php
-/** Cuentas y roles. Variables: $cuentas, $roles, $filtro, $miId, $modal */
+/** Cuentas y roles. Variables: $cuentas, $roles, $filtro, $miId, $modal, $planes (null = sin tabla de planes) */
 $estados = [1 => ["Activo", "chip chip--exito"], 2 => ["Pendiente", "chip chip--alerta"], 0 => ["Inactivo", "chip chip--neutro"]];
 
 /* Para el modal "Nuevo usuario" (se guarda con el mismo código del admin) */
@@ -35,7 +35,7 @@ $modal += ["cursos" => [], "lecciones" => [], "docentes" => []];
     <?php else: ?>
         <div class="pnl-tabla-caja">
             <table class="pnl-tabla">
-                <thead><tr><th>Cuenta</th><th>Rol</th><th>Estado</th><th class="col-acciones">Acciones</th></tr></thead>
+                <thead><tr><th>Cuenta</th><th>Rol</th><th>Estado</th><?php if ($planes !== null): ?><th>Plan</th><?php endif; ?><th class="col-acciones">Acciones</th></tr></thead>
                 <tbody>
                     <?php foreach ($cuentas as $u):
                         [$txt, $cls] = $estados[(int) $u["activo"]] ?? $estados[0];
@@ -66,6 +66,42 @@ $modal += ["cursos" => [], "lecciones" => [], "docentes" => []];
                                 <?php endif; ?>
                             </td>
                             <td><span class="<?= $cls ?>"><?= $txt ?></span></td>
+                            <?php if ($planes !== null):
+                                $planU = $planes[(int) $u["id"]] ?? null;
+                            ?>
+                                <td class="cuenta-plan">
+                                    <?php if ($planU): ?>
+                                        <span class="chip chip--logro"><i class="fa-solid fa-crown" aria-hidden="true"></i> <?= e(Plan::nombre($planU["plan"])) ?></span><br>
+                                        <span class="col-suave">hasta <?= e(fecha_panel($planU["fin"])) ?></span>
+                                    <?php else: ?>
+                                        <span class="chip chip--neutro">Gratuito</span>
+                                    <?php endif; ?>
+                                    <?php if (!$esYo): ?>
+                                        <?php if ($planU && $planU["plan"] === Plan::CORTESIA): ?>
+                                            <form method="POST" action="index.php" data-confirmar="¿Quitar el Premium de cortesía a <?= e(nombre_panel($u)) ?>? Vuelve al plan Gratuito sin perder su progreso.">
+                                                <?= campoCsrf() ?>
+                                                <input type="hidden" name="accion" value="quitar_premium">
+                                                <input type="hidden" name="id" value="<?= (int) $u["id"] ?>">
+                                                <input type="hidden" name="filtro" value="<?= e($filtro) ?>">
+                                                <button class="boton boton--secundario boton--sm" type="submit">Quitar</button>
+                                            </form>
+                                        <?php endif; ?>
+                                        <form method="POST" action="index.php" class="cuenta-plan__dar">
+                                            <?= campoCsrf() ?>
+                                            <input type="hidden" name="accion" value="dar_premium">
+                                            <input type="hidden" name="id" value="<?= (int) $u["id"] ?>">
+                                            <input type="hidden" name="filtro" value="<?= e($filtro) ?>">
+                                            <label class="sr-only" for="meses-<?= (int) $u["id"] ?>">Tiempo de Premium de cortesía para <?= e(nombre_panel($u)) ?></label>
+                                            <select class="pnl-selector" id="meses-<?= (int) $u["id"] ?>" name="meses">
+                                                <option value="1">1 mes</option>
+                                                <option value="3">3 meses</option>
+                                                <option value="12">1 año</option>
+                                            </select>
+                                            <button class="boton boton--secundario boton--sm" type="submit"><?= $planU ? "Extender" : "Dar Premium" ?></button>
+                                        </form>
+                                    <?php endif; ?>
+                                </td>
+                            <?php endif; ?>
                             <td class="col-acciones">
                                 <?php if (!$esYo): ?>
                                     <div class="pnl-item__acciones" style="justify-content: flex-end;">

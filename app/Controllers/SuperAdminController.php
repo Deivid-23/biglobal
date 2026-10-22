@@ -89,9 +89,12 @@ class SuperAdminController
 
         $stmt = $this->c->prepare($sql);
         $stmt->execute($params);
+        $cuentas = $stmt->fetchAll();
 
         $this->render("cuentas", "super-cuentas", "Cuentas y roles", [
-            "cuentas"  => $stmt->fetchAll(),
+            "cuentas"  => $cuentas,
+            // Plan de cada cuenta (null = la tabla de suscripciones aún no existe)
+            "planes"   => Plan::disponible($this->c) ? Plan::planesDe($this->c, array_column($cuentas, "id")) : null,
             "roles"    => $roles,
             "filtro"   => $filtro,
             "miId"     => (int) $_SESSION["usuario_id"],
@@ -200,6 +203,30 @@ class SuperAdminController
                     $this->c->prepare("DELETE FROM usuarios WHERE id = ?")->execute([$id]);
                     Auditoria::registrar("cuenta.eliminar", "cuenta", $id, $nombreCuenta, $cuenta["rol"], null);
                     Panel::volver($volver, "ok", "Cuenta eliminada definitivamente.");
+
+                case "dar_premium":
+                    // Premium de cortesía (beca, soporte, pruebas): sin pago y sin renovación
+                    if (!Plan::disponible($this->c)) {
+                        Panel::volver($volver, "error", "Los planes aún no están disponibles.");
+                    }
+                    $meses = (int) ($_POST["meses"] ?? 0);
+                    if (!in_array($meses, [1, 3, 12], true)) {
+                        Panel::volver($volver, "error", "Elige por cuánto tiempo dar Premium.");
+                    }
+                    $vigente = Plan::suscripcionVigente($this->c, $id);
+                    $desde = $vigente ? new DateTimeImmutable($vigente["fin"]) : new DateTimeImmutable("now");
+                    $fin = $desde->modify("+{$meses} months")->format("Y-m-d H:i:s");
+                    Plan::otorgarManual($this->c, $id, $fin, $miId, "Cortesía de {$meses} " . ($meses === 1 ? "mes" : "meses"));
+                    Auditoria::registrar("plan.cortesia", "cuenta", $id, $nombreCuenta,
+                        $vigente ? Plan::nombre($vigente["plan"]) : "Gratuito", "Premium (cortesía) hasta " . substr($fin, 0, 10));
+                    Panel::volver($volver, "ok", "Premium de cortesía activo hasta el " . substr($fin, 0, 10) . ".");
+
+                case "quitar_premium":
+                    if (!Plan::disponible($this->c) || Plan::quitarManual($this->c, $id) === 0) {
+                        Panel::volver($volver, "error", "Esta cuenta no tiene Premium de cortesía. (Las suscripciones pagadas se cancelan desde el perfil del usuario.)");
+                    }
+                    Auditoria::registrar("plan.quitar", "cuenta", $id, $nombreCuenta, "Premium (cortesía)", "Gratuito");
+                    Panel::volver($volver, "ok", "Se quitó el Premium de cortesía.");
 
                 default:
                     Panel::volver($volver, "error", "Acción no reconocida.");

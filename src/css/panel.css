@@ -907,3 +907,8 @@ select.entrada { cursor: pointer; }
 /* ---------- "Cerrar sesión" es un formulario POST: el botón se ve como los enlaces del menú ---------- */
 .pnl-salir { margin: 0; }
 button.pnl-nav__enlace { width: 100%; border: 0; background: none; cursor: pointer; text-align: left; }
+
+/* ---------- Cuentas: plan de cada usuario ---------- */
+.cuenta-plan { min-width: 190px; }
+.cuenta-plan form { margin-top: var(--esp-2); }
+.cuenta-plan__dar { display: flex; flex-wrap: wrap; gap: var(--esp-2); align-items: center; }

@@ -2,7 +2,8 @@
 /**
  * Mi perfil.
  * Variables: $cuenta (datos guardados), $valores (lo que se muestra en el formulario),
- *            $errores (["datos" => ?, "password" => ?]), $reglas, $estudiante
+ *            $errores (["datos" => ?, "password" => ?]), $reglas, $estudiante,
+ *            $suscripcion (Premium vigente, o null si es Gratuito)
  */
 $tienePassword = (int) $cuenta["tiene_password"] === 1;
 $conGoogle = (int) $cuenta["con_google"] === 1;
@@ -29,6 +30,42 @@ $textoReglas = "Mínimo {$reglas['minimo']} caracteres"
 </header>
 
 <div class="perfil-rejilla">
+
+    <!-- ================= PLAN (Gratuito / Premium) ================= -->
+    <section class="perfil-tarjeta perfil-plan" aria-labelledby="titulo-plan">
+        <?php if ($suscripcion): ?>
+            <div class="perfil-plan__cabecera">
+                <h2 id="titulo-plan">Tu plan</h2>
+                <span class="chip chip--logro"><i class="fa-solid fa-crown" aria-hidden="true"></i> <?= e(Plan::nombre($suscripcion["plan"])) ?></span>
+            </div>
+            <p class="perfil-tarjeta__ayuda">
+                Tienes la ruta de aprendizaje completa y acceso a todas las clases en vivo.
+                <?php if ((int) $suscripcion["renovacion_automatica"] === 1 && $suscripcion["estado"] === "activa"): ?>
+                    Se renueva el <strong><?= e(fechaCorta($suscripcion["fin"])) ?></strong>.
+                <?php else: ?>
+                    Premium hasta el <strong><?= e(fechaCorta($suscripcion["fin"])) ?></strong>. Después pasas al plan Gratuito sin perder tu progreso.
+                <?php endif; ?>
+            </p>
+        <?php else: ?>
+            <div class="perfil-plan__cabecera">
+                <h2 id="titulo-plan">Tu plan</h2>
+                <span class="chip chip--neutro">Gratuito</span>
+            </div>
+            <p class="perfil-tarjeta__ayuda">
+                Tienes la ruta de aprendizaje completa de cada idioma y las clases en vivo abiertas para todos.
+                Con Premium te unes a todas las clases en vivo con docentes.
+            </p>
+            <ul class="perfil-plan__precios">
+                <li>
+                    <strong><?= e(Plan::pesos(Plan::PLANES[Plan::MENSUAL]["centavos"])) ?></strong> al mes
+                </li>
+                <li>
+                    <strong><?= e(Plan::pesos(Plan::PLANES[Plan::ANUAL]["centavos"])) ?></strong> al año
+                    <span class="chip chip--exito">2 meses gratis</span>
+                </li>
+            </ul>
+        <?php endif; ?>
+    </section>
 
     <!-- ================= DATOS PERSONALES ================= -->
     <section class="perfil-tarjeta" aria-labelledby="titulo-datos">

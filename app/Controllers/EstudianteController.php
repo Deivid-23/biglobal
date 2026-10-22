@@ -130,7 +130,10 @@ class EstudianteController
 
         $reglas = Seguridad::reglasPassword();
 
-        $this->render("perfil", "perfil", "Mi perfil", compact("cuenta", "valores", "errores", "reglas"));
+        // Plan Gratuito o Premium (null = Gratuito)
+        $suscripcion = Plan::suscripcionVigente($conexion, $id);
+
+        $this->render("perfil", "perfil", "Mi perfil", compact("cuenta", "valores", "errores", "reglas", "suscripcion"));
     }
 
     /** Guarda nombre, apellido y correo. Devuelve null si salió bien o el mensaje de error. */
