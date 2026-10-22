@@ -3,15 +3,17 @@
 /**
  * Acciones sobre las solicitudes de docentes (solo POST).
  *
- *   aprobar   -> admin y super administrador
- *   rechazar  -> admin y super administrador (desactiva, no borra)
- *   eliminar  -> SOLO super administrador (borrado definitivo)
+ *   aprobar    -> admin y super administrador (también reactiva). Avisa al docente.
+ *   rechazar   -> admin y super administrador, con MOTIVO obligatorio. Avisa al docente.
+ *   desactivar -> desactiva a un docente ya aprobado (no es un rechazo de solicitud)
+ *   eliminar   -> SOLO super administrador (borrado definitivo)
  *
  * El permiso se revisa aquí, en el servidor: aunque un admin envíe
  * el formulario a mano, "eliminar" le responde 403.
  */
 
 require_once __DIR__ . "/../../app/bootstrap.php";
+require_once __DIR__ . "/../../app/Models/DocenteSolicitudModel.php";
 
 protegerRol("admin");
 
@@ -59,13 +61,33 @@ try {
 
     switch ($accion) {
         case "aprobar":
+            if (!in_array((int) $docente["activo"], [0, 2], true)) {
+                Panel::volver($volver, "error", "Este docente ya estaba activo.");
+            }
             $conexion->prepare("UPDATE usuarios SET activo = 1 WHERE id = ?")->execute([$id]);
+            DocenteSolicitudModel::aprobar($conexion, $id, (int) $_SESSION["usuario_id"]);
             Auditoria::registrar("docente.aprobar", "cuenta", $id, $nombreDocente, $estadoAntes, Auditoria::ESTADOS[1]);
-            Panel::volver($volver, "ok", "Docente aprobado. Ya puede entrar a su panel.");
+            Panel::volver($volver, "ok", "Docente aprobado. Le avisamos por la campana y por correo.");
 
         case "rechazar":
+            $motivo = trim((string) ($_POST["motivo"] ?? ""));
+            if (mb_strlen($motivo) < 10 || mb_strlen($motivo) > 500) {
+                Panel::volver($volver, "error", "Escribe el motivo del rechazo (entre 10 y 500 caracteres): se lo enviamos al docente.");
+            }
+            if ((int) $docente["activo"] !== 2) {
+                Panel::volver($volver, "error", "Solo se rechazan solicitudes pendientes. Para un docente activo usa «Desactivar».");
+            }
             $conexion->prepare("UPDATE usuarios SET activo = 0 WHERE id = ?")->execute([$id]);
-            Auditoria::registrar("docente.rechazar", "cuenta", $id, $nombreDocente, $estadoAntes, Auditoria::ESTADOS[0]);
+            DocenteSolicitudModel::rechazar($conexion, $id, (int) $_SESSION["usuario_id"], $motivo);
+            Auditoria::registrar("docente.rechazar", "cuenta", $id, $nombreDocente, $estadoAntes, Auditoria::ESTADOS[0] . " · " . $motivo);
+            Panel::volver($volver, "ok", "Solicitud rechazada. Le enviamos el motivo al docente.");
+
+        case "desactivar":
+            if ((int) $docente["activo"] !== 1) {
+                Panel::volver($volver, "error", "Este docente no está activo.");
+            }
+            $conexion->prepare("UPDATE usuarios SET activo = 0 WHERE id = ?")->execute([$id]);
+            Auditoria::registrar("cuenta.estado", "cuenta", $id, $nombreDocente, $estadoAntes, Auditoria::ESTADOS[0]);
             Panel::volver($volver, "ok", "Docente desactivado.");
 
         case "eliminar":

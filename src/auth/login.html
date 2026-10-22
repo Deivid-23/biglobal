@@ -186,8 +186,26 @@
                         </div>
                     </fieldset>
                     <p class="campo__ayuda" id="role-choice-hint" hidden style="margin-top: var(--esp-2);">
-                        Las cuentas de docente quedan pendientes hasta que un administrador las apruebe.
+                        Las cuentas de docente quedan pendientes hasta que un administrador revise tus documentos y las apruebe.
                     </p>
+
+                    <!-- Solo para docentes: idioma y diplomas (se muestra al elegir "Docente") -->
+                    <div class="docente-extra" id="docente-extra" hidden>
+                        <div class="campo">
+                            <label class="campo__etiqueta" for="reg-idioma">Idioma que vas a enseñar</label>
+                            <select class="entrada" id="reg-idioma">
+                                <option value="">Elige un idioma</option>
+                            </select>
+                        </div>
+                        <div class="campo">
+                            <label class="campo__etiqueta" for="reg-documentos">Diplomas o certificados</label>
+                            <input class="entrada" type="file" id="reg-documentos" multiple
+                                   accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" aria-describedby="reg-documentos-ayuda">
+                            <p class="campo__ayuda" id="reg-documentos-ayuda">
+                                Que acrediten tu dominio del idioma. PDF, JPG o PNG, máximo 5 MB cada uno y hasta 5 archivos.
+                            </p>
+                        </div>
+                    </div>
 
                     <div class="fila-opciones">
                         <label class="casilla" for="terms">

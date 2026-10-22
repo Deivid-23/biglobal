@@ -486,3 +486,16 @@ a { color: var(--azul-700); text-underline-offset: 3px; }
 
 /* En escritorio la cabecera solo tiene "Volver" y el botón de tema, a la derecha */
 .auth-movil-cabecera .cabecera-acciones { margin-left: auto; }
+
+/* ---------- Registro de docente: idioma y diplomas ---------- */
+.docente-extra { margin-top: var(--esp-4); padding: var(--esp-4); border: 1px solid var(--borde); border-radius: var(--radio); background: var(--fondo-app); }
+.docente-extra .campo + .campo { margin-top: var(--esp-4); }
+.docente-extra input[type="file"] { padding: var(--esp-2); }
+
+/* ---------- Docente pendiente: sus documentos ---------- */
+.pendiente-docs { margin-top: var(--esp-6); text-align: left; }
+.pendiente-docs__titulo { font-family: var(--fuente-titulo); font-size: var(--texto-lg); font-weight: 800; margin-bottom: var(--esp-3); }
+.pendiente-docs__lista { list-style: none; margin: 0 0 var(--esp-4); padding: 0; display: grid; gap: var(--esp-2); }
+.pendiente-docs__lista li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--esp-2); overflow-wrap: anywhere; }
+.pendiente-docs__form { display: grid; gap: var(--esp-2); justify-items: start; }
+.pendiente-docs__form .entrada { width: 100%; }

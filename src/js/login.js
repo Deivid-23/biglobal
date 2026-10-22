@@ -160,6 +160,12 @@ async function obtenerCsrf() {
         pintarReglas();
     }
 
+    // Idiomas para el registro de docente (solo se llena una vez)
+    const selectIdioma = document.getElementById("reg-idioma");
+    if (selectIdioma && Array.isArray(datos.idiomas) && selectIdioma.options.length === 1) {
+        datos.idiomas.forEach(i => selectIdioma.add(new Option(i.nombre, i.id)));
+    }
+
     document.querySelectorAll('input[name="csrf_token"]').forEach(input => {
         input.value = datos.csrf_token;
     });
@@ -207,6 +213,19 @@ async function enviarFormulario(evento, tipo) {
         datos.append("password", password);
         datos.append("confirm_password", confirmar);
         datos.append("rol", rol);
+
+        // Docente: idioma y documentos (el servidor vuelve a revisar todo)
+        if (rol === "docente") {
+            const idioma = document.getElementById("reg-idioma").value;
+            const archivos = Array.from(document.getElementById("reg-documentos").files);
+            if (!idioma) return mostrarMensaje("Elige el idioma que vas a enseñar.");
+            if (archivos.length === 0) return mostrarMensaje("Sube al menos un diploma o certificado (PDF, JPG o PNG).");
+            if (archivos.length > 5) return mostrarMensaje("Puedes subir máximo 5 archivos.");
+            const grande = archivos.find(a => a.size > 5 * 1024 * 1024);
+            if (grande) return mostrarMensaje("«" + grande.name + "» pesa más de 5 MB.");
+            datos.append("idioma_id", idioma);
+            archivos.forEach(a => datos.append("documentos[]", a));
+        }
     } else {
         url = "login.php";
 
@@ -293,8 +312,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Aviso cuando se elige Docente
     document.querySelectorAll('input[name="reg-role"]').forEach(radio => {
         radio.addEventListener("change", () => {
-            document.getElementById("role-choice-hint").hidden =
-                document.querySelector('input[name="reg-role"]:checked').value !== "docente";
+            const esDocente = document.querySelector('input[name="reg-role"]:checked').value === "docente";
+            document.getElementById("role-choice-hint").hidden = !esDocente;
+            document.getElementById("docente-extra").hidden = !esDocente;
         });
     });
 

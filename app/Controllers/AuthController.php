@@ -1,6 +1,8 @@
 <?php
 
 require_once __DIR__ . "/../Models/AuthModel.php";
+require_once __DIR__ . "/../Models/ContenidoModel.php";
+require_once __DIR__ . "/../Models/DocenteSolicitudModel.php";
 
 /**
  * AuthController
@@ -221,6 +223,23 @@ class AuthController
                 exit;
             }
 
+            /* Docente: idioma que enseñará y diplomas o certificados (obligatorios) */
+            $idiomaDocente = null;
+            $archivosDocente = [];
+            $conDocumentos = $rolSolicitado === "docente" && DocenteSolicitudModel::disponible($conexion);
+            if ($conDocumentos) {
+                [$idiomaDocente, $errorIdioma] = ContenidoModel::idiomaElegido($conexion, $_POST["idioma_id"] ?? "");
+                if ($errorIdioma || $idiomaDocente === null) {
+                    echo json_encode(["success" => false, "message" => "Elige el idioma que vas a enseñar."]);
+                    exit;
+                }
+                $archivosDocente = DocenteSolicitudModel::validarArchivos($_FILES["documentos"] ?? null);
+                if (is_string($archivosDocente)) {
+                    echo json_encode(["success" => false, "message" => $archivosDocente]);
+                    exit;
+                }
+            }
+
             $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
             /* ---------------------------------------------------
@@ -244,14 +263,28 @@ class AuthController
                 $activoInicial = 1;
             }
 
-            $nuevoId = AuthModel::crear($conexion, [
-                "nombre"   => $nombre,
-                "apellido" => $apellido,
-                "correo"   => $correo,
-                "password" => $passwordHash,
-                "rolId"    => $rolId,
-                "activo"   => $activoInicial,
-            ]);
+            // Cuenta y documentos juntos: o se guarda todo o nada
+            $conexion->beginTransaction();
+            try {
+                $nuevoId = AuthModel::crear($conexion, [
+                    "nombre"   => $nombre,
+                    "apellido" => $apellido,
+                    "correo"   => $correo,
+                    "password" => $passwordHash,
+                    "rolId"    => $rolId,
+                    "activo"   => $activoInicial,
+                ]);
+                if ($conDocumentos) {
+                    DocenteSolicitudModel::guardarSolicitud($conexion, (int) $nuevoId, $idiomaDocente);
+                    DocenteSolicitudModel::guardarDocumentos($conexion, (int) $nuevoId, $archivosDocente);
+                }
+                $conexion->commit();
+            } catch (Throwable $e) {
+                if ($conexion->inTransaction()) {
+                    $conexion->rollBack();
+                }
+                throw $e;
+            }
 
             /* Avisar al equipo (campana + correo). Nunca rompe el registro. */
             Notificador::cuentaNueva(
@@ -372,6 +405,17 @@ class AuthController
             "csrf_token" => generarCsrfToken(),
             // Reglas de Configuración > Seguridad, para mostrarlas en el registro
             "reglas"     => Seguridad::reglasPassword(),
+            // Idiomas para el campo "Idioma que enseñarás" del registro de docente
+            "idiomas"    => array_map(fn($i) => ["id" => (int) $i["id"], "nombre" => $i["nombre"]], self::idiomasPublicos()),
         ]);
+    }
+
+    private static function idiomasPublicos(): array
+    {
+        try {
+            return ContenidoModel::idiomasActivos(Conexion::conectar());
+        } catch (Throwable $e) {
+            return [];
+        }
     }
 }

@@ -4,6 +4,7 @@ require_once __DIR__ . "/../Models/AdminModel.php";
 require_once __DIR__ . "/../Models/ContenidoModel.php";
 require_once __DIR__ . "/../Models/QuizModel.php";
 require_once __DIR__ . "/../Models/ClaseModel.php";
+require_once __DIR__ . "/../Models/DocenteSolicitudModel.php";
 
 /**
  * AdminController
@@ -182,10 +183,17 @@ class AdminController
 
     public function solicitudes(): void
     {
+        $pendientes = AdminModel::docentesPorEstado($this->c, 2);
+        $rechazados = AdminModel::docentesPorEstado($this->c, 0);
+        $ids = array_merge(array_column($pendientes, "id"), array_column($rechazados, "id"));
+
         $this->render("solicitudes", "solicitudes", "Solicitudes de docentes", [
-            "pendientes" => AdminModel::docentesPorEstado($this->c, 2),
-            "aprobados"  => AdminModel::docentesPorEstado($this->c, 1),
-            "rechazados" => AdminModel::docentesPorEstado($this->c, 0),
+            "pendientes"  => $pendientes,
+            "aprobados"   => AdminModel::docentesPorEstado($this->c, 1),
+            "rechazados"  => $rechazados,
+            // Idioma, motivo y documentos de cada docente (vacío si aún no existe la tabla)
+            "solicitudes" => DocenteSolicitudModel::solicitudesDe($this->c, $ids),
+            "documentos"  => DocenteSolicitudModel::documentosDeVarios($this->c, array_column($pendientes, "id")),
         ]);
     }
 

@@ -45,6 +45,13 @@ if ($activo === 0) {
 
 /* activo === 2 → pendiente, seguir mostrando la pantalla */
 $nombre = $_SESSION["nombre"] ?? "Docente";
+
+/* Sus diplomas o certificados (puede agregar más mientras espera) */
+require_once __DIR__ . "/../../app/Models/DocenteSolicitudModel.php";
+$conDocumentos = DocenteSolicitudModel::disponible($conexion);
+$misDocumentos = $conDocumentos ? DocenteSolicitudModel::documentosDe($conexion, (int) $_SESSION["usuario_id"]) : [];
+$avisoDocs = $_SESSION["aviso_documentos"] ?? null;
+unset($_SESSION["aviso_documentos"]);
 ?>
 <!DOCTYPE html>
 <html lang="es"<?= Panel::atributosHtml() ?>>
@@ -85,8 +92,43 @@ $nombre = $_SESSION["nombre"] ?? "Docente";
 
         <div class="aviso aviso--info" style="margin-top: var(--esp-6); text-align: left;">
             <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
-            <span><strong>¿Qué sigue?</strong> Cuando aprueben tu cuenta podrás entrar a tu panel con tu correo y contraseña.</span>
+            <span><strong>¿Qué sigue?</strong> Un administrador revisa tus diplomas o certificados. Te avisaremos por correo cuando aprueben (o no) tu cuenta.</span>
         </div>
+
+        <?php if ($conDocumentos): ?>
+            <div class="pendiente-docs">
+                <h2 class="pendiente-docs__titulo">Tus documentos</h2>
+                <?php if ($avisoDocs): ?>
+                    <p class="aviso aviso--<?= $avisoDocs["tipo"] === "ok" ? "exito" : "error" ?>" role="status"><span><?= e($avisoDocs["mensaje"]) ?></span></p>
+                <?php endif; ?>
+                <?php if ($misDocumentos): ?>
+                    <ul class="pendiente-docs__lista">
+                        <?php foreach ($misDocumentos as $doc): ?>
+                            <li>
+                                <a href="documento.php?id=<?= (int) $doc["id"] ?>" target="_blank" rel="noopener">
+                                    <i class="fa-solid <?= $doc["tipo_mime"] === "application/pdf" ? "fa-file-pdf" : "fa-file-image" ?>" aria-hidden="true"></i>
+                                    <?= e($doc["nombre_original"]) ?>
+                                </a>
+                                <span class="campo__ayuda"><?= e(DocenteSolicitudModel::pesoLegible((int) $doc["tamano"])) ?></span>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php else: ?>
+                    <p class="auth-text">Todavía no has subido diplomas o certificados. Súbelos para que podamos revisar tu cuenta.</p>
+                <?php endif; ?>
+
+                <?php if (count($misDocumentos) < DocenteSolicitudModel::MAX_ARCHIVOS): ?>
+                    <form method="POST" action="documentos.php" enctype="multipart/form-data" class="pendiente-docs__form">
+                        <?= campoCsrf() ?>
+                        <label class="campo__etiqueta" for="docs-nuevos">Agregar diplomas o certificados</label>
+                        <input class="entrada" type="file" id="docs-nuevos" name="documentos[]" multiple required
+                               accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png">
+                        <p class="campo__ayuda">PDF, JPG o PNG, máximo 5 MB cada uno. Te quedan <?= DocenteSolicitudModel::MAX_ARCHIVOS - count($misDocumentos) ?>.</p>
+                        <button class="boton boton--secundario" type="submit"><i class="fa-solid fa-upload" aria-hidden="true"></i> Subir</button>
+                    </form>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
 
         <div class="auth-actions">
             <form method="POST" action="../auth/logout.php">

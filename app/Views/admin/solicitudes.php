@@ -1,5 +1,6 @@
 <?php
-/** Solicitudes de docentes. Variables: $pendientes, $aprobados, $rechazados, $esSuper */
+/** Solicitudes de docentes. Variables: $pendientes, $aprobados, $rechazados, $esSuper, $solicitudes, $documentos */
+$iconosDoc = ["application/pdf" => "fa-file-pdf", "image/jpeg" => "fa-file-image", "image/png" => "fa-file-image"];
 
 /** Formulario de una acción (aprobar, rechazar, eliminar) sobre un docente. */
 function botonSolicitud(int $id, string $accion, string $texto, string $icono, string $clase, string $confirmar = ""): string
@@ -20,7 +21,7 @@ function botonSolicitud(int $id, string $accion, string $texto, string $icono, s
 <header class="pnl-encabezado">
     <div>
         <h1>Solicitudes de docentes</h1>
-        <p>Los docentes que se registran quedan pendientes hasta que los apruebes.</p>
+        <p>Los docentes que se registran quedan pendientes hasta que revises sus diplomas o certificados y los apruebes. Si rechazas, escribe el motivo: se lo enviamos.</p>
     </div>
 </header>
 
@@ -51,16 +52,48 @@ function botonSolicitud(int $id, string $accion, string $texto, string $icono, s
         </div>
     <?php else: ?>
         <ul class="pnl-lista">
-            <?php foreach ($pendientes as $d): ?>
-                <li class="pnl-item">
+            <?php foreach ($pendientes as $d):
+                $sol = $solicitudes[(int) $d["id"]] ?? null;
+                $docs = $documentos[(int) $d["id"]] ?? [];
+            ?>
+                <li class="pnl-item solicitud">
                     <span class="pnl-avatar" aria-hidden="true"><?= e(mb_strtoupper(mb_substr($d["nombre"], 0, 1))) ?></span>
                     <div class="pnl-item__cuerpo">
                         <p class="pnl-item__titulo"><?= e(nombre_panel($d)) ?></p>
-                        <p class="pnl-item__texto"><?= e($d["correo"]) ?> · se registró el <?= e(fecha_panel($d["fecha_registro"])) ?></p>
+                        <p class="pnl-item__texto">
+                            <?= e($d["correo"]) ?> · se registró el <?= e(fecha_panel($d["fecha_registro"])) ?>
+                            <?php if (!empty($sol["idioma"])): ?> · enseñará <strong><?= e($sol["idioma"]) ?></strong><?php endif; ?>
+                        </p>
+                        <?php if ($docs): ?>
+                            <ul class="solicitud__docs" aria-label="Documentos de <?= e(nombre_panel($d)) ?>">
+                                <?php foreach ($docs as $doc): ?>
+                                    <li>
+                                        <a href="documento.php?id=<?= (int) $doc["id"] ?>" target="_blank" rel="noopener">
+                                            <i class="fa-solid <?= e($iconosDoc[$doc["tipo_mime"]] ?? "fa-file") ?>" aria-hidden="true"></i>
+                                            <?= e($doc["nombre_original"]) ?>
+                                        </a>
+                                        <span class="col-suave"><?= e(DocenteSolicitudModel::pesoLegible((int) $doc["tamano"])) ?></span>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php else: ?>
+                            <p class="pnl-item__texto"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> No subió documentos.</p>
+                        <?php endif; ?>
+                        <details class="solicitud__rechazo">
+                            <summary>Rechazar con un motivo</summary>
+                            <form method="POST" action="solicitudes.php" class="pnl-form">
+                                <?= campoCsrf() ?>
+                                <input type="hidden" name="accion" value="rechazar">
+                                <input type="hidden" name="id" value="<?= (int) $d["id"] ?>">
+                                <label class="campo__etiqueta" for="motivo-<?= (int) $d["id"] ?>">Motivo (se lo enviamos al docente)</label>
+                                <textarea class="entrada" id="motivo-<?= (int) $d["id"] ?>" name="motivo" rows="2" minlength="10" maxlength="500" required
+                                          placeholder="Ej. El certificado no muestra el nivel de inglés. Sube uno que acredite B2 o superior."></textarea>
+                                <div class="pnl-form__acciones"><button class="boton boton--peligro boton--sm" type="submit"><i class="fa-solid fa-xmark" aria-hidden="true"></i> Rechazar solicitud</button></div>
+                            </form>
+                        </details>
                     </div>
                     <div class="pnl-item__acciones">
                         <?= botonSolicitud((int) $d["id"], "aprobar", "Aprobar", "fa-check", "boton--exito") ?>
-                        <?= botonSolicitud((int) $d["id"], "rechazar", "Rechazar", "fa-xmark", "boton--peligro") ?>
                     </div>
                 </li>
             <?php endforeach; ?>
@@ -82,7 +115,7 @@ function botonSolicitud(int $id, string $accion, string $texto, string $icono, s
                             <p class="pnl-item__texto"><?= e($d["correo"]) ?></p>
                         </div>
                         <div class="pnl-item__acciones">
-                            <?= botonSolicitud((int) $d["id"], "rechazar", "Desactivar", "fa-user-slash", "boton--peligro", "¿Desactivar a este docente? Podrás reactivarlo después.") ?>
+                            <?= botonSolicitud((int) $d["id"], "desactivar", "Desactivar", "fa-user-slash", "boton--peligro", "¿Desactivar a este docente? Podrás reactivarlo después.") ?>
                         </div>
                     </li>
                 <?php endforeach; ?>
@@ -101,6 +134,9 @@ function botonSolicitud(int $id, string $accion, string $texto, string $icono, s
                         <div class="pnl-item__cuerpo">
                             <p class="pnl-item__titulo"><?= e(nombre_panel($d)) ?></p>
                             <p class="pnl-item__texto"><?= e($d["correo"]) ?></p>
+                            <?php if (!empty($solicitudes[(int) $d["id"]]["motivo"])): ?>
+                                <p class="pnl-item__texto">Motivo: <?= e($solicitudes[(int) $d["id"]]["motivo"]) ?></p>
+                            <?php endif; ?>
                         </div>
                         <div class="pnl-item__acciones">
                             <?= botonSolicitud((int) $d["id"], "aprobar", "Reactivar", "fa-rotate-left", "boton--secundario") ?>

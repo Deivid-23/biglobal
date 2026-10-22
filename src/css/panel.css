@@ -927,3 +927,11 @@ button.pnl-nav__enlace { width: 100%; border: 0; background: none; cursor: point
 .eliminar-cuenta summary { min-height: 36px; display: inline-flex; align-items: center; font-weight: 700; color: var(--rojo-700); cursor: pointer; }
 .eliminar-cuenta form { margin-top: var(--esp-3); display: grid; gap: var(--esp-3); justify-items: start; max-width: 420px; }
 .eliminar-cuenta .campo { width: 100%; }
+
+/* ---------- Solicitudes de docentes: documentos y rechazo con motivo ---------- */
+.solicitud { align-items: flex-start; }
+.solicitud__docs { list-style: none; margin: var(--esp-2) 0 0; padding: 0; display: grid; gap: var(--esp-1); }
+.solicitud__docs li { display: flex; flex-wrap: wrap; gap: var(--esp-2); align-items: baseline; font-size: var(--texto-sm); overflow-wrap: anywhere; }
+.solicitud__rechazo { margin-top: var(--esp-3); }
+.solicitud__rechazo summary { min-height: 32px; display: inline-flex; align-items: center; font-weight: 700; color: var(--rojo-700); cursor: pointer; font-size: var(--texto-sm); }
+.solicitud__rechazo form { margin-top: var(--esp-2); max-width: 520px; }

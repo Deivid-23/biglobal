@@ -13,6 +13,9 @@ RUN cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
         echo "session.cookie_httponly = 1"; \
         echo "session.use_strict_mode = 1"; \
         echo "date.timezone = America/Bogota"; \
+        echo "upload_max_filesize = 6M"; \
+        echo "post_max_size = 32M"; \
+        echo "max_file_uploads = 10"; \
     } > "$PHP_INI_DIR/conf.d/biglobal.ini"
 
 # Solo la carpeta src/ es pública. app/ y config/ quedan fuera del navegador.
