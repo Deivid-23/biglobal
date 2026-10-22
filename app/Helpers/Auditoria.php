@@ -33,10 +33,13 @@ class Auditoria
         "plan.quitar"        => "Quitó Premium de cortesía",
         "clase.cancelar"     => "Canceló una clase en vivo",
         "clase.abierta"      => "Cambió si una clase es gratuita",
+        "cuenta.solicita_eliminacion" => "Pidió eliminar su cuenta",
+        "cuenta.recuperada"  => "Recuperó su cuenta",
+        "cuenta.borrado_definitivo" => "Se borraron los datos de una cuenta",
     ];
 
     /** Texto del estado de una cuenta (usuarios.activo). */
-    public const ESTADOS = [0 => "inactiva", 1 => "activa", 2 => "pendiente"];
+    public const ESTADOS = [0 => "inactiva", 1 => "activa", 2 => "pendiente", 3 => "eliminación pendiente", 4 => "eliminada"];
 
     public static function disponible(PDO $c): bool
     {

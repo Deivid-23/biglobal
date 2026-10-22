@@ -22,7 +22,8 @@ const ERRORES_GOOGLE = {
 };
 
 const MENSAJES_OK = {
-    password_actualizada: "¡Listo! Tu contraseña se actualizó. Ya puedes iniciar sesión."
+    password_actualizada: "¡Listo! Tu contraseña se actualizó. Ya puedes iniciar sesión.",
+    eliminacion_programada: "Programamos la eliminación de tu cuenta en 30 días y te enviamos un correo. Si cambias de opinión, inicia sesión antes de esa fecha."
 };
 
 let reglasPassword = { minimo: 8, mayuscula: false, numero: false };

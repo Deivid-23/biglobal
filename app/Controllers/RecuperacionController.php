@@ -61,7 +61,8 @@ class RecuperacionController
             $conexion = Conexion::conectar();
             $usuario = RecuperacionModel::buscarUsuarioPorCorreo($conexion, $correo);
 
-            if (!$usuario || (int) $usuario["activo"] === 0) {
+            // Activas, docentes pendientes y cuentas con eliminación pendiente (para que puedan recuperarla)
+            if (!$usuario || !in_array((int) $usuario["activo"], [1, 2, 3], true)) {
                 return null; // mismo mensaje en pantalla, pero no se envía nada
             }
 

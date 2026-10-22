@@ -1,6 +1,7 @@
 <?php
 /** Cuentas y roles. Variables: $cuentas, $roles, $filtro, $miId, $modal, $planes (null = sin tabla de planes) */
-$estados = [1 => ["Activo", "chip chip--exito"], 2 => ["Pendiente", "chip chip--alerta"], 0 => ["Inactivo", "chip chip--neutro"]];
+$estados = [1 => ["Activo", "chip chip--exito"], 2 => ["Pendiente", "chip chip--alerta"], 0 => ["Inactivo", "chip chip--neutro"],
+            3 => ["Se elimina pronto", "chip chip--alerta"], 4 => ["Eliminada", "chip chip--neutro"]];
 
 /* Para el modal "Nuevo usuario" (se guarda con el mismo código del admin) */
 $tipoNuevo = "usuarios";
@@ -103,7 +104,7 @@ $modal += ["cursos" => [], "lecciones" => [], "docentes" => []];
                                 </td>
                             <?php endif; ?>
                             <td class="col-acciones">
-                                <?php if (!$esYo): ?>
+                                <?php if (!$esYo && (int) $u["activo"] !== 4): /* una cuenta ya eliminada no se reactiva */ ?>
                                     <div class="pnl-item__acciones" style="justify-content: flex-end;">
                                         <form method="POST" action="index.php">
                                             <?= campoCsrf() ?>

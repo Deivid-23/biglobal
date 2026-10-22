@@ -57,8 +57,9 @@ function refrescarSesionUsuario(): void
         return;
     }
 
-    // Cuenta borrada o desactivada: se cierra la sesión en este mismo momento
-    if (!$fila || (int) $fila["activo"] === 0) {
+    // Cuenta borrada, desactivada, con eliminación pendiente (3) o eliminada (4):
+    // se cierra la sesión en este mismo momento
+    if (!$fila || !in_array((int) $fila["activo"], [1, 2], true)) {
         $_SESSION = [];
         session_regenerate_id(true);
         $GLOBALS["biglobal_cuenta_cerrada"] = true;
@@ -67,6 +68,23 @@ function refrescarSesionUsuario(): void
 
     $_SESSION["rol"]    = $fila["rol"];
     $_SESSION["rol_id"] = (int) $fila["rol_id"];
+}
+
+/**
+ * La contraseña (o Google) ya se verificó y la cuenta tiene eliminación
+ * pendiente: se guarda en la sesión SOLO el id de la cuenta a recuperar
+ * (15 minutos, sin iniciar sesión todavía). Devuelve la página a la que
+ * ir, o null si ya pasó la fecha de borrado.
+ */
+function iniciarRecuperacionCuenta(int $usuarioId): ?string
+{
+    require_once __DIR__ . "/../../app/Models/CuentaEliminacionModel.php";
+    if (!CuentaEliminacionModel::pendiente(Conexion::conectar(), $usuarioId)) {
+        return null;
+    }
+    session_regenerate_id(true);
+    $_SESSION = ["recuperar_cuenta_id" => $usuarioId, "recuperar_cuenta_hasta" => time() + 900];
+    return "recuperar_cuenta.php";
 }
 
 /* =========================================================

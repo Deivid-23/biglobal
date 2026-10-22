@@ -1,4 +1,5 @@
-# Renovaciones del plan Premium de BiGlobal
+# Tareas diarias de BiGlobal: renovaciones del plan Premium y borrado de
+# las cuentas que pidieron eliminarse hace 30 días.
 # Todos los días a las 7:00 a. m. (hora de Colombia = 12:00 UTC) llama a la
 # tarea que cobra las renovaciones con tarjeta, vence lo que terminó y
 # manda los recordatorios. Usa el mismo secreto TAREAS_TOKEN del resumen semanal.
@@ -29,3 +30,13 @@ jobs:
                -X POST \
                -H "X-Tarea-Token: ${TAREAS_TOKEN}" \
                https://biglobal.onrender.com/tareas/renovaciones.php
+
+      - name: Borrar las cuentas que cumplieron 30 días de eliminación pendiente
+        env:
+          TAREAS_TOKEN: ${{ secrets.TAREAS_TOKEN }}
+        run: |
+          curl --fail-with-body --silent --show-error \
+               --retry 3 --retry-delay 20 --retry-all-errors --max-time 120 \
+               -X POST \
+               -H "X-Tarea-Token: ${TAREAS_TOKEN}" \
+               https://biglobal.onrender.com/tareas/eliminaciones.php

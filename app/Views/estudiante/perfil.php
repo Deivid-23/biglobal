@@ -178,6 +178,9 @@ $textoReglas = "Mínimo {$reglas['minimo']} caracteres"
 
     <!-- ================= CORREOS ================= -->
     <?php $claseTarjeta = "perfil-tarjeta"; require __DIR__ . "/../panel/_correos.php"; ?>
+
+    <!-- ================= ELIMINAR CUENTA ================= -->
+    <?php $claseTarjeta = "perfil-tarjeta"; require __DIR__ . "/../panel/_eliminar_cuenta.php"; ?>
 </div>
 
 <!-- ================= SESIÓN ================= -->

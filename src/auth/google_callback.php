@@ -171,8 +171,15 @@ if ($usuarioExistente) {
 
     $activo = (int) $usuarioExistente["activo"];
 
-    /* Cuenta bloqueada */
-    if ($activo === 0) {
+    /* Eliminación pendiente: puede recuperarla durante los 30 días */
+    if ($activo === 3) {
+        $destino = iniciarRecuperacionCuenta((int) $usuarioExistente["id"]);
+        header("Location: " . ($destino ?: "login.html?error=cuenta_inactiva"));
+        exit;
+    }
+
+    /* Cuenta bloqueada o eliminada */
+    if (!in_array($activo, [1, 2], true)) {
         header("Location: login.html?error=cuenta_inactiva");
         exit;
     }

@@ -71,3 +71,7 @@ $accionPerfil = "../auth/mi_cuenta.php";
 <div style="margin-top: var(--esp-5);">
     <?php $claseTarjeta = "pnl-tarjeta"; require __DIR__ . "/../panel/_correos.php"; ?>
 </div>
+
+<div style="margin-top: var(--esp-5);">
+    <?php $claseTarjeta = "pnl-tarjeta"; require __DIR__ . "/../panel/_eliminar_cuenta.php"; ?>
+</div>

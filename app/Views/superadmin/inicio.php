@@ -1,6 +1,7 @@
 <?php
 /** Resumen del sistema. Variables: $porRol, $administradores, $stats, $seguridad, $correoListo, $appUrl, $usuarioPanel */
-$estados = [1 => ["Activo", "chip chip--exito"], 2 => ["Pendiente", "chip chip--alerta"], 0 => ["Inactivo", "chip chip--neutro"]];
+$estados = [1 => ["Activo", "chip chip--exito"], 2 => ["Pendiente", "chip chip--alerta"], 0 => ["Inactivo", "chip chip--neutro"],
+            3 => ["Se elimina pronto", "chip chip--alerta"], 4 => ["Eliminada", "chip chip--neutro"]];
 $superActivos = count(array_filter($administradores, fn($a) => $a["rol"] === "superadmin" && (int) $a["activo"] === 1));
 ?>
 

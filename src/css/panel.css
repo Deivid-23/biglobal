@@ -920,3 +920,10 @@ button.pnl-nav__enlace { width: 100%; border: 0; background: none; cursor: point
 .tarjeta-correos h2 { font-size: var(--texto-lg); font-weight: 800; margin-bottom: var(--esp-2); }
 .correos-opcion { justify-content: flex-start; margin: var(--esp-4) 0; cursor: pointer; }
 .correos-opcion input { order: -1; accent-color: var(--azul-600); }
+
+/* ---------- Perfil: eliminar cuenta ---------- */
+.tarjeta-eliminar h2 { font-size: var(--texto-lg); font-weight: 800; margin-bottom: var(--esp-2); }
+.eliminar-cuenta { margin-top: var(--esp-4); }
+.eliminar-cuenta summary { min-height: 36px; display: inline-flex; align-items: center; font-weight: 700; color: var(--rojo-700); cursor: pointer; }
+.eliminar-cuenta form { margin-top: var(--esp-3); display: grid; gap: var(--esp-3); justify-items: start; max-width: 420px; }
+.eliminar-cuenta .campo { width: 100%; }

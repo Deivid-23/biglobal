@@ -81,8 +81,17 @@ class AuthController
 
             $activo = (int) ($usuario["activo"] ?? 0);
 
-            /* activo = 0 → cuenta inactiva/bloqueada */
-            if ($activo === 0) {
+            /* activo = 3 → pidió eliminar su cuenta: si todavía está en los 30 días, puede recuperarla */
+            if ($activo === 3) {
+                $destino = iniciarRecuperacionCuenta((int) $usuario["id"]);
+                echo json_encode($destino
+                    ? ["success" => true, "message" => "Tu cuenta tiene una eliminación pendiente.", "redirect" => $destino]
+                    : ["success" => false, "message" => "Esta cuenta ya fue eliminada."]);
+                exit;
+            }
+
+            /* activo = 0 (inactiva) o 4 (eliminada) → no entra */
+            if (!in_array($activo, [1, 2], true)) {
                 echo json_encode([
                     "success" => false,
                     "message" => "Tu cuenta está inactiva. Contacta al administrador."

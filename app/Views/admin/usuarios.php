@@ -1,7 +1,8 @@
 <?php
 /** Usuarios. Variables: $usuarios, $porRol, $esSuper, $modal */
 $tipoNuevo = "usuarios";
-$estados = [1 => ["Activo", "chip chip--exito"], 2 => ["Pendiente", "chip chip--alerta"], 0 => ["Inactivo", "chip chip--neutro"]];
+$estados = [1 => ["Activo", "chip chip--exito"], 2 => ["Pendiente", "chip chip--alerta"], 0 => ["Inactivo", "chip chip--neutro"],
+            3 => ["Se elimina pronto", "chip chip--alerta"], 4 => ["Eliminada", "chip chip--neutro"]];
 $chipsRol = ["admin" => "chip", "superadmin" => "chip chip--super", "docente" => "chip chip--logro", "estudiante" => "chip chip--exito"];
 ?>
 
