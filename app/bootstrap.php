@@ -41,6 +41,17 @@ function manejarErrorBD(Throwable $e, string $mensaje): void
     die(htmlspecialchars($mensaje, ENT_QUOTES, "UTF-8"));
 }
 
+/**
+ * "?v=1729700000" para los CSS y JS propios: la versión cambia cuando
+ * cambia el archivo, así el navegador no sigue usando una copia vieja.
+ * $ruta es relativa a src/ (ej. "estudiante/css/estudiante.css").
+ */
+function version(string $ruta): string
+{
+    $archivo = __DIR__ . "/../src/" . ltrim($ruta, "/");
+    return is_file($archivo) ? "?v=" . filemtime($archivo) : "";
+}
+
 /** Atajo para imprimir texto seguro en HTML. */
 if (!function_exists("e")) {
     function e($valor): string

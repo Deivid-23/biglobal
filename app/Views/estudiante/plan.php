@@ -223,4 +223,4 @@ $precio = Plan::PLANES[$elegido]["centavos"];
     <?php endif; ?>
 </section>
 
-<script src="js/pago.js"></script>
+<script src="js/pago.js<?= version("estudiante/js/pago.js") ?>"></script>

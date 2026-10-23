@@ -56,4 +56,4 @@ $enLista   = $miColor !== "" && array_key_exists($miColor, $sugeridos);
     </p>
     <p class="personalizar__estado" role="status" aria-live="polite" data-personalizar-estado></p>
 </section>
-<script src="../js/personalizar.js" defer></script>
+<script src="../js/personalizar.js<?= version("js/personalizar.js") ?>" defer></script>

@@ -69,4 +69,4 @@
     <noscript><p class="aviso aviso--alerta">Para hacer los ejercicios necesitas activar JavaScript.</p></noscript>
 </div>
 
-<script src="js/ruta.js" defer></script>
+<script src="js/ruta.js<?= version("estudiante/js/ruta.js") ?>" defer></script>

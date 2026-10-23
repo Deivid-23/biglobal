@@ -1414,6 +1414,7 @@ button.est-nav__enlace { width: 100%; border: 0; background: none; cursor: point
     flex-wrap: wrap;
     align-items: center;
     gap: var(--esp-4);
+    margin-top: var(--esp-5);
     margin-bottom: var(--esp-6);
     padding: var(--esp-5);
     border-radius: var(--radio-lg);
@@ -1701,9 +1702,9 @@ a.ruta-nodo__boton:active { transform: translateY(4px); box-shadow: 0 2px 0 var(
 .insignias-resumen__cuerpo { flex: 1; min-width: 0; display: grid; gap: var(--esp-2); }
 .insignias-resumen__numero { font-family: var(--fuente-titulo); font-weight: 700; }
 .insignias-resumen__numero strong { font-size: var(--texto-xl); color: var(--naranja-700); }
-.insignias-filtros { margin-top: var(--esp-5); }
+.insignias-filtros { margin-top: var(--esp-6); }
 .insignias-catalogo { margin-top: var(--esp-2); }
-.insignias-categoria { margin-top: var(--esp-6); }
+.insignias-categoria { margin-top: var(--esp-8); }
 .insignias-categoria__titulo { margin-bottom: var(--esp-3); font-size: var(--texto-lg); font-weight: 800; }
 .insignias-categoria__titulo small { margin-left: var(--esp-2); color: var(--texto-suave); font-size: var(--texto-xs); font-weight: 700; }
 .insignias-filtros + .vacio { margin-top: var(--esp-5); }

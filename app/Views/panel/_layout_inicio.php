@@ -13,7 +13,7 @@
     <meta name="theme-color" content="#EFF6FF">
     <meta name="robots" content="noindex">
     <!-- Tema claro/oscuro: va primero para que no haya parpadeo -->
-    <script src="../js/tema.js"></script>
+    <script src="../js/tema.js<?= version("js/tema.js") ?>"></script>
     <title><?= e($tituloPagina) ?> | BiGlobal</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,14 +21,14 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Manrope:wght@600;700;800&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha384-PPIZEGYM1v8zp5Py7UjFb79S58UeqCL9pYVnVPURKEqvioPROaVAJKKLzvH2rDnI" crossorigin="anonymous" referrerpolicy="no-referrer">
 
-    <link rel="stylesheet" href="../css/tokens.css">
-    <link rel="stylesheet" href="../css/componentes.css">
-    <link rel="stylesheet" href="../css/panel.css">
+    <link rel="stylesheet" href="../css/tokens.css<?= version("css/tokens.css") ?>">
+    <link rel="stylesheet" href="../css/componentes.css<?= version("css/componentes.css") ?>">
+    <link rel="stylesheet" href="../css/panel.css<?= version("css/panel.css") ?>">
 
     <?php if ($conGraficos): ?>
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" integrity="sha384-9nhczxUqK87bcKHh20fSQcTGD4qq5GhayNYSYWqwBkINBhOfQLg/P5HG5lF1urn4" crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
     <?php endif; ?>
-    <script src="../js/panel.js" defer></script>
+    <script src="../js/panel.js<?= version("js/panel.js") ?>" defer></script>
 </head>
 <body class="pnl-body">
 <a class="saltar-contenido" href="#contenido">Saltar al contenido</a>

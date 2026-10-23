@@ -15,6 +15,6 @@
     <?php endforeach; ?>
 </nav>
 
-<script src="js/estudiante.js"></script>
+<script src="js/estudiante.js<?= version("estudiante/js/estudiante.js") ?>"></script>
 </body>
 </html>

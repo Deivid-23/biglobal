@@ -29,7 +29,7 @@ $etiquetaCampana = $avisosSinLeer > 0 ? "Notificaciones: " . $avisosSinLeer . " 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <script src="../js/tema.js"></script>
+    <script src="../js/tema.js<?= version("js/tema.js") ?>"></script>
     <meta name="theme-color" content="#FFFFFF">
     <title><?= e($titulo) ?> | BiGlobal</title>
 
@@ -38,9 +38,9 @@ $etiquetaCampana = $avisosSinLeer > 0 ? "Notificaciones: " . $avisosSinLeer . " 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Manrope:wght@600;700;800&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha384-PPIZEGYM1v8zp5Py7UjFb79S58UeqCL9pYVnVPURKEqvioPROaVAJKKLzvH2rDnI" crossorigin="anonymous" referrerpolicy="no-referrer">
 
-    <link rel="stylesheet" href="../css/tokens.css">
-    <link rel="stylesheet" href="../css/componentes.css">
-    <link rel="stylesheet" href="css/estudiante.css">
+    <link rel="stylesheet" href="../css/tokens.css<?= version("css/tokens.css") ?>">
+    <link rel="stylesheet" href="../css/componentes.css<?= version("css/componentes.css") ?>">
+    <link rel="stylesheet" href="css/estudiante.css<?= version("estudiante/css/estudiante.css") ?>">
 </head>
 <body class="est-body">
 <a class="saltar-contenido" href="#contenido">Saltar al contenido</a>
