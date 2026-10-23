@@ -495,7 +495,9 @@ class RutaModel
         $resultado = [];
         foreach ($niveles as $n) {
             $lista = $porNivel[(int) $n["id"]] ?? [];
-            $estadoNivel = !$anteriorCompleto ? "bloqueado" : (((int) $n["premium"] === 1 && !$esPremium) ? "premium" : "abierto");
+            // Si ya avanzó en este nivel, sigue abierto aunque después se agreguen lecciones al anterior
+            $conAvance = (bool) array_filter($lista, fn($l) => $l["completada_en"] !== null);
+            $estadoNivel = !$anteriorCompleto && !$conAvance ? "bloqueado" : (((int) $n["premium"] === 1 && !$esPremium) ? "premium" : "abierto");
 
             $abierta = $estadoNivel === "abierto";   // la siguiente lección jugable está disponible
             $jugables = 0;
@@ -522,7 +524,7 @@ class RutaModel
 
             $completo = $jugables > 0 ? $hechas === $jugables : true;
             $resultado[] = $n + ["estado" => $estadoNivel, "unidades" => array_values($unidades), "jugables" => $jugables, "hechas" => $hechas];
-            $anteriorCompleto = $anteriorCompleto && $completo && $estadoNivel === "abierto";
+            $anteriorCompleto = $completo && $estadoNivel === "abierto";
         }
         return $resultado;
     }
