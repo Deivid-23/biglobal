@@ -193,7 +193,7 @@ class CuentaEliminacionModel
             // Datos de aprendizaje y avisos (cada tabla, solo si existe)
             foreach (["progreso", "certificados", "recuperacion_password", "estudiante_stats", "xp_movimientos",
                       "usuario_medallas", "notificaciones", "actividad_intentos", "clase_inscripciones", "clase_invitaciones",
-                      "ruta_progreso", "racha_dias", "grupo_miembros"] as $tabla) {
+                      "ruta_progreso", "racha_dias", "grupo_miembros", "usuario_fotos"] as $tabla) {
                 if (self::existeTabla($c, $tabla)) {
                     $c->prepare("DELETE FROM {$tabla} WHERE usuario_id = ?")->execute([$usuarioId]);
                 }

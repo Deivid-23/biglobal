@@ -65,6 +65,10 @@ $accionPerfil = "../auth/mi_cuenta.php";
 </div>
 
 <div style="margin-top: var(--esp-5);">
+    <?php $claseTarjeta = "pnl-tarjeta"; $inicialesFoto = $usuarioPanel["iniciales"]; require __DIR__ . "/../panel/_foto_perfil.php"; ?>
+</div>
+
+<div style="margin-top: var(--esp-5);">
     <?php $claseTarjeta = "pnl-tarjeta"; require __DIR__ . "/../panel/_personalizacion.php"; ?>
 </div>
 

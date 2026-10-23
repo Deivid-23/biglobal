@@ -1728,3 +1728,6 @@ a.ruta-nodo__boton:active { transform: translateY(4px); box-shadow: 0 2px 0 var(
 .perfil-enlace-insignias small { color: var(--texto-suave); font-size: var(--texto-sm); }
 .perfil-enlace-insignias > i:last-child { color: var(--texto-suave); }
 @media (hover: hover) and (pointer: fine) { .perfil-enlace-insignias:hover { border-color: var(--azul-300); } }
+
+/* Foto de perfil: separada de las tarjetas de abajo */
+.perfil-tarjeta.foto-perfil { margin-bottom: var(--esp-5); }

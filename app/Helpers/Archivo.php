@@ -155,8 +155,9 @@ class Archivo
     /**
      * Envía el archivo al navegador de forma segura y termina.
      * $fila necesita: nombre (o nombre_original), mime (o tipo_mime) y contenido.
+     * $enCache = true solo si la dirección cambia cuando cambia el archivo (ej. foto de perfil con ?v=).
      */
-    public static function servir(array $fila): void
+    public static function servir(array $fila, bool $enCache = false): void
     {
         $mime = (string) ($fila["mime"] ?? $fila["tipo_mime"] ?? "");
         $conocido = false;
@@ -171,7 +172,7 @@ class Archivo
         header("Content-Disposition: inline; filename=\"" . preg_replace('/[^\x20-\x7E]/', "_", $nombre) . "\"; filename*=UTF-8''" . rawurlencode($nombre));
         header("X-Content-Type-Options: nosniff");
         header("Content-Security-Policy: sandbox; default-src 'none'; img-src 'self'; media-src 'self'; style-src 'unsafe-inline'");
-        header("Cache-Control: private, no-store");
+        header($enCache ? "Cache-Control: private, max-age=31536000, immutable" : "Cache-Control: private, no-store");
         echo $contenido;
         exit;
     }

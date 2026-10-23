@@ -15,7 +15,7 @@ $textoReglas = "Mínimo {$reglas['minimo']} caracteres"
 ?>
 
 <header class="encabezado-pagina perfil-cabecera">
-    <span class="est-avatar est-avatar--grande" aria-hidden="true"><?= e($estudiante["iniciales"]) ?></span>
+    <?= FotoPerfil::avatar((int) $_SESSION["usuario_id"], $estudiante["iniciales"], "est-avatar est-avatar--grande") ?>
     <div>
         <h1><?= e($estudiante["nombre"]) ?></h1>
         <p>
@@ -29,6 +29,9 @@ $textoReglas = "Mínimo {$reglas['minimo']} caracteres"
         <?php endif; ?>
     </div>
 </header>
+
+<!-- ================= FOTO DE PERFIL ================= -->
+<?php $claseTarjeta = "perfil-tarjeta"; $inicialesFoto = $estudiante["iniciales"]; require __DIR__ . "/../panel/_foto_perfil.php"; ?>
 
 <div class="perfil-rejilla">
 

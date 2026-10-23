@@ -74,7 +74,7 @@ $etiquetaCampana = $avisosSinLeer > 0 ? "Notificaciones: " . $avisosSinLeer . " 
             <!-- Tu nombre lleva a "Mi perfil" -->
             <a class="est-perfil <?= $paginaActiva === "perfil" ? "es-activo" : "" ?>" href="index.php?page=perfil"
                <?= $paginaActiva === "perfil" ? 'aria-current="page"' : "" ?>>
-                <span class="est-avatar" aria-hidden="true"><?= e($estudiante["iniciales"]) ?></span>
+                <?= FotoPerfil::avatar((int) $_SESSION["usuario_id"], $estudiante["iniciales"], "est-avatar") ?>
                 <span class="est-perfil__texto">
                     <strong><?= e($estudiante["nombre"]) ?></strong>
                     <small>Mi perfil</small>
@@ -120,7 +120,7 @@ $etiquetaCampana = $avisosSinLeer > 0 ? "Notificaciones: " . $avisosSinLeer . " 
 
             <a class="est-usuario" href="index.php?page=perfil" aria-label="Mi perfil">
                 <span class="est-usuario__nombre"><?= e($estudiante["nombre"]) ?></span>
-                <span class="est-avatar" aria-hidden="true"><?= e($estudiante["iniciales"]) ?></span>
+                <?= FotoPerfil::avatar((int) $_SESSION["usuario_id"], $estudiante["iniciales"], "est-avatar") ?>
             </a>
         </header>
 

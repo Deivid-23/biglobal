@@ -12,6 +12,12 @@ $inicialesGrupo = function (array $fila): string {
     $partes = preg_split('/\s+/', $nombre) ?: [$nombre];
     return mb_strtoupper(mb_substr($partes[0], 0, 1) . (isset($partes[1]) ? mb_substr($partes[1], 0, 1) : "")) ?: "?";
 };
+// Fotos de todos los que aparecen, en una sola consulta
+$autoresTablon = array_column($anuncios, "autor_id");
+foreach ($anuncios as $a) {
+    $autoresTablon = array_merge($autoresTablon, array_column($a["comentarios"], "autor_id"));
+}
+FotoPerfil::versiones($autoresTablon);
 ?>
 <?php if (!$anuncios): ?>
     <div class="vacio">
@@ -24,7 +30,7 @@ $inicialesGrupo = function (array $fila): string {
         <?php foreach ($anuncios as $a): ?>
             <li class="grupo-anuncio" id="anuncio-<?= (int) $a["id"] ?>">
                 <div class="grupo-anuncio__cabecera">
-                    <span class="grupo-avatar" aria-hidden="true"><?= e($inicialesGrupo($a)) ?></span>
+                    <?= FotoPerfil::avatar((int) $a["autor_id"], $inicialesGrupo($a), "grupo-avatar") ?>
                     <div class="grupo-anuncio__autor">
                         <strong><?= e(nombre_panel($a)) ?></strong>
                         <small><time datetime="<?= e(date("c", strtotime($a["creado"]))) ?>"><?= e(hace_panel($a["creado"])) ?></time></small>
@@ -50,7 +56,7 @@ $inicialesGrupo = function (array $fila): string {
                         <ul class="grupo-comentarios__lista">
                             <?php foreach ($a["comentarios"] as $k): $mio = (int) $k["autor_id"] === (int) $usuarioId; ?>
                                 <li class="grupo-comentario">
-                                    <span class="grupo-avatar grupo-avatar--sm" aria-hidden="true"><?= e($inicialesGrupo($k)) ?></span>
+                                    <?= FotoPerfil::avatar((int) $k["autor_id"], $inicialesGrupo($k), "grupo-avatar grupo-avatar--sm") ?>
                                     <div class="grupo-comentario__cuerpo">
                                         <p class="grupo-comentario__autor">
                                             <strong><?= e(nombre_panel($k)) ?></strong>

@@ -423,6 +423,31 @@ textarea.entrada { min-height: 110px; padding: var(--esp-3) var(--esp-4); resize
 .personalizar [data-personalizar-nota] { margin-top: var(--esp-3); }
 .personalizar__estado { min-height: 1.4em; margin-top: var(--esp-2); color: var(--verde-700); font-size: var(--texto-sm); font-weight: 700; }
 
+/* ---------- Foto de perfil (en cualquier avatar redondo) ---------- */
+.con-foto { overflow: hidden; padding: 0; background: var(--neutro-100); }
+.con-foto img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+.foto-perfil h2 { font-size: var(--texto-lg); font-weight: 800; }
+.foto-perfil > .campo__ayuda { margin-top: var(--esp-1); }
+.foto-perfil__cuerpo { display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-5); margin-top: var(--esp-4); }
+.foto-perfil__avatar {
+    width: 96px;
+    height: 96px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--azul-100);
+    color: var(--azul-800);
+    font-family: var(--fuente-titulo);
+    font-size: 1.8rem;
+    font-weight: 800;
+}
+.foto-perfil__acciones { display: grid; gap: var(--esp-2); flex: 1 1 220px; min-width: 0; }
+.foto-perfil__acciones form { display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-2); margin: 0; }
+.foto-perfil__acciones .campo__ayuda { flex-basis: 100%; margin: 0; }
+.foto-perfil__elegir { cursor: pointer; }
+.foto-perfil__elegir:focus-within { outline: 2px solid var(--azul-600); outline-offset: 2px; }
+
 /* ---------- GRUPOS: tablón y material (docente y estudiante) ---------- */
 .grupo-seccion { margin-top: var(--esp-5); }
 

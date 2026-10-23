@@ -150,11 +150,13 @@ $esDocente = true;
             <?php if (!$progreso["miembros"]): ?>
                 <p class="texto-suave">Todavía no hay estudiantes. Compárteles el código <strong><?= e($grupoActual["codigo"]) ?></strong>: lo escriben en «Mis grupos».</p>
             <?php else: ?>
+                <?php FotoPerfil::versiones(array_column($progreso["miembros"], "id")); ?>
                 <ul class="pnl-lista pnl-lista--compacta">
                     <?php foreach ($progreso["miembros"] as $m):
                         $pct = $total ? (int) min(100, round(((int) $m["hechas"] / $total) * 100)) : 0;
                     ?>
                         <li class="pnl-item">
+                            <?= FotoPerfil::avatar((int) $m["id"], mb_strtoupper(mb_substr(nombre_panel($m), 0, 1)), "grupo-avatar") ?>
                             <div class="pnl-item__cuerpo">
                                 <p class="pnl-item__titulo"><?= e(nombre_panel($m)) ?></p>
                                 <p class="pnl-item__texto"><?= e($m["correo"]) ?> · desde <?= e(fecha_panel($m["unido_en"])) ?></p>

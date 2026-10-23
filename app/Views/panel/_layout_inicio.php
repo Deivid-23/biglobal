@@ -102,7 +102,7 @@
 
             <a class="pnl-usuario" href="<?= e($perfilUrl) ?>" aria-label="Mi perfil">
                 <span class="pnl-usuario__nombre"><?= e($usuarioPanel["nombre"]) ?></span>
-                <span class="pnl-avatar" aria-hidden="true"><?= e($usuarioPanel["iniciales"]) ?></span>
+                <?= FotoPerfil::avatar((int) $_SESSION["usuario_id"], $usuarioPanel["iniciales"], "pnl-avatar") ?>
             </a>
         </header>
 
