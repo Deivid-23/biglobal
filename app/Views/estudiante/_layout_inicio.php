@@ -3,19 +3,25 @@
  * Parte superior del layout del estudiante.
  * Variables que llegan desde EstudianteController::render():
  *   $titulo, $paginaActiva, $estudiante, $flash, $avisosSinLeer
+ *
+ * Igual que los otros roles: menú lateral con las secciones y una barra
+ * superior con la campana, el tema y el usuario. En celular el menú
+ * lateral se abre como cajón (botón ☰) y abajo quedan 4 atajos.
  */
 
 require_once __DIR__ . "/_helpers.php";
 
+/* "tabbar" => true: atajo de la barra inferior del celular (máximo 4) */
 $menu = [
-    ["page" => "inicio",       "texto" => "Inicio",          "icono" => "fa-house"],
-    ["page" => "ruta",         "texto" => "Mi ruta",         "icono" => "fa-route", "corto" => "Ruta"],
-    ["page" => "cursos",       "texto" => "Explorar cursos", "icono" => "fa-compass", "tabbar" => false],
-    ["page" => "mis-cursos",   "texto" => "Mis cursos",      "icono" => "fa-book-open", "corto" => "Cursos"],
-    ["page" => "clases",       "texto" => "Clases en vivo",  "icono" => "fa-video", "corto" => "Clases"],
-    ["page" => "grupos",       "texto" => "Mis grupos",      "icono" => "fa-people-group", "corto" => "Grupos"],
-    ["page" => "certificados", "texto" => "Certificados",    "icono" => "fa-award", "corto" => "Diplomas"],
+    ["page" => "inicio",       "texto" => "Inicio",          "icono" => "fa-house", "tabbar" => true],
+    ["page" => "ruta",         "texto" => "Mi ruta",         "icono" => "fa-route", "corto" => "Ruta", "tabbar" => true],
+    ["page" => "cursos",       "texto" => "Explorar cursos", "icono" => "fa-compass"],
+    ["page" => "mis-cursos",   "texto" => "Mis cursos",      "icono" => "fa-book-open", "corto" => "Cursos", "tabbar" => true],
+    ["page" => "clases",       "texto" => "Clases en vivo",  "icono" => "fa-video"],
+    ["page" => "grupos",       "texto" => "Mis grupos",      "icono" => "fa-people-group", "corto" => "Grupos", "tabbar" => true],
+    ["page" => "certificados", "texto" => "Certificados",    "icono" => "fa-award"],
 ];
+$etiquetaCampana = $avisosSinLeer > 0 ? "Notificaciones: " . $avisosSinLeer . " sin leer" : "Notificaciones";
 ?>
 <!DOCTYPE html>
 <html lang="es"<?= Panel::atributosHtml() ?>>
@@ -40,25 +46,16 @@ $menu = [
 
 <div class="est-app">
 
-    <!-- ================= BARRA LATERAL (escritorio) ================= -->
-    <aside class="est-lateral" aria-label="Menú del estudiante">
+    <!-- ================= MENÚ LATERAL (en celular se abre como cajón) ================= -->
+    <aside class="est-lateral" id="est-menu" aria-label="Menú del estudiante">
         <div class="est-lateral__cabecera">
             <a class="est-marca" href="index.php">
                 <img src="../img/logo-Biglobal.png" alt="" width="36" height="36">
                 <span>BiGlobal</span>
             </a>
-            <div class="cabecera-acciones">
-<?php /* Campana: abre la página de notificaciones */ ?>
-            <a class="est-campana" href="index.php?page=avisos"
-               aria-label="<?= $avisosSinLeer > 0 ? "Notificaciones: " . $avisosSinLeer . " sin leer" : "Notificaciones" ?>">
-                <i class="fa-solid fa-bell" aria-hidden="true"></i>
-                <?php if ($avisosSinLeer > 0): ?><span class="est-campana__contador" aria-hidden="true"><?= $avisosSinLeer > 9 ? "9+" : $avisosSinLeer ?></span><?php endif; ?>
-            </a>
-            <button class="boton-tema" type="button" data-alternar-tema aria-label="Cambiar a modo oscuro">
-                <i class="fa-solid fa-sun icono-sol" aria-hidden="true"></i>
-                <i class="fa-solid fa-moon icono-luna" aria-hidden="true"></i>
+            <button class="est-icono-boton est-cerrar-menu" type="button" data-cerrar-menu aria-label="Cerrar menú">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
             </button>
-            </div>
         </div>
 
         <nav class="est-nav" aria-label="Principal">
@@ -91,31 +88,39 @@ $menu = [
             </form>
         </div>
     </aside>
+    <div class="est-velo" data-cerrar-menu></div>
 
     <!-- ================= CONTENIDO ================= -->
     <div class="est-columna">
 
-        <!-- Encabezado de celular -->
-        <header class="est-cabecera-movil">
-            <a class="est-marca" href="index.php">
+        <!-- Barra superior (igual que en los otros roles) -->
+        <header class="est-barra">
+            <button class="est-icono-boton est-abrir-menu" type="button" data-abrir-menu
+                    aria-controls="est-menu" aria-expanded="false" aria-label="Abrir menú">
+                <i class="fa-solid fa-bars" aria-hidden="true"></i>
+            </button>
+
+            <a class="est-marca est-barra__marca" href="index.php">
                 <img src="../img/logo-Biglobal.png" alt="" width="32" height="32">
                 <span>BiGlobal</span>
             </a>
-            <div class="cabecera-acciones">
-<?php /* Campana: abre la página de notificaciones */ ?>
-            <a class="est-campana" href="index.php?page=avisos"
-               aria-label="<?= $avisosSinLeer > 0 ? "Notificaciones: " . $avisosSinLeer . " sin leer" : "Notificaciones" ?>">
+            <p class="est-barra__titulo"><?= e($titulo) ?></p>
+
+            <a class="est-icono-boton est-campana" href="index.php?page=avisos" aria-label="<?= e($etiquetaCampana) ?>"
+               <?= $paginaActiva === "avisos" ? 'aria-current="page"' : "" ?>>
                 <i class="fa-solid fa-bell" aria-hidden="true"></i>
                 <?php if ($avisosSinLeer > 0): ?><span class="est-campana__contador" aria-hidden="true"><?= $avisosSinLeer > 9 ? "9+" : $avisosSinLeer ?></span><?php endif; ?>
             </a>
-                <button class="boton-tema" type="button" data-alternar-tema aria-label="Cambiar a modo oscuro">
-                    <i class="fa-solid fa-sun icono-sol" aria-hidden="true"></i>
-                    <i class="fa-solid fa-moon icono-luna" aria-hidden="true"></i>
-                </button>
-            <a class="est-avatar est-avatar--boton" href="index.php?page=perfil" aria-label="Mi perfil">
-                <?= e($estudiante["iniciales"]) ?>
+
+            <button class="boton-tema" type="button" data-alternar-tema aria-label="Cambiar a modo oscuro">
+                <i class="fa-solid fa-sun icono-sol" aria-hidden="true"></i>
+                <i class="fa-solid fa-moon icono-luna" aria-hidden="true"></i>
+            </button>
+
+            <a class="est-usuario" href="index.php?page=perfil" aria-label="Mi perfil">
+                <span class="est-usuario__nombre"><?= e($estudiante["nombre"]) ?></span>
+                <span class="est-avatar" aria-hidden="true"><?= e($estudiante["iniciales"]) ?></span>
             </a>
-            </div>
         </header>
 
         <main id="contenido" class="est-principal" tabindex="-1">

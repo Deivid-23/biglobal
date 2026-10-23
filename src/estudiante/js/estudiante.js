@@ -45,6 +45,41 @@
     });
 })();
 
+/* Menú lateral en celular: se abre con ☰ y se cierra con la X, el fondo o Escape. */
+(function () {
+    "use strict";
+    var menu = document.getElementById("est-menu");
+    var abrir = document.querySelector("[data-abrir-menu]");
+    var velo = document.querySelector(".est-velo");
+    if (!menu || !abrir || !velo) return;
+
+    function cerrar(devolverFoco) {
+        if (!menu.classList.contains("esta-abierta")) return;
+        menu.classList.remove("esta-abierta");
+        velo.classList.remove("esta-visible");
+        document.body.classList.remove("menu-abierto");
+        abrir.setAttribute("aria-expanded", "false");
+        if (devolverFoco) abrir.focus();
+    }
+
+    abrir.addEventListener("click", function () {
+        menu.classList.add("esta-abierta");
+        velo.classList.add("esta-visible");
+        document.body.classList.add("menu-abierto");
+        abrir.setAttribute("aria-expanded", "true");
+        var activo = menu.querySelector(".est-nav__enlace.es-activo") || menu.querySelector("a");
+        if (activo) activo.focus();
+    });
+    document.querySelectorAll("[data-cerrar-menu]").forEach(function (el) {
+        el.addEventListener("click", function () { cerrar(true); });
+    });
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") cerrar(true);
+    });
+    // Si la pantalla crece a computador con el cajón abierto, se cierra
+    window.matchMedia("(min-width: 900px)").addEventListener("change", function () { cerrar(false); });
+})();
+
 /* Formularios con data-confirmar="¿Seguro…?": piden confirmación antes de enviarse. */
 document.querySelectorAll("form[data-confirmar]").forEach(function (form) {
     form.addEventListener("submit", function (evento) {

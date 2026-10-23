@@ -1,7 +1,8 @@
 /* ==========================================================================
    BiGlobal · PANEL DEL ESTUDIANTE
    Requiere: ../css/tokens.css y ../css/componentes.css
-   Celular primero: barra inferior tipo app. Desde 900px: barra lateral.
+   Celular primero: barra superior, menú lateral como cajón (botón ☰) y
+   4 atajos abajo. Desde 900px: menú lateral fijo, como los otros roles.
    ========================================================================== */
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -24,9 +25,89 @@ a { color: var(--azul-700); text-underline-offset: 3px; }
 /* ---------- Estructura ---------- */
 .est-app { min-height: 100vh; }
 
-.est-lateral { display: none; }
+/* Celular: el menú lateral es un cajón que se abre con el botón ☰ */
+.est-lateral {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 60;
+    width: min(300px, 86vw);
+    display: flex;
+    flex-direction: column;
+    gap: var(--esp-6);
+    padding: calc(var(--esp-5) + env(safe-area-inset-top)) var(--esp-4) calc(var(--esp-5) + env(safe-area-inset-bottom));
+    overflow-y: auto;
+    background: var(--superficie);
+    border-right: 1px solid var(--borde);
+    transform: translateX(-105%);
+    visibility: hidden;
+    transition: transform 240ms var(--ease-out), visibility 0s linear 240ms;
+}
+.est-lateral.esta-abierta { transform: none; visibility: visible; box-shadow: var(--sombra-3); transition: transform 240ms var(--ease-out); }
+
+.est-velo {
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    background: rgba(15, 23, 42, 0.45);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 200ms ease;
+}
+.est-velo.esta-visible { opacity: 1; pointer-events: auto; }
+body.menu-abierto { overflow: hidden; }
 
 .est-columna { min-width: 0; }
+
+/* ---------- Barra superior (igual que en los otros roles) ---------- */
+.est-barra {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    gap: var(--esp-2);
+    min-height: 64px;
+    padding: calc(var(--esp-2) + env(safe-area-inset-top)) var(--esp-4) var(--esp-2);
+    background: var(--superficie-vidrio);
+    backdrop-filter: saturate(1.4) blur(10px);
+    border-bottom: 1px solid var(--borde);
+}
+.est-barra__marca { flex: 1; min-width: 0; padding: 0; font-size: 1.15rem; }
+.est-barra__titulo {
+    display: none;
+    flex: 1;
+    min-width: 0;
+    font-family: var(--fuente-titulo);
+    font-weight: 800;
+    font-size: var(--texto-lg);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.est-usuario {
+    display: flex;
+    align-items: center;
+    gap: var(--esp-2);
+    padding-left: var(--esp-1);
+    min-width: 0;
+    color: inherit;
+    text-decoration: none;
+}
+.est-usuario__nombre {
+    display: none;
+    max-width: 180px;
+    font-family: var(--fuente-titulo);
+    font-weight: 700;
+    font-size: var(--texto-sm);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+@media (min-width: 720px) { .est-usuario__nombre { display: block; } }
+@media (max-width: 360px) { .est-barra__marca span { display: none; } }
 
 .est-principal {
     width: 100%;
@@ -44,18 +125,19 @@ a { color: var(--azul-700); text-underline-offset: 3px; }
 
     .est-lateral {
         position: sticky;
-        top: 0;
+        z-index: auto;
+        width: auto;
         height: 100vh;
-        display: flex;
-        flex-direction: column;
-        gap: var(--esp-6);
         padding: var(--esp-6) var(--esp-4);
-        background: var(--superficie);
-        border-right: 1px solid var(--borde);
+        transform: none;
+        visibility: visible;
+        transition: none;
     }
 
-    .est-principal { padding: var(--esp-10) var(--esp-8) var(--esp-12); }
-    .est-cabecera-movil, .est-tabbar { display: none !important; }
+    .est-barra { padding: var(--esp-3) var(--esp-8); min-height: 68px; }
+    .est-barra__titulo { display: block; }
+    .est-principal { padding: var(--esp-8) var(--esp-8) var(--esp-12); }
+    .est-abrir-menu, .est-cerrar-menu, .est-barra__marca, .est-velo, .est-tabbar { display: none !important; }
 }
 
 /* ---------- Marca ---------- */
@@ -145,29 +227,28 @@ a { color: var(--azul-700); text-underline-offset: 3px; }
 
 .est-salir { color: var(--texto-suave); }
 
-/* ---------- Encabezado y barra inferior de celular ---------- */
-.est-cabecera-movil {
-    position: sticky;
-    top: 0;
-    z-index: 20;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: calc(var(--esp-2) + env(safe-area-inset-top)) var(--esp-4) var(--esp-2);
-    background: var(--superficie-vidrio);
-    backdrop-filter: saturate(1.4) blur(10px);
-    border-bottom: 1px solid var(--borde);
-}
-
+/* ---------- Botones de ícono (☰, cerrar, campana): con borde, como en los otros roles ---------- */
 .est-icono-boton {
+    position: relative;
     width: 44px;
     height: 44px;
-    display: grid;
+    flex: 0 0 auto;
+    display: inline-grid;
     place-items: center;
+    padding: 0;
+    border: 1px solid var(--borde);
     border-radius: var(--radio);
+    background: var(--superficie);
     color: var(--texto-suave);
+    font-size: 1.05rem;
     text-decoration: none;
+    cursor: pointer;
+    transition: background-color var(--dur) ease, color var(--dur) ease, transform var(--dur-rapida) var(--ease-out);
 }
+.est-icono-boton:active { transform: scale(0.94); }
+@media (hover: hover) and (pointer: fine) { .est-icono-boton:hover { background: var(--azul-50); color: var(--marca-texto); } }
+
+/* ---------- Barra inferior de celular ---------- */
 
 .est-tabbar {
     position: fixed;
@@ -176,7 +257,7 @@ a { color: var(--azul-700); text-underline-offset: 3px; }
     bottom: 0;
     z-index: 30;
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     padding: 6px var(--esp-1) calc(6px + env(safe-area-inset-bottom));
     background: var(--superficie-vidrio);
     backdrop-filter: saturate(1.4) blur(10px);
@@ -848,15 +929,6 @@ a.est-perfil.es-activo { background: var(--azul-100); }
     a.est-perfil:not(.es-activo):hover { background: var(--azul-50); }
 }
 
-/* Avatar de la cabecera de celular: botón de 44px para el dedo */
-.est-avatar--boton {
-    width: 44px;
-    height: 44px;
-    text-decoration: none;
-    transition: transform var(--dur-rapida) var(--ease-out);
-}
-
-.est-avatar--boton:active { transform: scale(0.95); }
 
 .est-avatar--grande {
     width: 72px;
@@ -942,7 +1014,7 @@ a.est-perfil.es-activo { background: var(--azul-100); }
 .perfil-salir .perfil-tarjeta__ayuda { margin-bottom: 0; }
 .perfil-salir__titulo { font-family: var(--fuente-titulo); font-weight: 800; }
 
-/* Marca + botón de tema en la parte de arriba de la barra lateral */
+/* Marca (y en celular el botón de cerrar) arriba del menú lateral */
 .est-lateral__cabecera {
     display: flex;
     align-items: center;
@@ -1144,24 +1216,12 @@ button.est-nav__enlace { width: 100%; border: 0; background: none; cursor: point
 .invitacion__acciones { display: flex; gap: var(--esp-2); }
 .invitacion__acciones form { margin: 0; }
 
-/* ---------- Campana (abre la página de notificaciones) ---------- */
-.est-campana {
-    position: relative;
-    width: 40px;
-    height: 40px;
-    display: inline-grid;
-    place-items: center;
-    flex: 0 0 auto;
-    border-radius: 50%;
-    color: var(--texto-suave);
-    text-decoration: none;
-    transition: background-color var(--dur) ease, color var(--dur) ease;
-}
-@media (hover: hover) and (pointer: fine) { .est-campana:hover { background: var(--azul-50); color: var(--azul-700); } }
+/* ---------- Campana (abre la página de notificaciones; su forma viene de .est-icono-boton) ---------- */
+.est-campana[aria-current="page"] { background: var(--azul-100); color: var(--azul-800); }
 .est-campana__contador {
     position: absolute;
-    top: 2px;
-    right: 0;
+    top: -6px;
+    right: -6px;
     min-width: 18px;
     height: 18px;
     padding: 0 4px;
@@ -1200,7 +1260,7 @@ button.est-nav__enlace { width: 100%; border: 0; background: none; cursor: point
 .aviso-item__titulo a { color: inherit; }
 .aviso-item__texto { margin-top: var(--esp-1); color: var(--texto-suave); font-size: var(--texto-sm); line-height: 1.6; overflow-wrap: anywhere; }
 .aviso-item__fecha { display: block; margin-top: var(--esp-1); color: var(--texto-tenue); font-size: var(--texto-xs); }
-@media (prefers-reduced-motion: reduce) { .est-campana { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .est-icono-boton, .est-lateral, .est-velo { transition: none; } }
 
 /* ---------- Perfil: tarjeta "Correos" (no hay panel.css en el estudiante) ---------- */
 .tarjeta-correos h2 { font-size: var(--texto-xl); font-weight: 800; }
