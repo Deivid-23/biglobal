@@ -50,6 +50,9 @@ class Notificador
         "grupo_material"    => "fa-folder-open",
         "grupo_miembro"     => "fa-user-group",
         "grupo_comentario"  => "fa-comment",
+        "grupo_tarea"       => "fa-clipboard-list",
+        "tarea_entrega"     => "fa-file-arrow-up",
+        "tarea_calificada"  => "fa-star",
     ];
 
     /**
@@ -142,6 +145,9 @@ class Notificador
         "grupo_material"     => "campana",
         "grupo_miembro"      => "campana",
         "grupo_comentario"   => "campana",
+        "grupo_tarea"        => "opcional",
+        "tarea_entrega"      => "campana",
+        "tarea_calificada"   => "opcional",
     ];
 
     /** ¿Existe usuarios.correos_opcionales? (antes del SQL: todos reciben) */

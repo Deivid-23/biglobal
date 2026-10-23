@@ -12,7 +12,7 @@ require_once __DIR__ . "/../../app/Models/ContenidoModel.php";
 require_once __DIR__ . "/../../app/Models/QuizModel.php";
 require_once __DIR__ . "/../../app/Models/ClaseModel.php";
 require_once __DIR__ . "/../../app/Models/RevisionModel.php";
-require_once __DIR__ . "/../../app/Models/GrupoModel.php";
+require_once __DIR__ . "/../../app/Models/TareaModel.php";
 
 protegerRol("docente");
 
@@ -231,7 +231,7 @@ if ($pagina === "clases") {
     }
 }
 
-/* Grupos (?page=grupos) y un grupo (?page=grupo&grupo=ID&tab=tablon|material|estudiantes): solo los del docente */
+/* Grupos (?page=grupos) y un grupo (?page=grupo&grupo=ID&tab=tablon|tareas|material|estudiantes[&tarea=ID]): solo los del docente */
 if ($pagina === "grupos" || $pagina === "grupo") {
     $datosVista["gruposDisponibles"] = GrupoModel::disponible($conexion);
     if (!$datosVista["gruposDisponibles"] && $pagina === "grupo") {
@@ -248,7 +248,21 @@ if ($pagina === "grupo") {
         header("Location: index.php?page=grupos");
         exit;
     }
-    $tab = in_array($_GET["tab"] ?? "", ["tablon", "material", "estudiantes"], true) ? $_GET["tab"] : "tablon";
+    $tab = in_array($_GET["tab"] ?? "", ["tablon", "tareas", "material", "estudiantes"], true) ? $_GET["tab"] : "tablon";
+    $grupoIdActual = (int) $grupoActual["id"];
+    $tareasDisponibles = TareaModel::disponible($conexion);
+    if ($tab === "tareas" && !$tareasDisponibles) {
+        $tab = "tablon";
+    }
+    $tareaActual = null;
+    if ($tab === "tareas" && (int) ($_GET["tarea"] ?? 0) > 0) {
+        $tareaActual = TareaModel::deGrupo($conexion, (int) $_GET["tarea"], $grupoIdActual);
+        if (!$tareaActual) {
+            $_SESSION["flash_docente"] = ["tipo" => "error", "mensaje" => "La tarea ya no existe."];
+            header("Location: index.php?page=grupo&grupo=" . $grupoIdActual . "&tab=tareas");
+            exit;
+        }
+    }
     $titulos["grupo"] = $grupoActual["nombre"];
     $datosVista += [
         "grupoActual" => $grupoActual,
@@ -256,9 +270,20 @@ if ($pagina === "grupo") {
         "anuncios"    => $tab === "tablon" ? GrupoModel::anuncios($conexion, (int) $grupoActual["id"]) : [],
         "material"    => $tab === "material" ? GrupoModel::material($conexion, (int) $grupoActual["id"]) : [],
         "progreso"    => $tab === "estudiantes" ? GrupoModel::miembrosConProgreso($conexion, $grupoActual) : ["total" => null, "miembros" => []],
+        "tareasDisponibles" => $tareasDisponibles,
+        "tareas"      => $tab === "tareas" && !$tareaActual ? TareaModel::tareasDocente($conexion, $grupoIdActual) : [],
+        "tareaActual" => $tareaActual,
+        "adjuntosTarea" => $tareaActual ? (TareaModel::adjuntos($conexion, "tarea", [(int) $tareaActual["id"]])[(int) $tareaActual["id"]] ?? []) : [],
+        "entregas"    => $tareaActual ? TareaModel::entregasDeTarea($conexion, (int) $tareaActual["id"], $grupoIdActual) : [],
+        "resumenTareas" => $tab === "estudiantes" && $tareasDisponibles
+            ? ["total" => TareaModel::totalTareas($conexion, $grupoIdActual), "porEstudiante" => TareaModel::resumenPorEstudiante($conexion, $grupoIdActual)]
+            : null,
         "acceptArchivo" => Archivo::accept(GrupoModel::GRUPOS_ARCHIVO),
         "tiposArchivo"  => Archivo::textoTipos(GrupoModel::GRUPOS_ARCHIVO),
     ];
+    $datosVista["adjuntosEntregas"] = $tareaActual
+        ? TareaModel::adjuntos($conexion, "entrega", array_column($datosVista["entregas"], "id"))
+        : [];
 }
 
 /* Preguntas de una actividad (?page=preguntas&actividad=...): solo si es de un curso del docente */

@@ -1,7 +1,8 @@
 <?php
 /**
- * Un grupo del docente con pestañas: tablón, material y estudiantes.
- * Variables: $grupoActual, $tab, $anuncios, $material, $progreso,
+ * Un grupo del docente con pestañas: tablón, tareas, material y estudiantes.
+ * Variables: $grupoActual, $tab, $anuncios, $material, $progreso, $tareasDisponibles,
+ *            $tareas, $tareaActual, $adjuntosTarea, $entregas, $adjuntosEntregas, $resumenTareas,
  *            $cursosDocente, $acceptArchivo, $tiposArchivo, $csrfToken
  */
 $grupoId = (int) $grupoActual["id"];
@@ -9,9 +10,13 @@ $archivado = (int) $grupoActual["archivado"] === 1;
 $base = "index.php?page=grupo&amp;grupo=" . $grupoId;
 $pestanas = [
     "tablon"      => ["Tablón", "fa-bullhorn"],
+    "tareas"      => ["Tareas", "fa-clipboard-list"],
     "material"    => ["Material", "fa-folder-open"],
     "estudiantes" => ["Estudiantes (" . (int) $grupoActual["miembros"] . ")", "fa-user-group"],
 ];
+if (!$tareasDisponibles) {
+    unset($pestanas["tareas"]);
+}
 
 // Para las piezas compartidas
 $accionUrl = "grupos_acciones.php";
@@ -79,6 +84,10 @@ $esDocente = true;
     <section class="grupo-seccion" aria-label="Anuncios">
         <?php require __DIR__ . "/../grupos/_tablon.php"; ?>
     </section>
+
+<?php elseif ($tab === "tareas"): ?>
+
+    <?php require __DIR__ . "/_tareas.php"; ?>
 
 <?php elseif ($tab === "material"): ?>
 
@@ -149,6 +158,13 @@ $esDocente = true;
                             <div class="pnl-item__cuerpo">
                                 <p class="pnl-item__titulo"><?= e(nombre_panel($m)) ?></p>
                                 <p class="pnl-item__texto"><?= e($m["correo"]) ?> · desde <?= e(fecha_panel($m["unido_en"])) ?></p>
+                                <?php if ($resumenTareas && $resumenTareas["total"] > 0):
+                                    $rt = $resumenTareas["porEstudiante"][(int) $m["id"]] ?? null; ?>
+                                    <p class="pnl-item__texto">
+                                        Tareas: <?= (int) ($rt["entregadas"] ?? 0) ?> de <?= (int) $resumenTareas["total"] ?> entregadas
+                                        <?php if ($rt && $rt["promedio"] !== null): ?> · promedio <?= e(TareaModel::numero($rt["promedio"])) ?>%<?php endif; ?>
+                                    </p>
+                                <?php endif; ?>
                                 <?php if ($total !== null): ?>
                                     <div class="grupo-progreso">
                                         <div class="progreso" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<?= $pct ?>"

@@ -487,7 +487,7 @@ a.pnl-dato:active { transform: translateY(1px); }
 .pnl-pestana.es-activa { background: var(--superficie); color: var(--azul-800); box-shadow: var(--sombra-1); }
 
 /* ---------- Formularios ---------- */
-.pnl-form { display: grid; gap: var(--esp-4); max-width: 640px; }
+.pnl-form { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--esp-4); max-width: 640px; }
 .pnl-form .campo + .campo { margin-top: 0; }
 /* 2 columnas solo si caben (depende del ancho de la tarjeta, no de la pantalla) */
 .pnl-form__fila { display: grid; gap: var(--esp-4); grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); }

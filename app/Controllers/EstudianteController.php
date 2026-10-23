@@ -7,7 +7,7 @@ require_once __DIR__ . "/../Models/QuizModel.php";
 require_once __DIR__ . "/../Models/PagoModel.php";
 require_once __DIR__ . "/../Models/ClaseModel.php";
 require_once __DIR__ . "/../Models/ContenidoModel.php";
-require_once __DIR__ . "/../Models/GrupoModel.php";
+require_once __DIR__ . "/../Models/TareaModel.php";
 require_once __DIR__ . "/../Views/estudiante/_helpers.php";
 
 /**
@@ -810,8 +810,8 @@ class EstudianteController
     /* =========================================================
        GRUPOS (tipo Classroom)
        GET  index.php?page=grupos               -> Mis grupos + entrar con código
-       GET  index.php?page=grupo&id=N[&tab=...] -> tablón o material
-       POST grupo.php (accion=unirse|salir|comentar|borrar_comentario)
+       GET  index.php?page=grupo&id=N[&tab=tareas|material][&tarea=N] -> tablón, tareas o material
+       POST grupo.php (accion=unirse|salir|comentar|borrar_comentario|entregar)
     ========================================================= */
     public function grupos(): void
     {
@@ -831,12 +831,36 @@ class EstudianteController
             header("Location: index.php?page=grupos");
             exit;
         }
-        $tab = ($_GET["tab"] ?? "") === "material" ? "material" : "tablon";
-        $this->render("grupo", "grupos", $grupo["nombre"], [
+        $grupoId = (int) $grupo["id"];
+        $tareasDisponibles = TareaModel::disponible($c);
+        $tab = in_array($_GET["tab"] ?? "", ["tareas", "material"], true) ? $_GET["tab"] : "tablon";
+        if ($tab === "tareas" && !$tareasDisponibles) {
+            $tab = "tablon";
+        }
+
+        $tarea = null;
+        $entrega = null;
+        if ($tab === "tareas" && (int) ($_GET["tarea"] ?? 0) > 0) {
+            $tarea = TareaModel::deGrupo($c, (int) $_GET["tarea"], $grupoId);
+            if (!$tarea) {
+                $_SESSION["flash_estudiante"] = ["tipo" => "error", "mensaje" => "Esa tarea ya no existe."];
+                header("Location: index.php?page=grupo&id=" . $grupoId . "&tab=tareas");
+                exit;
+            }
+            $entrega = TareaModel::entregaDe($c, (int) $tarea["id"], $this->usuarioId);
+        }
+
+        $this->render("grupo", "grupos", $tarea ? $tarea["titulo"] : $grupo["nombre"], [
             "grupo"    => $grupo,
             "tab"      => $tab,
-            "anuncios" => $tab === "tablon" ? GrupoModel::anuncios($c, (int) $grupo["id"]) : [],
-            "material" => $tab === "material" ? GrupoModel::material($c, (int) $grupo["id"]) : [],
+            "anuncios" => $tab === "tablon" ? GrupoModel::anuncios($c, $grupoId) : [],
+            "material" => $tab === "material" ? GrupoModel::material($c, $grupoId) : [],
+            "tareasDisponibles" => $tareasDisponibles,
+            "tareas"   => $tab === "tareas" && !$tarea ? TareaModel::tareasEstudiante($c, $grupoId, $this->usuarioId) : [],
+            "tarea"    => $tarea,
+            "entrega"  => $entrega,
+            "adjuntosTarea"   => $tarea ? (TareaModel::adjuntos($c, "tarea", [(int) $tarea["id"]])[(int) $tarea["id"]] ?? []) : [],
+            "adjuntosEntrega" => $entrega ? (TareaModel::adjuntos($c, "entrega", [(int) $entrega["id"]])[(int) $entrega["id"]] ?? []) : [],
         ]);
     }
 
@@ -894,6 +918,23 @@ class EstudianteController
             // Solo los comentarios propios
             $ok = GrupoModel::borrarComentario($c, $grupoId, (int) ($_POST["comentario_id"] ?? 0), $this->usuarioId);
             $volver($ok ? "exito" : "error", $ok ? "Comentario borrado." : "Solo puedes borrar tus propios comentarios.", $base . "#anuncio-" . $anuncioId);
+        }
+        if ($accion === "entregar") {
+            $tarea = TareaModel::disponible($c) ? TareaModel::deGrupo($c, (int) ($_POST["tarea_id"] ?? 0), $grupoId) : null;
+            if (!$tarea) {
+                $volver("error", "Esa tarea ya no existe.", $base . "&tab=tareas");
+            }
+            $urlTarea = $base . "&tab=tareas&tarea=" . (int) $tarea["id"];
+            if (!LimiteIntentos::permitir("tarea_entrega:usuario:" . $this->usuarioId, 30, 600)) {
+                $volver("error", "Enviaste muchas veces seguidas. Espera unos minutos.", $urlTarea);
+            }
+            try {
+                $r = TareaModel::entregar($c, $grupo, $tarea, $this->usuarioId, (string) ($_POST["texto"] ?? ""), $_FILES["archivos"] ?? null);
+            } catch (Throwable $e) {
+                error_log("[BiGlobal][entregar] " . $e->getMessage());
+                $r = "No pudimos guardar tu entrega. Inténtalo de nuevo.";
+            }
+            $volver($r === true ? "exito" : "error", $r === true ? "¡Entrega enviada! Tu docente ya recibió el aviso." : $r, $urlTarea);
         }
         $volver("error", "Acción no válida.", $base);
     }

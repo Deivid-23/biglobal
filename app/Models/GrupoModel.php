@@ -302,7 +302,7 @@ class GrupoModel
     }
 
     /** Ids de los estudiantes del grupo (para los avisos). */
-    private static function idsMiembros(PDO $c, int $grupoId): array
+    public static function idsMiembros(PDO $c, int $grupoId): array
     {
         $stmt = $c->prepare("SELECT usuario_id FROM grupo_miembros WHERE grupo_id = ?");
         $stmt->execute([$grupoId]);
@@ -576,8 +576,8 @@ class GrupoModel
 
     /**
      * El archivo con su contenido, SOLO si la persona puede verlo:
-     *   material -> el docente del grupo, sus miembros (grupo activo) o el equipo admin.
-     * Los contextos tarea y entrega llegan con la parte B.
+     *   material, tarea -> el docente del grupo, sus miembros (grupo activo) o el equipo admin.
+     *   entrega         -> el estudiante que la hizo, el docente del grupo o el equipo admin.
      */
     public static function archivoConPermiso(PDO $c, int $archivoId, int $usuarioId, string $rol): ?array
     {
@@ -604,6 +604,33 @@ class GrupoModel
             $puede = in_array($rol, ["admin", "superadmin"], true)
                 || ($rol === "docente" && (int) $grupo["docente_id"] === $usuarioId)
                 || ($rol === "estudiante" && (int) $grupo["archivado"] === 0 && self::esMiembro($c, (int) $grupo["id"], $usuarioId));
+            return $puede ? $archivo : null;
+        }
+
+        if ($archivo["contexto"] === "tarea" || $archivo["contexto"] === "entrega") {
+            $sql = $archivo["contexto"] === "tarea"
+                ? "SELECT g.id, g.docente_id, g.archivado, NULL AS estudiante_id
+                   FROM grupo_tareas t INNER JOIN grupos g ON g.id = t.grupo_id
+                   WHERE t.id = ? LIMIT 1"
+                : "SELECT g.id, g.docente_id, g.archivado, e.estudiante_id
+                   FROM tarea_entregas e
+                   INNER JOIN grupo_tareas t ON t.id = e.tarea_id
+                   INNER JOIN grupos g ON g.id = t.grupo_id
+                   WHERE e.id = ? LIMIT 1";
+            $stmt = $c->prepare($sql);
+            $stmt->execute([(int) $archivo["contexto_id"]]);
+            $grupo = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$grupo) {
+                return null;
+            }
+            $puede = in_array($rol, ["admin", "superadmin"], true)
+                || ($rol === "docente" && (int) $grupo["docente_id"] === $usuarioId);
+            if (!$puede && $rol === "estudiante") {
+                // Su propia entrega la ve siempre; los adjuntos de la tarea, si sigue en el grupo activo
+                $puede = $archivo["contexto"] === "entrega"
+                    ? (int) $grupo["estudiante_id"] === $usuarioId
+                    : (int) $grupo["archivado"] === 0 && self::esMiembro($c, (int) $grupo["id"], $usuarioId);
+            }
             return $puede ? $archivo : null;
         }
         return null;

@@ -1309,3 +1309,26 @@ button.est-nav__enlace { width: 100%; border: 0; background: none; cursor: point
 }
 .grupo-pestana.es-activa { background: var(--superficie); color: var(--azul-800); box-shadow: var(--sombra-1); }
 .grupo-salir { margin-top: var(--esp-8); display: flex; justify-content: center; }
+
+/* ---------- Grupos: tareas ---------- */
+.grupo-tarea,
+.grupo-nota,
+.grupo-mi-entrega {
+    margin-top: var(--esp-4);
+    padding: var(--esp-5);
+    border-radius: var(--radio-lg);
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+}
+.grupo-tarea__titulo { font-size: var(--texto-xl); font-weight: 800; overflow-wrap: anywhere; }
+.grupo-tarea__meta { margin-top: var(--esp-1); }
+.grupo-nota { background: var(--verde-100); border-color: transparent; color: var(--verde-700); }
+.grupo-nota h3,
+.grupo-mi-entrega h3 { font-size: var(--texto-lg); font-weight: 800; }
+.grupo-nota__valor { margin-top: var(--esp-1); font-family: var(--fuente-titulo); font-size: var(--texto-lg); }
+.grupo-nota__valor strong { font-size: 2rem; }
+.grupo-nota__comentario { margin-top: var(--esp-2); color: var(--texto); overflow-wrap: anywhere; }
+.grupo-mi-entrega .aviso { margin-top: var(--esp-3); }
+.grupo-entregar { display: grid; gap: var(--esp-4); margin-top: var(--esp-4); }
+.grupo-entregar .campo + .campo { margin-top: 0; }
+.grupo-entregar .boton { justify-self: start; }

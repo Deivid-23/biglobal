@@ -1,5 +1,9 @@
 <?php
-/** Un grupo del estudiante: tablón o material. Variables: $grupo, $tab, $anuncios, $material */
+/**
+ * Un grupo del estudiante: tablón, tareas o material.
+ * Variables: $grupo, $tab, $anuncios, $material, $tareasDisponibles,
+ *            $tareas, $tarea, $entrega, $adjuntosTarea, $adjuntosEntrega
+ */
 $grupoId = (int) $grupo["id"];
 
 // Para las piezas compartidas
@@ -23,17 +27,28 @@ $archivado = false;
 </header>
 
 <nav class="grupo-pestanas" aria-label="Secciones del grupo">
-    <?php foreach (["tablon" => ["Tablón", "fa-bullhorn"], "material" => ["Material", "fa-folder-open"]] as $clave => [$texto, $icono]): ?>
+    <?php
+    $pestanas = ["tablon" => ["Tablón", "fa-bullhorn"], "tareas" => ["Tareas", "fa-clipboard-list"], "material" => ["Material", "fa-folder-open"]];
+    if (!$tareasDisponibles) {
+        unset($pestanas["tareas"]);
+    }
+    foreach ($pestanas as $clave => [$texto, $icono]): ?>
         <a class="grupo-pestana <?= $tab === $clave ? "es-activa" : "" ?>"
-           href="index.php?page=grupo&amp;id=<?= $grupoId ?><?= $clave === "material" ? "&amp;tab=material" : "" ?>"
+           href="index.php?page=grupo&amp;id=<?= $grupoId ?><?= $clave !== "tablon" ? "&amp;tab=" . $clave : "" ?>"
            <?= $tab === $clave ? 'aria-current="page"' : "" ?>>
             <i class="fa-solid <?= $icono ?>" aria-hidden="true"></i> <?= $texto ?>
         </a>
     <?php endforeach; ?>
 </nav>
 
-<section class="grupo-seccion" aria-label="<?= $tab === "material" ? "Material" : "Anuncios" ?>">
-    <?php require __DIR__ . "/../grupos/" . ($tab === "material" ? "_material.php" : "_tablon.php"); ?>
+<section class="grupo-seccion" aria-label="<?= ["tablon" => "Anuncios", "tareas" => "Tareas", "material" => "Material"][$tab] ?>">
+    <?php
+    if ($tab === "tareas") {
+        require __DIR__ . "/_tareas.php";
+    } else {
+        require __DIR__ . "/../grupos/" . ($tab === "material" ? "_material.php" : "_tablon.php");
+    }
+    ?>
 </section>
 
 <form class="grupo-salir" method="POST" action="grupo.php"

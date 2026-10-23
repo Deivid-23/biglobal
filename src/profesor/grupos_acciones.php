@@ -7,7 +7,7 @@
  */
 
 require_once __DIR__ . "/../../app/bootstrap.php";
-require_once __DIR__ . "/../../app/Models/GrupoModel.php";
+require_once __DIR__ . "/../../app/Models/TareaModel.php";
 
 protegerRol("docente");
 require_once __DIR__ . "/verificar_aprobado.php";
@@ -104,6 +104,40 @@ try {
         case "eliminar_material":
             $ok = GrupoModel::eliminarMaterial($conexion, (int) ($_POST["material_id"] ?? 0), $grupoId);
             volverGrupo($ok ? "ok" : "error", $ok ? "Material eliminado." : "El material ya no existe.", $base . "&tab=material");
+
+        /* ---------- Tareas ---------- */
+        case "crear_tarea":
+            if (!TareaModel::disponible($conexion)) {
+                volverGrupo("error", "Las tareas aún no están disponibles.", $base);
+            }
+            $r = TareaModel::crear($conexion, $grupo, $docenteId, $_POST, $_FILES["adjuntos"] ?? null);
+            if (is_string($r)) {
+                volverGrupo("error", $r, $base . "&tab=tareas");
+            }
+            volverGrupo("ok", "Tarea publicada. Les avisamos a los estudiantes.", $base . "&tab=tareas&tarea=" . $r);
+
+        case "editar_tarea":
+        case "eliminar_tarea":
+        case "calificar":
+            $tarea = TareaModel::disponible($conexion) ? TareaModel::deGrupo($conexion, (int) ($_POST["tarea_id"] ?? 0), $grupoId) : null;
+            if (!$tarea) {
+                volverGrupo("error", "La tarea ya no existe.", $base . "&tab=tareas");
+            }
+            $urlTarea = $base . "&tab=tareas&tarea=" . (int) $tarea["id"];
+
+            if ($accion === "eliminar_tarea") {
+                TareaModel::eliminar($conexion, (int) $tarea["id"], $grupoId);
+                volverGrupo("ok", "Tarea eliminada con sus entregas.", $base . "&tab=tareas");
+            }
+            if ($accion === "editar_tarea") {
+                $quitar = array_map("intval", (array) ($_POST["quitar_adjunto"] ?? []));
+                $r = TareaModel::editar($conexion, $tarea, $_POST, $_FILES["adjuntos"] ?? null, $quitar);
+                volverGrupo($r === true ? "ok" : "error", $r === true ? "Tarea guardada." : $r, $urlTarea . "#editar-tarea");
+            }
+            $entregaId = (int) ($_POST["entrega_id"] ?? 0);
+            $r = TareaModel::calificar($conexion, $grupo, $tarea, $entregaId, $docenteId,
+                (string) ($_POST["puntaje"] ?? ""), (string) ($_POST["comentario"] ?? ""));
+            volverGrupo($r === true ? "ok" : "error", $r === true ? "Calificación guardada. Le avisamos al estudiante." : $r, $urlTarea . "#entrega-" . $entregaId);
 
         default:
             volverGrupo("error", "Acción no válida.", $base);

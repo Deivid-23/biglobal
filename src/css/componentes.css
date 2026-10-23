@@ -517,3 +517,34 @@ textarea.entrada { min-height: 110px; padding: var(--esp-3) var(--esp-4); resize
 .grupo-progreso { display: flex; align-items: center; gap: var(--esp-2); margin-top: var(--esp-2); max-width: 320px; }
 .grupo-progreso .progreso { flex: 1; height: 8px; }
 .grupo-progreso span { font-size: var(--texto-xs); font-weight: 700; color: var(--texto-suave); }
+
+/* ---------- GRUPOS: tareas y entregas (docente y estudiante) ---------- */
+.grupo-adjuntos { list-style: none; margin: var(--esp-3) 0 0; padding: 0; display: grid; gap: var(--esp-2); }
+.grupo-adjuntos li { display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-1) var(--esp-3); }
+.grupo-adjuntos__nombre { display: inline-flex; align-items: center; gap: var(--esp-2); font-weight: 700; overflow-wrap: anywhere; }
+.grupo-adjuntos small { color: var(--texto-suave); font-size: var(--texto-xs); }
+.grupo-adjuntos audio { width: 100%; max-width: 360px; }
+
+.grupo-tarea__texto,
+.grupo-entrega__texto { margin-top: var(--esp-3); line-height: 1.65; overflow-wrap: anywhere; }
+.grupo-tarea__meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-2); color: var(--texto-suave); font-size: var(--texto-sm); }
+
+.grupo-entregas { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--esp-3); }
+.grupo-entrega { padding: var(--esp-4); border: 1px solid var(--borde); border-radius: var(--radio); }
+.grupo-entrega--vacia { background: var(--neutro-100); border-style: dashed; }
+.grupo-calificar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--esp-3);
+    margin-top: var(--esp-4);
+    padding-top: var(--esp-3);
+    border-top: 1px solid var(--borde);
+}
+.grupo-calificar .campo { margin: 0; }
+.grupo-calificar__nota { flex: 0 0 140px; }
+.grupo-calificar__comentario { flex: 1 1 240px; }
+.grupo-calificar .pnl-form__acciones { margin: 0; }
+
+.grupo-casilla { display: flex; align-items: center; gap: var(--esp-2); font-size: var(--texto-sm); }
+.grupo-casilla input { width: 18px; height: 18px; flex: none; }
