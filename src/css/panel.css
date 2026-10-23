@@ -402,7 +402,10 @@ a.pnl-dato:active { transform: translateY(1px); }
 }
 
 /* ---------- Tablas ---------- */
+/* position: relative hace que los textos .sr-only (position: absolute) de las
+   celdas queden dentro de la caja; sin eso estiraban toda la página en celular */
 .pnl-tabla-caja {
+    position: relative;
     overflow-x: auto;
     margin: 0 calc(var(--esp-5) * -1);
     padding: 0 var(--esp-5);
