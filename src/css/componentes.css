@@ -422,3 +422,98 @@ textarea.entrada { min-height: 110px; padding: var(--esp-3) var(--esp-4); resize
 
 .personalizar [data-personalizar-nota] { margin-top: var(--esp-3); }
 .personalizar__estado { min-height: 1.4em; margin-top: var(--esp-2); color: var(--verde-700); font-size: var(--texto-sm); font-weight: 700; }
+
+/* ---------- GRUPOS: tablón y material (docente y estudiante) ---------- */
+.grupo-seccion { margin-top: var(--esp-5); }
+
+.grupo-codigo {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: var(--texto-xl);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--azul-800);
+}
+.grupo-codigo--sm { font-size: var(--texto-sm); letter-spacing: 0.08em; }
+
+.grupo-avatar {
+    flex: none;
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--azul-100);
+    color: var(--azul-800);
+    font-family: var(--fuente-titulo);
+    font-size: var(--texto-sm);
+    font-weight: 800;
+}
+.grupo-avatar--sm { width: 32px; height: 32px; font-size: var(--texto-xs); }
+
+.grupo-tablon,
+.grupo-material { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--esp-4); }
+
+.grupo-anuncio,
+.grupo-material__item {
+    min-width: 0;
+    padding: var(--esp-5);
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio-lg);
+}
+
+.grupo-anuncio__cabecera,
+.grupo-material__cabecera { display: flex; align-items: center; gap: var(--esp-3); }
+.grupo-anuncio__autor { flex: 1; min-width: 0; display: grid; }
+.grupo-anuncio__autor strong { font-family: var(--fuente-titulo); overflow-wrap: anywhere; }
+.grupo-anuncio__autor small,
+.grupo-comentario__autor small { color: var(--texto-suave); font-size: var(--texto-xs); }
+.grupo-anuncio__texto { margin-top: var(--esp-3); line-height: 1.65; overflow-wrap: anywhere; }
+
+.grupo-comentarios { margin-top: var(--esp-4); padding-top: var(--esp-3); border-top: 1px solid var(--borde); }
+.grupo-comentarios__total { font-size: var(--texto-xs); font-weight: 700; color: var(--texto-suave); }
+.grupo-comentarios__lista { list-style: none; margin: var(--esp-2) 0 0; padding: 0; display: grid; gap: var(--esp-3); }
+.grupo-comentario { display: flex; align-items: flex-start; gap: var(--esp-2); }
+.grupo-comentario__cuerpo { flex: 1; min-width: 0; }
+.grupo-comentario__autor { display: flex; flex-wrap: wrap; gap: 0 var(--esp-2); align-items: baseline; font-size: var(--texto-sm); }
+.grupo-comentario__texto { font-size: var(--texto-sm); overflow-wrap: anywhere; }
+.grupo-comentar { display: flex; gap: var(--esp-2); margin-top: var(--esp-3); }
+.grupo-comentar .entrada { flex: 1; min-width: 0; min-height: 40px; }
+
+.grupo-material__icono {
+    flex: none;
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radio);
+    background: var(--azul-50);
+    color: var(--marca-texto);
+}
+.grupo-material__cuerpo { flex: 1; min-width: 0; }
+.grupo-material__titulo { font-family: var(--fuente-titulo); font-weight: 800; overflow-wrap: anywhere; }
+.grupo-material__meta { color: var(--texto-suave); font-size: var(--texto-xs); overflow-wrap: anywhere; }
+.grupo-material__texto { margin-top: var(--esp-3); font-size: var(--texto-sm); overflow-wrap: anywhere; }
+.grupo-material__item > .boton { margin-top: var(--esp-3); max-width: 100%; }
+.grupo-material__audio { display: block; width: 100%; margin-top: var(--esp-3); }
+.grupo-material__imagen {
+    display: block;
+    max-width: 100%;
+    max-height: 320px;
+    margin-top: var(--esp-3);
+    border-radius: var(--radio);
+    border: 1px solid var(--borde);
+}
+.grupo-material__video {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    margin-top: var(--esp-3);
+    overflow: hidden;
+    border-radius: var(--radio);
+    background: var(--neutro-100);
+}
+.grupo-material__video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+.grupo-progreso { display: flex; align-items: center; gap: var(--esp-2); margin-top: var(--esp-2); max-width: 320px; }
+.grupo-progreso .progreso { flex: 1; height: 8px; }
+.grupo-progreso span { font-size: var(--texto-xs); font-weight: 700; color: var(--texto-suave); }

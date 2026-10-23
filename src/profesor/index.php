@@ -12,6 +12,7 @@ require_once __DIR__ . "/../../app/Models/ContenidoModel.php";
 require_once __DIR__ . "/../../app/Models/QuizModel.php";
 require_once __DIR__ . "/../../app/Models/ClaseModel.php";
 require_once __DIR__ . "/../../app/Models/RevisionModel.php";
+require_once __DIR__ . "/../../app/Models/GrupoModel.php";
 
 protegerRol("docente");
 
@@ -54,7 +55,7 @@ unset($_SESSION["flash_docente"]);
    PÁGINA ACTUAL
 ========================================================= */
 $pagina = $_GET["page"] ?? "inicio";
-$paginasValidas = ["inicio", "cursos", "curso", "lecciones", "actividades", "preguntas", "clases", "perfil"];
+$paginasValidas = ["inicio", "cursos", "curso", "lecciones", "actividades", "preguntas", "clases", "grupos", "grupo", "perfil"];
 if (!in_array($pagina, $paginasValidas, true)) $pagina = "inicio";
 
 $cursoIdActual = isset($_GET["id"]) ? (int) $_GET["id"] : 0;
@@ -175,6 +176,8 @@ $titulos = [
     "actividades" => "Actividades",
     "preguntas"   => "Preguntas",
     "clases"      => "Clases en vivo",
+    "grupos"      => "Grupos",
+    "grupo"       => "Grupo",
     "perfil"      => "Mi perfil",
 ];
 
@@ -193,7 +196,7 @@ if ($cursoActual && !empty($leccionesCurso)) {
 }
 
 // En el menú, "curso" se marca como "Mis cursos" y "preguntas" como "Actividades"
-$activa = $pagina === "curso" ? "cursos" : ($pagina === "preguntas" ? "actividades" : $pagina);
+$activa = $pagina === "curso" ? "cursos" : ($pagina === "preguntas" ? "actividades" : ($pagina === "grupo" ? "grupos" : $pagina));
 
 /* Número de preguntas de cada actividad del docente (null = aún no existen las tablas) */
 $numPreguntas = QuizModel::disponible($conexion)
@@ -226,6 +229,36 @@ if ($pagina === "clases") {
         }
         $datosVista["participantes"] = ClaseModel::participantes($conexion, $claseId);
     }
+}
+
+/* Grupos (?page=grupos) y un grupo (?page=grupo&grupo=ID&tab=tablon|material|estudiantes): solo los del docente */
+if ($pagina === "grupos" || $pagina === "grupo") {
+    $datosVista["gruposDisponibles"] = GrupoModel::disponible($conexion);
+    if (!$datosVista["gruposDisponibles"] && $pagina === "grupo") {
+        $pagina = "grupos";
+    }
+}
+if ($pagina === "grupos") {
+    $datosVista["grupos"] = $datosVista["gruposDisponibles"] ? GrupoModel::gruposDocente($conexion, $docenteId) : [];
+}
+if ($pagina === "grupo") {
+    $grupoActual = GrupoModel::deDocente($conexion, (int) ($_GET["grupo"] ?? 0), $docenteId);
+    if (!$grupoActual) {
+        $_SESSION["flash_docente"] = ["tipo" => "error", "mensaje" => "El grupo no existe o no es tuyo."];
+        header("Location: index.php?page=grupos");
+        exit;
+    }
+    $tab = in_array($_GET["tab"] ?? "", ["tablon", "material", "estudiantes"], true) ? $_GET["tab"] : "tablon";
+    $titulos["grupo"] = $grupoActual["nombre"];
+    $datosVista += [
+        "grupoActual" => $grupoActual,
+        "tab"         => $tab,
+        "anuncios"    => $tab === "tablon" ? GrupoModel::anuncios($conexion, (int) $grupoActual["id"]) : [],
+        "material"    => $tab === "material" ? GrupoModel::material($conexion, (int) $grupoActual["id"]) : [],
+        "progreso"    => $tab === "estudiantes" ? GrupoModel::miembrosConProgreso($conexion, $grupoActual) : ["total" => null, "miembros" => []],
+        "acceptArchivo" => Archivo::accept(GrupoModel::GRUPOS_ARCHIVO),
+        "tiposArchivo"  => Archivo::textoTipos(GrupoModel::GRUPOS_ARCHIVO),
+    ];
 }
 
 /* Preguntas de una actividad (?page=preguntas&actividad=...): solo si es de un curso del docente */

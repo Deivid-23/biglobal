@@ -21,13 +21,6 @@ class DocenteSolicitudModel
     public const MAX_ARCHIVOS = 5;
     public const MAX_BYTES = 5 * 1024 * 1024;
 
-    /** Tipo => [extensión, firma inicial del archivo] */
-    private const TIPOS = [
-        "application/pdf" => ["pdf", "%PDF-"],
-        "image/jpeg"      => ["jpg", "\xFF\xD8\xFF"],
-        "image/png"       => ["png", "\x89PNG\r\n\x1A\n"],
-    ];
-
     public static function disponible(PDO $c): bool
     {
         static $disponible = null;
@@ -55,74 +48,11 @@ class DocenteSolicitudModel
      */
     public static function validarArchivos($campo, int $yaGuardados = 0, bool $obligatorio = true)
     {
-        $lista = [];
-        if (is_array($campo) && isset($campo["name"])) {
-            foreach ((array) $campo["name"] as $i => $nombre) {
-                $error = (int) (((array) $campo["error"])[$i] ?? UPLOAD_ERR_NO_FILE);
-                if ($error === UPLOAD_ERR_NO_FILE) {
-                    continue;
-                }
-                $lista[] = [
-                    "nombre" => (string) $nombre,
-                    "tmp"    => (string) (((array) $campo["tmp_name"])[$i] ?? ""),
-                    "tamano" => (int) (((array) $campo["size"])[$i] ?? 0),
-                    "error"  => $error,
-                ];
-            }
+        $r = Archivo::validar($campo, ["pdf", "imagen"], self::MAX_ARCHIVOS, $yaGuardados, $obligatorio);
+        if (!is_array($r)) {
+            return $obligatorio && str_starts_with((string) $r, "Sube al menos") ? "Sube al menos un diploma o certificado (PDF, JPG o PNG)." : $r;
         }
-
-        if (!$lista) {
-            return $obligatorio ? "Sube al menos un diploma o certificado (PDF, JPG o PNG)." : [];
-        }
-        if (count($lista) + $yaGuardados > self::MAX_ARCHIVOS) {
-            return "Puedes subir máximo " . self::MAX_ARCHIVOS . " archivos en total.";
-        }
-
-        $archivos = [];
-        foreach ($lista as $a) {
-            if ($a["error"] === UPLOAD_ERR_INI_SIZE || $a["error"] === UPLOAD_ERR_FORM_SIZE || $a["tamano"] > self::MAX_BYTES) {
-                return "«" . self::nombreLimpio($a["nombre"], "") . "» pesa más de 5 MB.";
-            }
-            if ($a["error"] !== UPLOAD_ERR_OK || !is_uploaded_file($a["tmp"])) {
-                return "No pudimos recibir uno de los archivos. Inténtalo de nuevo.";
-            }
-
-            $contenido = (string) file_get_contents($a["tmp"]);
-            $tipo = self::tipoReal($contenido);
-            if ($tipo === null || strlen($contenido) === 0) {
-                return "«" . self::nombreLimpio($a["nombre"], "") . "» no es un PDF, JPG o PNG válido.";
-            }
-
-            $archivos[] = [
-                "nombre"    => self::nombreLimpio($a["nombre"], self::TIPOS[$tipo][0]),
-                "mime"      => $tipo,
-                "tamano"    => strlen($contenido),
-                "sha256"    => hash("sha256", $contenido),
-                "contenido" => $contenido,
-            ];
-        }
-        return $archivos;
-    }
-
-    /** El tipo según los primeros bytes (no la extensión ni lo que diga el navegador). */
-    private static function tipoReal(string $contenido): ?string
-    {
-        foreach (self::TIPOS as $mime => [$ext, $firma]) {
-            if (strncmp($contenido, $firma, strlen($firma)) === 0) {
-                return $mime;
-            }
-        }
-        return null;
-    }
-
-    /** "../../Mi diploma (final).PDF" -> "Mi diploma (final).pdf" (sin rutas ni caracteres raros). */
-    private static function nombreLimpio(string $nombre, string $extension): string
-    {
-        $nombre = basename(str_replace("\\", "/", $nombre));
-        $base = pathinfo($nombre, PATHINFO_FILENAME);
-        $base = trim((string) preg_replace('/[^\p{L}\p{N} ._()\-]+/u', "", $base));
-        $base = mb_substr($base !== "" ? $base : "documento", 0, 120);
-        return $extension !== "" ? $base . "." . $extension : $base;
+        return $r;
     }
 
     /* =========================================================
@@ -217,16 +147,7 @@ class DocenteSolicitudModel
     /** Envía el archivo al navegador de forma segura y termina. */
     public static function servir(array $doc): void
     {
-        $tipo = isset(self::TIPOS[$doc["tipo_mime"]]) ? $doc["tipo_mime"] : "application/octet-stream";
-        $nombre = str_replace(['"', "\r", "\n"], "", (string) $doc["nombre_original"]);
-        header("Content-Type: " . $tipo);
-        header("Content-Length: " . strlen((string) $doc["contenido"]));
-        header("Content-Disposition: inline; filename=\"" . preg_replace('/[^\x20-\x7E]/', "_", $nombre) . "\"; filename*=UTF-8''" . rawurlencode($nombre));
-        header("X-Content-Type-Options: nosniff");
-        header("Content-Security-Policy: sandbox; default-src 'none'; img-src 'self'; style-src 'unsafe-inline'");
-        header("Cache-Control: private, no-store");
-        echo $doc["contenido"];
-        exit;
+        Archivo::servir($doc);
     }
 
     /* =========================================================
@@ -261,6 +182,6 @@ class DocenteSolicitudModel
 
     public static function pesoLegible(int $bytes): string
     {
-        return $bytes >= 1048576 ? number_format($bytes / 1048576, 1, ",", ".") . " MB" : max(1, (int) round($bytes / 1024)) . " KB";
+        return Archivo::peso($bytes);
     }
 }

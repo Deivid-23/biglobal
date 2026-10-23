@@ -950,3 +950,33 @@ button.pnl-nav__enlace { width: 100%; border: 0; background: none; cursor: point
 .revision-item__contenido summary { min-height: 32px; display: inline-flex; align-items: center; font-weight: 700; color: var(--azul-700); cursor: pointer; }
 .revision-item__contenido > * + * { margin-top: var(--esp-2); }
 .revision-item__form { margin-top: var(--esp-4); padding-top: var(--esp-4); border-top: 1px solid var(--borde); }
+
+/* ---------- Grupos (docente) ---------- */
+.grupo-codigo-caja {
+    display: grid;
+    justify-items: start;
+    gap: var(--esp-1);
+    padding: var(--esp-3) var(--esp-4);
+    border-radius: var(--radio);
+    background: var(--azul-50);
+    border: 1px solid var(--azul-100);
+}
+.grupo-tipos { display: flex; flex-direction: row; flex-wrap: wrap; gap: var(--esp-2); margin: 0; padding: 0; border: 0; }
+.grupo-tipos legend { width: 100%; margin-bottom: var(--esp-2); }
+.grupo-tipo { position: relative; }
+.grupo-tipo input { position: absolute; opacity: 0; pointer-events: none; }
+.grupo-tipo span {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--esp-2);
+    min-height: 40px;
+    padding: 0 var(--esp-4);
+    border: 1px solid var(--borde-fuerte);
+    border-radius: var(--radio-pill);
+    font-family: var(--fuente-titulo);
+    font-size: var(--texto-sm);
+    font-weight: 700;
+    cursor: pointer;
+}
+.grupo-tipo input:checked + span { background: var(--azul-600); border-color: var(--azul-600); color: #fff; }
+.grupo-tipo input:focus-visible + span { outline: 2px solid var(--azul-600); outline-offset: 2px; }

@@ -7,6 +7,7 @@ require_once __DIR__ . "/../Models/QuizModel.php";
 require_once __DIR__ . "/../Models/PagoModel.php";
 require_once __DIR__ . "/../Models/ClaseModel.php";
 require_once __DIR__ . "/../Models/ContenidoModel.php";
+require_once __DIR__ . "/../Models/GrupoModel.php";
 require_once __DIR__ . "/../Views/estudiante/_helpers.php";
 
 /**
@@ -28,6 +29,9 @@ require_once __DIR__ . "/../Views/estudiante/_helpers.php";
  *   estudiante/responder_actividad.php (POST) -> responderActividad()
  *   estudiante/index.php?page=plan          -> plan()   (Mi plan y pagos)
  *   estudiante/pagar.php (POST)             -> pagar()
+ *   estudiante/index.php?page=grupos        -> grupos()   (Mis grupos)
+ *   estudiante/index.php?page=grupo&id=N    -> grupo()
+ *   estudiante/grupo.php (POST)             -> accionGrupo()
  */
 class EstudianteController
 {
@@ -801,6 +805,97 @@ class EstudianteController
         $_SESSION["flash_estudiante"] = ["tipo" => "info", "mensaje" => $r["mensaje"]];
         header("Location: index.php?page=clases#clase-" . $claseId);
         exit;
+    }
+
+    /* =========================================================
+       GRUPOS (tipo Classroom)
+       GET  index.php?page=grupos               -> Mis grupos + entrar con código
+       GET  index.php?page=grupo&id=N[&tab=...] -> tablón o material
+       POST grupo.php (accion=unirse|salir|comentar|borrar_comentario)
+    ========================================================= */
+    public function grupos(): void
+    {
+        $disponible = GrupoModel::disponible($this->conexion);
+        $this->render("grupos", "grupos", "Mis grupos", [
+            "disponible" => $disponible,
+            "grupos"     => $disponible ? GrupoModel::gruposEstudiante($this->conexion, $this->usuarioId) : [],
+        ]);
+    }
+
+    public function grupo(): void
+    {
+        $c = $this->conexion;
+        $grupo = GrupoModel::disponible($c) ? GrupoModel::paraEstudiante($c, (int) ($_GET["id"] ?? 0), $this->usuarioId) : null;
+        if (!$grupo) {
+            $_SESSION["flash_estudiante"] = ["tipo" => "error", "mensaje" => "Ese grupo no existe, se archivó o ya no estás en él."];
+            header("Location: index.php?page=grupos");
+            exit;
+        }
+        $tab = ($_GET["tab"] ?? "") === "material" ? "material" : "tablon";
+        $this->render("grupo", "grupos", $grupo["nombre"], [
+            "grupo"    => $grupo,
+            "tab"      => $tab,
+            "anuncios" => $tab === "tablon" ? GrupoModel::anuncios($c, (int) $grupo["id"]) : [],
+            "material" => $tab === "material" ? GrupoModel::material($c, (int) $grupo["id"]) : [],
+        ]);
+    }
+
+    public function accionGrupo(): void
+    {
+        if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+            header("Location: index.php?page=grupos");
+            exit;
+        }
+        verificarCsrfFormulario($_POST["csrf_token"] ?? "");
+
+        $c = $this->conexion;
+        $volver = function (string $tipo, string $mensaje, string $url = "index.php?page=grupos"): void {
+            $_SESSION["flash_estudiante"] = ["tipo" => $tipo, "mensaje" => $mensaje];
+            header("Location: " . $url);
+            exit;
+        };
+        if (!GrupoModel::disponible($c)) {
+            $volver("error", "Los grupos aún no están disponibles.");
+        }
+
+        $accion = (string) ($_POST["accion"] ?? "");
+
+        if ($accion === "unirse") {
+            // Pocos intentos: así nadie adivina códigos probando
+            $clave = "grupo_codigo:usuario:" . $this->usuarioId;
+            if (!LimiteIntentos::permitir($clave, 10, 900)) {
+                $volver("error", "Probaste muchos códigos seguidos. Espera unos minutos e inténtalo de nuevo.");
+            }
+            $r = GrupoModel::unirse($c, (string) ($_POST["codigo"] ?? ""), $this->usuarioId);
+            $volver($r["ok"] ? "exito" : "error", $r["mensaje"], $r["ok"] ? "index.php?page=grupo&id=" . $r["grupo_id"] : "index.php?page=grupos");
+        }
+
+        // El resto: tiene que estar en el grupo (y el grupo activo)
+        $grupo = GrupoModel::paraEstudiante($c, (int) ($_POST["grupo_id"] ?? 0), $this->usuarioId);
+        if (!$grupo) {
+            $volver("error", "Ese grupo no existe, se archivó o ya no estás en él.");
+        }
+        $grupoId = (int) $grupo["id"];
+        $anuncioId = (int) ($_POST["anuncio_id"] ?? 0);
+        $base = "index.php?page=grupo&id=" . $grupoId;
+
+        if ($accion === "salir") {
+            GrupoModel::salir($c, $grupoId, $this->usuarioId);
+            $volver("info", "Saliste del grupo «" . $grupo["nombre"] . "». Puedes volver con el código.");
+        }
+        if ($accion === "comentar") {
+            if (!LimiteIntentos::permitir("grupo_comentario:usuario:" . $this->usuarioId, 30, 600)) {
+                $volver("error", "Escribiste muchos comentarios seguidos. Espera unos minutos.", $base . "#anuncio-" . $anuncioId);
+            }
+            $r = GrupoModel::comentar($c, $grupoId, $anuncioId, $this->usuarioId, (string) ($_POST["texto"] ?? ""));
+            $volver($r === true ? "exito" : "error", $r === true ? "Comentario publicado." : $r, $base . "#anuncio-" . $anuncioId);
+        }
+        if ($accion === "borrar_comentario") {
+            // Solo los comentarios propios
+            $ok = GrupoModel::borrarComentario($c, $grupoId, (int) ($_POST["comentario_id"] ?? 0), $this->usuarioId);
+            $volver($ok ? "exito" : "error", $ok ? "Comentario borrado." : "Solo puedes borrar tus propios comentarios.", $base . "#anuncio-" . $anuncioId);
+        }
+        $volver("error", "Acción no válida.", $base);
     }
 
     /** Suscripción cancelada que todavía se puede volver a renovar sola. */

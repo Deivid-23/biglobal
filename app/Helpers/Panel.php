@@ -155,6 +155,7 @@ class Panel
                     ["lecciones",   "Lecciones",   "fa-book-open",  "../profesor/index.php?page=lecciones"],
                     ["actividades", "Actividades", "fa-list-check", "../profesor/index.php?page=actividades"],
                     ["clases",      "Clases en vivo", "fa-video",   "../profesor/index.php?page=clases"],
+                    ["grupos",      "Grupos",      "fa-people-group", "../profesor/index.php?page=grupos"],
                 ],
             ];
         }

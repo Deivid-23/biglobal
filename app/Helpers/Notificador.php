@@ -46,6 +46,10 @@ class Notificador
         "clase_cupo"        => "fa-video",
         "clase_cancelada"   => "fa-calendar-xmark",
         "clase_invitacion"  => "fa-gift",
+        "grupo_anuncio"     => "fa-bullhorn",
+        "grupo_material"    => "fa-folder-open",
+        "grupo_miembro"     => "fa-user-group",
+        "grupo_comentario"  => "fa-comment",
     ];
 
     /**
@@ -134,6 +138,10 @@ class Notificador
         "clase_invitacion"   => "opcional",
         "contenido_revisado" => "opcional",
         "clase_cancelada"    => "campana",
+        "grupo_anuncio"      => "opcional",
+        "grupo_material"     => "campana",
+        "grupo_miembro"      => "campana",
+        "grupo_comentario"   => "campana",
     ];
 
     /** ¿Existe usuarios.correos_opcionales? (antes del SQL: todos reciben) */

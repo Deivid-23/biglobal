@@ -292,3 +292,36 @@ document.addEventListener("input", (e) => {
         if (radio) radio.checked = true;
     }
 });
+
+/* Grupos: "Copiar" el código del grupo */
+document.addEventListener("click", (e) => {
+    const boton = e.target.closest ? e.target.closest("[data-copiar]") : null;
+    if (!boton) return;
+    const texto = boton.dataset.copiar;
+    const listo = () => {
+        const antes = boton.innerHTML;
+        boton.textContent = "¡Copiado!";
+        setTimeout(() => { boton.innerHTML = antes; }, 2000);
+    };
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(texto).then(listo, () => window.prompt("Copia el código:", texto));
+    } else {
+        window.prompt("Copia el código:", texto);
+    }
+});
+
+/* Grupos: en "Agregar material" se ve el campo de archivo o el de enlace según el tipo */
+document.querySelectorAll("form[data-material]").forEach((form) => {
+    const mostrar = () => {
+        const elegido = form.querySelector("[data-material-tipo]:checked");
+        const tipo = elegido ? elegido.value : "archivo";
+        form.querySelectorAll("[data-para-tipo]").forEach((campo) => {
+            const visible = campo.dataset.paraTipo.split(" ").includes(tipo);
+            campo.hidden = !visible;
+            const entrada = campo.querySelector("input");
+            if (entrada) entrada.required = visible;
+        });
+    };
+    form.addEventListener("change", mostrar);
+    mostrar();
+});

@@ -10,9 +10,10 @@ require_once __DIR__ . "/_helpers.php";
 $menu = [
     ["page" => "inicio",       "texto" => "Inicio",          "icono" => "fa-house"],
     ["page" => "cursos",       "texto" => "Explorar cursos", "icono" => "fa-compass"],
-    ["page" => "mis-cursos",   "texto" => "Mis cursos",      "icono" => "fa-book-open"],
+    ["page" => "mis-cursos",   "texto" => "Mis cursos",      "icono" => "fa-book-open", "corto" => "Cursos"],
     ["page" => "clases",       "texto" => "Clases en vivo",  "icono" => "fa-video", "corto" => "Clases"],
-    ["page" => "certificados", "texto" => "Certificados",    "icono" => "fa-award"],
+    ["page" => "grupos",       "texto" => "Mis grupos",      "icono" => "fa-people-group", "corto" => "Grupos"],
+    ["page" => "certificados", "texto" => "Certificados",    "icono" => "fa-award", "corto" => "Diplomas"],
 ];
 ?>
 <!DOCTYPE html>
