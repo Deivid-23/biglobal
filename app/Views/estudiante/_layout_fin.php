@@ -5,7 +5,7 @@
 
 <!-- ================= BARRA INFERIOR (celular) ================= -->
 <nav class="est-tabbar" aria-label="Principal">
-    <?php foreach ($menu as $item): $activo = $paginaActiva === $item["page"]; ?>
+    <?php foreach (array_filter($menu, fn($m) => ($m["tabbar"] ?? true) !== false) as $item): $activo = $paginaActiva === $item["page"]; ?>
         <a class="est-tabbar__enlace <?= $activo ? "es-activo" : "" ?>"
            href="index.php?page=<?= e($item["page"]) ?>"
            <?= $activo ? 'aria-current="page"' : "" ?>>

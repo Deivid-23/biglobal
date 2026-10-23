@@ -184,6 +184,7 @@ class Panel
             ["clases",      "Clases en vivo", "fa-video",    "../admin/index.php?page=clases"],
             ["solicitudes", "Solicitudes", "fa-user-clock",  "../admin/index.php?page=solicitudes", $solicitudesPendientes],
             ["revision",    "Revisión de contenido", "fa-clipboard-check", "../admin/index.php?page=revision", $revisionesPendientes],
+            ["ruta",        "Ruta de aprendizaje", "fa-route",  "../admin/index.php?page=ruta"],
         ];
 
         return $menu;

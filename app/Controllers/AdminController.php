@@ -6,6 +6,7 @@ require_once __DIR__ . "/../Models/QuizModel.php";
 require_once __DIR__ . "/../Models/ClaseModel.php";
 require_once __DIR__ . "/../Models/DocenteSolicitudModel.php";
 require_once __DIR__ . "/../Models/RevisionModel.php";
+require_once __DIR__ . "/../Models/RutaModel.php";
 
 /**
  * AdminController
@@ -16,7 +17,7 @@ require_once __DIR__ . "/../Models/RevisionModel.php";
  * SuperAdminController y se valida otra vez en el servidor.
  *
  * Páginas: inicio, usuarios, cursos, idiomas, lecciones, actividades,
- *          preguntas (de una actividad), solicitudes, perfil.
+ *          preguntas (de una actividad), solicitudes, ruta (ruta de aprendizaje), perfil.
  * POST:    accion=crear (modal "Nuevo"), accion=editar, accion=eliminar,
  *          accion=guardar_pregunta, accion=eliminar_pregunta
  */
@@ -140,6 +141,67 @@ class AdminController
         $avisados = ClaseModel::cancelar($this->c, (int) $clase["id"], (string) ($_POST["motivo"] ?? ""));
         Auditoria::registrar("clase.cancelar", "clase", (int) $clase["id"], $clase["titulo"] . " · " . ClaseModel::fechaHora($clase["inicio"]));
         Panel::volver($volver, "ok", "Clase cancelada. Avisamos a " . plural_panel($avisados, "estudiante", "estudiantes") . ".");
+    }
+
+    /* =========================================================
+       RUTA DE APRENDIZAJE
+       ?page=ruta[&idioma=ID][&nivel=ID]          -> unidades y lecciones del nivel
+       ?page=ruta&leccion=ID[&ejercicio=ID]       -> ejercicios de la lección
+       Los cambios van por POST a src/admin/ruta_acciones.php
+    ========================================================= */
+    public function ruta(): void
+    {
+        $c = $this->c;
+        $datos = ["disponible" => RutaModel::disponible($c), "idiomas" => [], "niveles" => [], "nivel" => null,
+                  "arbol" => [], "leccion" => null, "ejercicios" => [], "ejercicioEditar" => null, "pendientesVideo" => []];
+        if (!$datos["disponible"]) {
+            $this->render("ruta", "ruta", "Ruta de aprendizaje", $datos);
+            return;
+        }
+
+        $leccion = (int) ($_GET["leccion"] ?? 0) > 0 ? RutaModel::leccion($c, (int) $_GET["leccion"]) : null;
+        if (isset($_GET["leccion"]) && !$leccion) {
+            Panel::volver("index.php?page=ruta", "error", "La lección ya no existe.");
+        }
+        $nivel = $leccion ? RutaModel::nivel($c, (int) $leccion["nivel_id"]) : null;
+
+        $datos["idiomas"] = RutaModel::idiomas($c, false);
+        $idiomaId = $nivel ? (int) $nivel["idioma_id"] : (int) ($_GET["idioma"] ?? 0);
+        if (!in_array($idiomaId, array_map("intval", array_column($datos["idiomas"], "id")), true)) {
+            $idiomaId = (int) ($datos["idiomas"][0]["id"] ?? 0);
+        }
+        $datos["idiomaId"] = $idiomaId;
+        $datos["niveles"] = $idiomaId ? RutaModel::niveles($c, $idiomaId, false) : [];
+
+        if (!$nivel) {
+            $pedido = (int) ($_GET["nivel"] ?? 0);
+            foreach ($datos["niveles"] as $n) {
+                if ((int) $n["id"] === $pedido) {
+                    $nivel = RutaModel::nivel($c, $pedido);
+                }
+            }
+            if (!$nivel && $datos["niveles"]) {
+                $nivel = RutaModel::nivel($c, (int) $datos["niveles"][0]["id"]);
+            }
+        }
+        $datos["nivel"] = $nivel;
+
+        if ($leccion) {
+            $datos["leccion"] = $leccion;
+            $datos["ejercicios"] = RutaModel::ejercicios($c, (int) $leccion["id"], false);
+            $editar = (int) ($_GET["ejercicio"] ?? 0);
+            foreach ($datos["ejercicios"] as $e) {
+                if ((int) $e["id"] === $editar) {
+                    $datos["ejercicioEditar"] = $e;
+                }
+            }
+        } elseif ($nivel) {
+            $datos["arbol"] = RutaModel::arbolAdmin($c, (int) $nivel["id"]);
+            if (strtoupper((string) $nivel["idioma_codigo"]) === "LSC") {
+                $datos["pendientesVideo"] = RutaModel::pendientesVideo($c, $idiomaId);
+            }
+        }
+        $this->render("ruta", "ruta", $leccion ? $leccion["titulo"] : "Ruta de aprendizaje", $datos);
     }
 
     /* =========================================================

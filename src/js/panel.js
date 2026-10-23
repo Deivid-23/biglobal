@@ -325,3 +325,16 @@ document.querySelectorAll("form[data-material]").forEach((form) => {
     form.addEventListener("change", mostrar);
     mostrar();
 });
+
+/* Ruta de aprendizaje (admin): en el formulario de ejercicios solo se ven los campos del tipo elegido */
+document.querySelectorAll("form[data-tipos]").forEach((form) => {
+    const selector = form.querySelector("[data-tipo-selector]");
+    if (!selector) return;
+    const mostrar = () => {
+        form.querySelectorAll("[data-para-tipo]").forEach((campo) => {
+            campo.hidden = !campo.dataset.paraTipo.split(" ").includes(selector.value);
+        });
+    };
+    selector.addEventListener("change", mostrar);
+    mostrar();
+});

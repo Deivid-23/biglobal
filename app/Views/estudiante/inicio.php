@@ -3,7 +3,8 @@
  * Inicio del estudiante.
  * Variables: $estudiante, $leccionesCompletadas, $totalCertificados,
  *            $cursosEnProgreso, $misCursos, $continuar, $sugeridos,
- *            $gamificacion (racha, XP, nivel y medallas; null si no hay tablas)
+ *            $gamificacion (racha, XP, nivel y medallas; null si no hay tablas),
+ *            $ruta (idioma y siguiente lección de la ruta; null si no hay ruta)
  */
 $esNuevo = $leccionesCompletadas === 0;
 ?>
@@ -58,6 +59,24 @@ $esNuevo = $leccionesCompletadas === 0;
         </a>
     <?php endif; ?>
 </section>
+
+<?php if ($ruta):
+    $idiomaRuta = idiomaDeCurso($ruta["idioma"]["nombre"], $ruta["idioma"]["codigo"]);
+    $urlRuta = "index.php?page=ruta&amp;idioma=" . e(rawurlencode($ruta["idioma"]["codigo"]));
+?>
+    <section class="ruta-inicio" aria-labelledby="titulo-ruta-inicio">
+        <span class="idioma idioma--grande <?= e($idiomaRuta["clase"]) ?>" aria-hidden="true"><?= e($idiomaRuta["codigo"]) ?></span>
+        <div class="ruta-inicio__cuerpo">
+            <h2 id="titulo-ruta-inicio"><?= $ruta["empezo"] ? "Continúa tu ruta" : "Empieza tu ruta" ?> · <?= e($ruta["idioma"]["nombre"]) ?></h2>
+            <p><?= $ruta["siguiente"]
+                ? e($ruta["siguiente"]["nivel"]) . " · " . e($ruta["siguiente"]["unidad"]) . ": " . e($ruta["siguiente"]["titulo"])
+                : "Lecciones cortas con ejercicios para avanzar paso a paso." ?></p>
+        </div>
+        <a class="boton boton--primario" href="<?= $ruta["siguiente"] ? "index.php?page=ruta-leccion&amp;id=" . (int) $ruta["siguiente"]["id"] : $urlRuta ?>">
+            <?= $ruta["siguiente"] ? "Seguir" : "Ver la ruta" ?> <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+        </a>
+    </section>
+<?php endif; ?>
 
 <?php if ($gamificacion) { require __DIR__ . "/_gamificacion.php"; } ?>
 

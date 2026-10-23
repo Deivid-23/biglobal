@@ -980,3 +980,17 @@ button.pnl-nav__enlace { width: 100%; border: 0; background: none; cursor: point
 }
 .grupo-tipo input:checked + span { background: var(--azul-600); border-color: var(--azul-600); color: #fff; }
 .grupo-tipo input:focus-visible + span { outline: 2px solid var(--azul-600); outline-offset: 2px; }
+
+/* ---------- Ruta de aprendizaje (admin) ---------- */
+.pnl-pestanas + .pnl-pestanas { margin-top: calc(-1 * var(--esp-3)); }
+.ruta-unidad h2 i { color: var(--marca-texto); }
+.ruta-detalles { margin-top: var(--esp-4); border-top: 1px solid var(--borde); padding-top: var(--esp-3); }
+.ruta-detalles summary {
+    cursor: pointer;
+    font-family: var(--fuente-titulo);
+    font-size: var(--texto-sm);
+    font-weight: 800;
+    color: var(--azul-700);
+}
+.ruta-detalles[open] summary { margin-bottom: var(--esp-3); }
+.ruta-detalles form + form { margin-top: var(--esp-3); }

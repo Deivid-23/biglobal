@@ -8,6 +8,7 @@ require_once __DIR__ . "/../Models/PagoModel.php";
 require_once __DIR__ . "/../Models/ClaseModel.php";
 require_once __DIR__ . "/../Models/ContenidoModel.php";
 require_once __DIR__ . "/../Models/TareaModel.php";
+require_once __DIR__ . "/../Models/RutaModel.php";
 require_once __DIR__ . "/../Views/estudiante/_helpers.php";
 
 /**
@@ -32,6 +33,9 @@ require_once __DIR__ . "/../Views/estudiante/_helpers.php";
  *   estudiante/index.php?page=grupos        -> grupos()   (Mis grupos)
  *   estudiante/index.php?page=grupo&id=N    -> grupo()
  *   estudiante/grupo.php (POST)             -> accionGrupo()
+ *   estudiante/index.php?page=ruta[&idioma=EN][&nivel=A1] -> ruta()  (Mi ruta)
+ *   estudiante/index.php?page=ruta-leccion&id=N           -> rutaLeccion()
+ *   estudiante/ruta_responder.php (POST, JSON)            -> rutaResponder()
  */
 class EstudianteController
 {
@@ -311,6 +315,7 @@ class EstudianteController
         }
 
         $this->render("inicio", "inicio", "Inicio", [
+            "ruta"                 => $this->resumenRuta(),
             "gamificacion"         => $gamificacion,
             "leccionesCompletadas" => $leccionesCompletadas,
             "totalCertificados"    => $totalCertificados,
@@ -937,6 +942,143 @@ class EstudianteController
             $volver($r === true ? "exito" : "error", $r === true ? "¡Entrega enviada! Tu docente ya recibió el aviso." : $r, $urlTarea);
         }
         $volver("error", "Acción no válida.", $base);
+    }
+
+    /* =========================================================
+       RUTA DE APRENDIZAJE
+    ========================================================= */
+
+    /** Para el inicio: idioma reciente y su siguiente lección (o null si no hay ruta). */
+    private function resumenRuta(): ?array
+    {
+        $c = $this->conexion;
+        if (!RutaModel::disponible($c)) {
+            return null;
+        }
+        $idiomas = RutaModel::idiomas($c, true);
+        if (!$idiomas) {
+            return null;
+        }
+        $reciente = RutaModel::idiomaReciente($c, $this->usuarioId);
+        $idioma = $idiomas[0];
+        foreach ($idiomas as $i) {
+            if ((int) $i["id"] === $reciente) {
+                $idioma = $i;
+            }
+        }
+        return [
+            "idioma"    => $idioma,
+            "empezo"    => $reciente !== null,
+            "siguiente" => RutaModel::siguiente($c, (int) $idioma["id"], $this->usuarioId, Plan::esPremium($c, $this->usuarioId)),
+        ];
+    }
+
+    public function ruta(): void
+    {
+        $c = $this->conexion;
+        $disponible = RutaModel::disponible($c);
+        $idiomas = $disponible ? RutaModel::idiomas($c, true) : [];
+        $datos = ["disponible" => $disponible, "idiomas" => $idiomas, "idioma" => null, "mapa" => [], "nivelActivo" => null];
+
+        if ($idiomas) {
+            $pedido = strtoupper(trim((string) ($_GET["idioma"] ?? "")));
+            $reciente = RutaModel::idiomaReciente($c, $this->usuarioId);
+            $idioma = $idiomas[0];
+            foreach ($idiomas as $i) {
+                if ($pedido !== "" ? strtoupper($i["codigo"]) === $pedido : (int) $i["id"] === $reciente) {
+                    $idioma = $i;
+                }
+            }
+            $mapa = RutaModel::mapa($c, (int) $idioma["id"], $this->usuarioId, Plan::esPremium($c, $this->usuarioId));
+
+            // Nivel que se muestra: el pedido, o el que tiene la siguiente lección
+            $nivelPedido = strtoupper(trim((string) ($_GET["nivel"] ?? "")));
+            $nivelActivo = $mapa[0]["codigo"] ?? null;
+            foreach ($mapa as $n) {
+                if ($nivelPedido !== "" && $n["codigo"] === $nivelPedido) {
+                    $nivelActivo = $n["codigo"];
+                    break;
+                }
+                if ($nivelPedido === "" && $n["estado"] === "abierto" && $n["hechas"] < $n["jugables"]) {
+                    $nivelActivo = $n["codigo"];
+                    break;
+                }
+            }
+            $datos = ["idioma" => $idioma, "mapa" => $mapa, "nivelActivo" => $nivelActivo] + $datos;
+        }
+        $this->render("ruta", "ruta", "Mi ruta", $datos);
+    }
+
+    public function rutaLeccion(): void
+    {
+        $c = $this->conexion;
+        $leccion = RutaModel::disponible($c) ? RutaModel::leccion($c, (int) ($_GET["id"] ?? 0)) : null;
+        $volver = function (string $tipo, string $mensaje, string $url = "index.php?page=ruta"): void {
+            $_SESSION["flash_estudiante"] = ["tipo" => $tipo, "mensaje" => $mensaje];
+            header("Location: " . $url);
+            exit;
+        };
+        if (!$leccion || (int) $leccion["publicado"] !== 1 || (int) $leccion["unidad_publicada"] !== 1 || (int) $leccion["nivel_publicado"] !== 1) {
+            $volver("error", "Esa lección no existe o todavía no está publicada.");
+        }
+        $urlRuta = "index.php?page=ruta&idioma=" . rawurlencode($leccion["idioma_codigo"]) . "&nivel=" . rawurlencode($leccion["nivel_codigo"]);
+
+        $estado = RutaModel::estadoLeccion($c, $leccion, $this->usuarioId, Plan::esPremium($c, $this->usuarioId));
+        if ($estado === "premium") {
+            $volver("info", "El nivel " . $leccion["nivel_codigo"] . " es parte de Premium.", "index.php?page=plan");
+        }
+        if ($estado === "bloqueada") {
+            $volver("info", "Primero completa las lecciones anteriores.", $urlRuta);
+        }
+        if (!in_array($estado, ["disponible", "completada"], true)) {
+            $volver("info", "Esa lección está en preparación.", $urlRuta);
+        }
+
+        $ejercicios = RutaModel::ejercicios($c, (int) $leccion["id"], true);
+        RutaModel::iniciarIntento((int) $leccion["id"], $ejercicios);
+        $this->render("ruta_leccion", "ruta", $leccion["titulo"], [
+            "leccion"    => $leccion,
+            "urlRuta"    => $urlRuta,
+            "video"      => Video::reproductor($leccion["video_url"]),
+            "ejercicios" => array_map(fn($e) => RutaModel::vistaPublica($e, (string) $leccion["idioma_codigo"]), $ejercicios),
+            "repaso"     => $estado === "completada",
+        ]);
+    }
+
+    /** POST (fetch) con una respuesta. Contesta JSON. */
+    public function rutaResponder(): void
+    {
+        header("Content-Type: application/json; charset=utf-8");
+        header("Cache-Control: no-store");
+        $responder = function (array $datos, int $codigo = 200): void {
+            http_response_code($codigo);
+            echo json_encode($datos, JSON_UNESCAPED_UNICODE);
+            exit;
+        };
+        if ($_SERVER["REQUEST_METHOD"] !== "POST" || !RutaModel::disponible($this->conexion)) {
+            $responder(["error" => "Petición no válida."], 405);
+        }
+        verificarCsrfFormulario($_POST["csrf_token"] ?? "");
+        if (!LimiteIntentos::permitir("ruta:usuario:" . $this->usuarioId, 400, 600)) {
+            $responder(["error" => "Vas muy rápido. Espera unos minutos."], 429);
+        }
+
+        $respuesta = $_POST["respuesta"] ?? "";
+        if (isset($_POST["respuesta_json"])) {
+            $json = (string) $_POST["respuesta_json"];
+            $respuesta = strlen($json) <= 4000 ? json_decode($json, true) : null;
+        }
+        if (is_string($respuesta) && mb_strlen($respuesta) > 500) {
+            $respuesta = mb_substr($respuesta, 0, 500);
+        }
+
+        try {
+            $r = RutaModel::responder($this->conexion, $this->usuarioId, (int) ($_POST["leccion_id"] ?? 0), (int) ($_POST["ejercicio_id"] ?? 0), $respuesta);
+        } catch (Throwable $e) {
+            error_log("[BiGlobal][ruta] " . $e->getMessage());
+            $responder(["error" => "No pudimos guardar tu respuesta. Inténtalo de nuevo."], 500);
+        }
+        $responder($r, isset($r["error"]) ? 409 : 200);
     }
 
     /** Suscripción cancelada que todavía se puede volver a renovar sola. */
