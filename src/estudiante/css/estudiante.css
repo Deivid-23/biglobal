@@ -1614,6 +1614,61 @@ a.ruta-nodo__boton:active { transform: translateY(4px); box-shadow: 0 2px 0 var(
 .ruta-ficha[data-par="5"] { border-color: var(--rojo-700);   background: var(--rojo-100);    color: var(--rojo-700); }
 .ruta-ficha[data-par="6"] { border-color: var(--texto-suave); background: var(--neutro-100); color: var(--texto); }
 
+/* Dictado y traducir: escribir la frase completa */
+.ruta-escribir { width: 100%; min-height: 88px; font-size: var(--texto-lg); resize: vertical; }
+.ruta-traducir__original {
+    margin-bottom: var(--esp-4);
+    padding: var(--esp-4);
+    border-left: 4px solid var(--azul-600);
+    border-radius: var(--radio);
+    background: var(--azul-50);
+    color: var(--azul-800);
+    font-size: var(--texto-lg);
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+/* Encontrar el error: cada palabra es un botón */
+.ruta-error { display: flex; flex-wrap: wrap; gap: var(--esp-2); }
+.ruta-error__palabra { padding: 0 var(--esp-3); }
+.ruta-error__palabra[aria-checked="true"] { border-color: var(--rojo-700); background: var(--rojo-100); color: var(--rojo-700); box-shadow: 0 3px 0 var(--rojo-700); }
+
+/* Clasificar: grupos y banco de palabras */
+.ruta-clasificar__ayuda { margin-bottom: var(--esp-3); color: var(--texto-suave); font-size: var(--texto-sm); }
+.ruta-clasificar { display: grid; gap: var(--esp-3); grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+.ruta-clasificar__grupo { min-width: 0; padding: var(--esp-3); border: 2px dashed var(--borde-fuerte); border-radius: var(--radio-lg); }
+.ruta-clasificar__grupo[data-grupo="0"] { border-color: var(--azul-600); }
+.ruta-clasificar__grupo[data-grupo="1"] { border-color: var(--verde-700); }
+.ruta-clasificar__grupo[data-grupo="2"] { border-color: var(--naranja-700); }
+.ruta-clasificar__titulo { margin-bottom: var(--esp-2); font-family: var(--fuente-titulo); font-weight: 800; overflow-wrap: anywhere; }
+.ruta-clasificar__lista { min-height: 48px; display: flex; flex-wrap: wrap; gap: var(--esp-2); }
+.ruta-clasificar__lista .ruta-ficha { max-width: 100%; overflow-wrap: anywhere; }
+.ruta-clasificar__grupo[data-grupo="0"] .ruta-ficha { border-color: var(--azul-600); background: var(--azul-100); color: var(--azul-800); }
+.ruta-clasificar__grupo[data-grupo="1"] .ruta-ficha { border-color: var(--verde-700); background: var(--verde-100); color: var(--verde-700); }
+.ruta-clasificar__grupo[data-grupo="2"] .ruta-ficha { border-color: var(--naranja-700); background: var(--naranja-100); color: var(--naranja-700); }
+.ruta-clasificar__banco:empty { display: none; }
+
+/* Varios espacios con fichas */
+.ruta-huecos { font-size: var(--texto-lg); line-height: 2.6; overflow-wrap: anywhere; }
+.ruta-huecos__espacio {
+    display: inline-block;
+    min-width: 7ch;
+    min-height: 40px;
+    margin: 0 var(--esp-1);
+    padding: 0 var(--esp-3);
+    border: 0;
+    border-bottom: 3px solid var(--azul-600);
+    border-radius: var(--radio) var(--radio) 0 0;
+    background: var(--azul-50);
+    color: var(--azul-800);
+    font: inherit;
+    font-weight: 700;
+    line-height: 1.4;
+    vertical-align: middle;
+    cursor: pointer;
+}
+.ruta-huecos__espacio:empty::after { content: "\00a0"; }
+
 .ruta-retro { margin-top: var(--esp-5); padding: var(--esp-4); border-radius: var(--radio-lg); }
 .ruta-retro--bien { background: var(--verde-100); color: var(--verde-700); }
 .ruta-retro--mal, .ruta-retro--error { background: var(--rojo-100); color: var(--rojo-700); }

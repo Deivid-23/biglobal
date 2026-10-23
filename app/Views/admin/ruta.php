@@ -177,7 +177,7 @@ $interruptor = function (string $nombre, bool $marcado, string $titulo, string $
                        placeholder="Ej. ¿Cómo se dice «gato» en inglés?">
             </div>
 
-            <div class="campo" data-para-tipo="escuchar">
+            <div class="campo" data-para-tipo="escuchar dictado">
                 <label class="campo__etiqueta" for="e-audio">Lo que va a sonar</label>
                 <input class="entrada" id="e-audio" name="texto_audio" maxlength="200" value="<?= $v("texto_audio") ?>" aria-describedby="e-audio-ayuda">
                 <p class="campo__ayuda" id="e-audio-ayuda">Lo lee la voz del navegador (<?= e(RutaModel::VOCES[$codigoIdioma] ?? "es-CO") ?>).</p>
@@ -191,23 +191,44 @@ $interruptor = function (string $nombre, bool $marcado, string $titulo, string $
                 <input class="entrada" type="number" id="e-correcta" name="correcta" min="1" max="4" value="<?= $v("correcta") ?>" aria-describedby="e-correcta-ayuda">
                 <p class="campo__ayuda" id="e-correcta-ayuda">Al estudiante le aparecen mezcladas.</p>
             </div>
-            <div class="campo" data-para-tipo="completar ordenar">
+            <div class="campo" data-para-tipo="traducir">
+                <label class="campo__etiqueta" for="e-original">Frase para traducir</label>
+                <input class="entrada" id="e-original" name="original" maxlength="200" value="<?= $v("original") ?>" placeholder="Ej. Tengo dos hermanos.">
+            </div>
+            <div class="campo" data-para-tipo="huecos">
+                <label class="campo__etiqueta" for="e-texto-huecos">Texto con espacios</label>
+                <textarea class="entrada" id="e-texto-huecos" name="texto_huecos" rows="3" maxlength="400" aria-describedby="e-huecos-ayuda"><?= $v("texto_huecos") ?></textarea>
+                <p class="campo__ayuda" id="e-huecos-ayuda">Marca de 2 a 4 espacios con ___ (ej. «Yesterday I ___ to the park and ___ a friend»).</p>
+            </div>
+            <div class="campo" data-para-tipo="completar ordenar error">
                 <label class="campo__etiqueta" for="e-frase">Frase</label>
                 <input class="entrada" id="e-frase" name="frase" maxlength="300" value="<?= $v("frase") ?>" aria-describedby="e-frase-ayuda">
-                <p class="campo__ayuda" id="e-frase-ayuda">Completar: marca el espacio con ___ (ej. «I ___ a student»). Ordenar: escribe la frase correcta completa.</p>
+                <p class="campo__ayuda" id="e-frase-ayuda">Completar: marca el espacio con ___ (ej. «I ___ a student»). Ordenar: escribe la frase correcta completa. Encontrar el error: marca la palabra equivocada entre asteriscos (ej. «She *go* to school»).</p>
             </div>
-            <div class="campo" data-para-tipo="completar">
+            <div class="campo" data-para-tipo="error">
+                <label class="campo__etiqueta" for="e-correccion">Palabra correcta</label>
+                <input class="entrada" id="e-correccion" name="correccion" maxlength="60" value="<?= $v("correccion") ?>" placeholder="Ej. goes">
+            </div>
+            <div class="campo" data-para-tipo="completar traducir huecos">
                 <label class="campo__etiqueta" for="e-respuestas">Respuestas aceptadas (una por línea)</label>
-                <textarea class="entrada" id="e-respuestas" name="respuestas" rows="2" aria-describedby="e-respuestas-ayuda"><?= $v("respuestas") ?></textarea>
-                <p class="campo__ayuda" id="e-respuestas-ayuda">No importan mayúsculas, tildes ni signos.</p>
+                <textarea class="entrada" id="e-respuestas" name="respuestas" rows="3" aria-describedby="e-respuestas-ayuda"><?= $v("respuestas") ?></textarea>
+                <p class="campo__ayuda" id="e-respuestas-ayuda">No importan mayúsculas, tildes ni signos. Traducir: escribe todas las traducciones válidas. Varios espacios: una respuesta por espacio, en orden.</p>
             </div>
-            <div class="campo" data-para-tipo="ordenar">
+            <div class="campo" data-para-tipo="ordenar huecos">
                 <label class="campo__etiqueta" for="e-extra">Palabras de más <span class="campo__ayuda">(opcional, separadas por espacio)</span></label>
                 <input class="entrada" id="e-extra" name="extra" maxlength="200" value="<?= $v("extra") ?>">
             </div>
-            <div class="campo" data-para-tipo="ordenar">
-                <label class="campo__etiqueta" for="e-aceptadas">Otros órdenes válidos <span class="campo__ayuda">(opcional, uno por línea)</span></label>
+            <div class="campo" data-para-tipo="ordenar dictado">
+                <label class="campo__etiqueta" for="e-aceptadas">Otras respuestas válidas <span class="campo__ayuda">(opcional, una por línea)</span></label>
                 <textarea class="entrada" id="e-aceptadas" name="aceptadas" rows="2"><?= $v("aceptadas") ?></textarea>
+            </div>
+            <div class="campo" data-para-tipo="clasificar">
+                <label class="campo__etiqueta" for="e-grupos">Grupos (2 o 3, uno por línea)</label>
+                <textarea class="entrada" id="e-grupos" name="grupos" rows="3" placeholder="Pasado&#10;Presente"><?= $v("grupos") ?></textarea>
+            </div>
+            <div class="campo" data-para-tipo="clasificar">
+                <label class="campo__etiqueta" for="e-items">Palabras (de 4 a 8, una por línea: palabra = grupo)</label>
+                <textarea class="entrada" id="e-items" name="items" rows="6" placeholder="went = Pasado&#10;go = Presente"><?= $v("items") ?></textarea>
             </div>
             <div class="campo" data-para-tipo="emparejar">
                 <label class="campo__etiqueta" for="e-pares">Parejas (una por línea: palabra = traducción)</label>

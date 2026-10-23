@@ -74,6 +74,60 @@
         return { el: grupo, valor: () => elegido };
     }
 
+    /** Botón para oír la frase (y uno para oírla más despacio) con la voz del navegador. */
+    function botonesDeVoz(e) {
+        const fila = crear("div", "ruta-escuchar");
+        const hayVoz = "speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined";
+        const decir = (lento) => {
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(e.texto);
+            u.lang = e.voz || "es-CO";
+            u.rate = lento ? 0.6 : 0.9;
+            window.speechSynthesis.speak(u);
+        };
+        if (hayVoz) {
+            const play = crear("button", "boton boton--primario ruta-escuchar__boton");
+            play.type = "button";
+            play.setAttribute("aria-label", "Escuchar");
+            play.appendChild(crear("i", "fa-solid fa-volume-high"));
+            play.addEventListener("click", () => decir(false));
+            const lento = crear("button", "boton boton--secundario boton--sm", " Más lento");
+            lento.type = "button";
+            lento.prepend(crear("i", "fa-solid fa-person-walking"));
+            lento.addEventListener("click", () => decir(true));
+            fila.append(play, lento);
+            setTimeout(() => decir(false), 300);
+        } else {
+            // Sin voz en el navegador: se muestra el texto
+            fila.appendChild(crear("p", "ruta-escuchar__texto", "«" + e.texto + "»"));
+        }
+        return fila;
+    }
+
+    /** Caja para escribir una frase completa. */
+    function campoDeTexto(cuerpo, etiqueta) {
+        const entrada = crear("textarea", "entrada ruta-escribir");
+        entrada.rows = 2;
+        entrada.maxLength = 300;
+        entrada.autocomplete = "off";
+        entrada.spellcheck = false;
+        entrada.setAttribute("autocapitalize", "off");
+        entrada.setAttribute("aria-label", etiqueta);
+        entrada.placeholder = etiqueta + "…";
+        entrada.addEventListener("input", listo);
+        // Enter comprueba (sin saltos de línea)
+        entrada.addEventListener("keydown", (ev) => {
+            if (ev.key === "Enter") {
+                ev.preventDefault();
+                ev.stopPropagation();
+                if (!boton.disabled) boton.click();
+            }
+        });
+        cuerpo.appendChild(entrada);
+        setTimeout(() => entrada.focus(), 50);
+        return () => (entrada.value.trim() === "" ? null : entrada.value.replace(/\s+/g, " "));
+    }
+
     /* ---------- Cada tipo de ejercicio ---------- */
     const tipos = {
         opcion(e, cuerpo) {
@@ -84,32 +138,121 @@
         sena(e, cuerpo) { return tipos.opcion(e, cuerpo); },
 
         escuchar(e, cuerpo) {
-            const fila = crear("div", "ruta-escuchar");
-            const hayVoz = "speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined";
-            const decir = (lento) => {
-                window.speechSynthesis.cancel();
-                const u = new SpeechSynthesisUtterance(e.texto);
-                u.lang = e.voz || "es-CO";
-                u.rate = lento ? 0.6 : 0.9;
-                window.speechSynthesis.speak(u);
-            };
-            if (hayVoz) {
-                const play = crear("button", "boton boton--primario ruta-escuchar__boton");
-                play.type = "button";
-                play.setAttribute("aria-label", "Escuchar");
-                play.appendChild(crear("i", "fa-solid fa-volume-high"));
-                play.addEventListener("click", () => decir(false));
-                const lento = crear("button", "boton boton--secundario boton--sm", "Más lento");
-                lento.type = "button";
-                lento.addEventListener("click", () => decir(true));
-                fila.append(play, lento);
-                setTimeout(() => decir(false), 300);
-            } else {
-                // Sin voz en el navegador: se muestra el texto
-                fila.appendChild(crear("p", "ruta-escuchar__texto", "«" + e.texto + "»"));
-            }
-            cuerpo.appendChild(fila);
+            cuerpo.appendChild(botonesDeVoz(e));
             return tipos.opcion(e, cuerpo);
+        },
+
+        dictado(e, cuerpo) {
+            cuerpo.appendChild(botonesDeVoz(e));
+            return campoDeTexto(cuerpo, "Escribe lo que oíste");
+        },
+
+        traducir(e, cuerpo) {
+            cuerpo.appendChild(crear("p", "ruta-traducir__original", e.original));
+            return campoDeTexto(cuerpo, "Escribe la traducción");
+        },
+
+        error(e, cuerpo) {
+            const frase = crear("div", "ruta-error");
+            frase.setAttribute("role", "radiogroup");
+            frase.setAttribute("aria-label", "Toca la palabra equivocada");
+            let elegida = null;
+            e.palabras.forEach((palabra, i) => {
+                const b = crear("button", "ruta-ficha ruta-error__palabra", palabra);
+                b.type = "button";
+                b.setAttribute("role", "radio");
+                b.setAttribute("aria-checked", "false");
+                b.addEventListener("click", () => {
+                    frase.querySelectorAll("button").forEach((x) => x.setAttribute("aria-checked", "false"));
+                    b.setAttribute("aria-checked", "true");
+                    elegida = String(i);
+                    listo();
+                });
+                frase.appendChild(b);
+            });
+            cuerpo.appendChild(frase);
+            return () => elegida;
+        },
+
+        clasificar(e, cuerpo) {
+            // Tocar una palabra la pasa al siguiente grupo; vuelve al banco después del último
+            const banco = crear("div", "ruta-ordenar__banco ruta-clasificar__banco");
+            banco.setAttribute("aria-label", "Palabras por clasificar");
+            const grupos = crear("div", "ruta-clasificar");
+            const cajas = e.grupos.map((nombre, g) => {
+                const caja = crear("div", "ruta-clasificar__grupo");
+                caja.dataset.grupo = String(g);
+                const titulo = crear("p", "ruta-clasificar__titulo", nombre);
+                const lista = crear("div", "ruta-clasificar__lista");
+                lista.setAttribute("aria-label", nombre);
+                caja.append(titulo, lista);
+                grupos.appendChild(caja);
+                return lista;
+            });
+            const lugar = new Map();   // ficha -> índice del grupo (o -1 en el banco)
+            e.items.forEach((palabra) => {
+                const ficha = crear("button", "ruta-ficha", palabra);
+                ficha.type = "button";
+                lugar.set(ficha, -1);
+                ficha.addEventListener("click", () => {
+                    const g = lugar.get(ficha) + 1;
+                    if (g >= cajas.length) {
+                        lugar.set(ficha, -1);
+                        banco.appendChild(ficha);
+                        ficha.setAttribute("aria-label", palabra + ": sin grupo");
+                    } else {
+                        lugar.set(ficha, g);
+                        cajas[g].appendChild(ficha);
+                        ficha.setAttribute("aria-label", palabra + ": " + e.grupos[g]);
+                    }
+                    listo();
+                });
+                banco.appendChild(ficha);
+            });
+            cuerpo.append(crear("p", "ruta-clasificar__ayuda", "Toca cada palabra para pasarla de grupo."), grupos, banco);
+            return () => ([...lugar.values()].some((g) => g < 0) ? null : [...lugar].map(([f, g]) => [f.textContent, e.grupos[g]]));
+        },
+
+        huecos(e, cuerpo) {
+            // Tocar una ficha llena el primer espacio libre; tocar un espacio lleno lo vacía
+            const texto = crear("p", "ruta-huecos");
+            const banco = crear("div", "ruta-ordenar__banco");
+            banco.setAttribute("aria-label", "Palabras");
+            const espacios = [];
+            e.partes.forEach((parte, i) => {
+                texto.appendChild(document.createTextNode(parte));
+                if (i < e.partes.length - 1) {
+                    const hueco = crear("button", "ruta-huecos__espacio");
+                    hueco.type = "button";
+                    hueco.setAttribute("aria-label", "Espacio " + (i + 1) + ": vacío");
+                    hueco.addEventListener("click", () => {
+                        if (!hueco.ficha) return;
+                        hueco.ficha.hidden = false;
+                        hueco.ficha = null;
+                        hueco.textContent = "";
+                        hueco.setAttribute("aria-label", "Espacio " + (i + 1) + ": vacío");
+                        listo();
+                    });
+                    espacios.push(hueco);
+                    texto.appendChild(hueco);
+                }
+            });
+            e.fichas.forEach((palabra) => {
+                const ficha = crear("button", "ruta-ficha", palabra);
+                ficha.type = "button";
+                ficha.addEventListener("click", () => {
+                    const libre = espacios.find((h) => !h.ficha);
+                    if (!libre) return;
+                    libre.ficha = ficha;
+                    libre.textContent = palabra;
+                    libre.setAttribute("aria-label", "Espacio " + (espacios.indexOf(libre) + 1) + ": " + palabra);
+                    ficha.hidden = true;
+                    listo();
+                });
+                banco.appendChild(ficha);
+            });
+            cuerpo.append(texto, banco);
+            return () => (espacios.every((h) => h.ficha) ? espacios.map((h) => h.ficha.textContent) : null);
         },
 
         vf(e, cuerpo) {
@@ -228,6 +371,8 @@
         caja.appendChild(crear("p", "ruta-ejercicio__tipo", {
             opcion: "Elige la respuesta", sena: "Mira la seña", escuchar: "Escucha y elige", vf: "¿Verdadero o falso?",
             completar: "Completa la frase", ordenar: "Ordena las palabras", emparejar: "Une las parejas",
+            dictado: "Escucha y escribe", traducir: "Traduce", error: "Encuentra el error",
+            clasificar: "Clasifica", huecos: "Completa el texto",
         }[e.tipo] || ""));
         const enunciado = crear("h2", "ruta-ejercicio__enunciado", e.enunciado);
         enunciado.tabIndex = -1;   // recibe el foco al cambiar de ejercicio (lectores de pantalla)
@@ -252,7 +397,7 @@
         caja.hidden = false;
         pie.hidden = false;
         listo();
-        if (e.tipo !== "completar") enunciado.focus({ preventScroll: true });
+        if (!["completar", "dictado", "traducir"].includes(e.tipo)) enunciado.focus({ preventScroll: true });
     }
 
     /* ---------- Comprobar en el servidor ---------- */
@@ -290,10 +435,11 @@
             return;
         }
 
-        caja.querySelectorAll("button, input").forEach((x) => { x.disabled = true; });
+        caja.querySelectorAll("button, input, textarea").forEach((x) => { x.disabled = true; });
         retro.className = "ruta-retro " + (r.correcto ? "ruta-retro--bien" : "ruta-retro--mal");
         $("[data-retro-titulo]").textContent = r.correcto ? "¡Correcto!" : "Respuesta correcta:";
-        $("[data-retro-solucion]").textContent = r.correcto ? "" : r.solucion;
+        // En "encontrar el error" la frase corregida se muestra siempre: es lo que se aprende
+        $("[data-retro-solucion]").textContent = r.correcto && porId[actual].tipo !== "error" ? "" : r.solucion;
         retro.hidden = false;
         avance(r.avance || 0);
 

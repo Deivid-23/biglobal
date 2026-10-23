@@ -31,6 +31,11 @@ class RutaModel
         "vf"        => "Verdadero o falso",
         "sena"      => "Ver la seña (LSC)",
         "escuchar"  => "Escuchar y elegir",
+        "dictado"   => "Dictado (escuchar y escribir)",
+        "traducir"  => "Traducir la frase",
+        "error"     => "Encontrar el error",
+        "clasificar" => "Clasificar en grupos",
+        "huecos"    => "Varios espacios con fichas",
     ];
     public const NIVELES = ["A1", "A2", "B1", "B2", "C1"];
     public const XP_PERFECTA = 5;
@@ -382,6 +387,84 @@ class RutaModel
                 return "Indica si la afirmación es verdadera o falsa.";
             }
             $datos = ["correcta" => $post["correcta_vf"] === "1"];
+        } elseif ($tipo === "dictado") {
+            $decir = trim((string) ($post["texto_audio"] ?? ""));
+            if ($decir === "" || mb_strlen($decir) > 200) {
+                return "Escribe lo que va a sonar (máximo 200 caracteres).";
+            }
+            $datos = ["texto" => $decir, "aceptadas" => self::lineas((string) ($post["aceptadas"] ?? ""))];
+        } elseif ($tipo === "traducir") {
+            $original = trim((string) ($post["original"] ?? ""));
+            if ($original === "" || mb_strlen($original) > 200) {
+                return "Escribe la frase que se va a traducir (máximo 200 caracteres).";
+            }
+            $respuestas = self::lineas((string) ($post["respuestas"] ?? ""));
+            if (!$respuestas || count($respuestas) > 10) {
+                return "Escribe de 1 a 10 traducciones aceptadas, una por línea.";
+            }
+            $datos = ["original" => $original, "respuestas" => $respuestas];
+        } elseif ($tipo === "error") {
+            $frase = trim((string) preg_replace('/\s+/u', " ", (string) ($post["frase"] ?? "")));
+            $palabras = $frase === "" ? [] : explode(" ", $frase);
+            $marcadas = array_keys(array_filter($palabras, fn($p) => preg_match('/^\*[^*]+\*[.,;:!?]*$/u', $p)));
+            if (count($palabras) < 3 || count($palabras) > 15 || count($marcadas) !== 1) {
+                return "Escribe una frase de 3 a 15 palabras y marca la palabra equivocada entre asteriscos, ej. «She *go* to school».";
+            }
+            $correccion = trim((string) ($post["correccion"] ?? ""));
+            if ($correccion === "" || mb_strlen($correccion) > 60) {
+                return "Escribe la palabra correcta que reemplaza al error.";
+            }
+            $error = $marcadas[0];
+            $palabras[$error] = str_replace("*", "", $palabras[$error]);
+            $datos = ["palabras" => $palabras, "error" => $error, "correccion" => $correccion];
+        } elseif ($tipo === "clasificar") {
+            $grupos = self::lineas((string) ($post["grupos"] ?? ""));
+            if (count($grupos) < 2 || count($grupos) > 3) {
+                return "Escribe 2 o 3 grupos, uno por línea.";
+            }
+            $normGrupos = array_map([self::class, "normalizar"], $grupos);
+            if (count(array_unique($normGrupos)) !== count($grupos)) {
+                return "Los grupos no se pueden repetir.";
+            }
+            $items = [];
+            foreach (self::lineas((string) ($post["items"] ?? "")) as $l) {
+                $partes = array_map("trim", explode("=", $l, 2));
+                $g = count($partes) === 2 ? array_search(self::normalizar($partes[1]), $normGrupos, true) : false;
+                if ($partes[0] === "" || $g === false) {
+                    return "Escribe cada palabra en una línea así: palabra = grupo (usando el nombre exacto de un grupo).";
+                }
+                $items[] = [$partes[0], (int) $g];
+            }
+            if (count($items) < 4 || count($items) > 8) {
+                return "Escribe de 4 a 8 palabras para clasificar.";
+            }
+            $norm = array_map(fn($i) => self::normalizar($i[0]), $items);
+            if (count(array_unique($norm)) !== count($norm)) {
+                return "Las palabras para clasificar no se pueden repetir.";
+            }
+            if (count(array_unique(array_column($items, 1))) !== count($grupos)) {
+                return "Cada grupo debe tener al menos una palabra.";
+            }
+            $datos = ["grupos" => $grupos, "items" => $items];
+        } elseif ($tipo === "huecos") {
+            $texto = trim((string) ($post["texto_huecos"] ?? ""));
+            $huecos = substr_count($texto, "___");
+            if ($huecos < 2 || $huecos > 4 || mb_strlen($texto) > 400) {
+                return "El texto debe tener de 2 a 4 espacios marcados con ___ (máximo 400 caracteres).";
+            }
+            $respuestas = self::lineas((string) ($post["respuestas"] ?? ""));
+            if (count($respuestas) !== $huecos) {
+                return "Escribe una respuesta por cada espacio, en orden, una por línea.";
+            }
+            $extra = array_values(array_filter(explode(" ", trim((string) preg_replace('/\s+/u', " ", (string) ($post["extra"] ?? ""))))));
+            if (count($extra) > 4) {
+                return "Agrega máximo 4 palabras de más.";
+            }
+            $banco = array_map([self::class, "normalizar"], array_merge($respuestas, $extra));
+            if (count(array_unique($banco)) !== count($banco)) {
+                return "Las fichas (respuestas y palabras de más) no se pueden repetir.";
+            }
+            $datos = ["texto" => $texto, "respuestas" => $respuestas, "extra" => $extra];
         }
 
         return [
@@ -435,6 +518,30 @@ class RutaModel
         }
         if ($e["tipo"] === "vf") {
             $f["correcta_vf"] = !empty($d["correcta"]) ? "1" : "0";
+        }
+        if ($e["tipo"] === "dictado") {
+            $f["aceptadas"] = implode("\n", $d["aceptadas"] ?? []);
+        }
+        if ($e["tipo"] === "traducir") {
+            $f["original"] = $d["original"] ?? "";
+            $f["respuestas"] = implode("\n", $d["respuestas"] ?? []);
+        }
+        if ($e["tipo"] === "error") {
+            $palabras = $d["palabras"] ?? [];
+            if (isset($palabras[$d["error"] ?? -1])) {
+                $palabras[$d["error"]] = "*" . $palabras[$d["error"]] . "*";
+            }
+            $f["frase"] = implode(" ", $palabras);
+            $f["correccion"] = $d["correccion"] ?? "";
+        }
+        if ($e["tipo"] === "clasificar") {
+            $f["grupos"] = implode("\n", $d["grupos"] ?? []);
+            $f["items"] = implode("\n", array_map(fn($i) => $i[0] . " = " . ($d["grupos"][$i[1]] ?? ""), $d["items"] ?? []));
+        }
+        if ($e["tipo"] === "huecos") {
+            $f["texto_huecos"] = $d["texto"] ?? "";
+            $f["respuestas"] = implode("\n", $d["respuestas"] ?? []);
+            $f["extra"] = implode(" ", $d["extra"] ?? []);
         }
         return $f;
     }
@@ -621,6 +728,27 @@ class RutaModel
                 $v["izquierda"] = $izq;
                 $v["derecha"] = $der;
                 break;
+            case "dictado":
+                // Igual que "escuchar": la voz del navegador necesita el texto
+                $v["texto"] = $d["texto"] ?? "";
+                $v["voz"] = self::VOCES[strtoupper($codigoIdioma)] ?? "es-CO";
+                break;
+            case "traducir":
+                $v["original"] = $d["original"] ?? "";
+                break;
+            case "error":
+                $v["palabras"] = $d["palabras"] ?? [];
+                break;
+            case "clasificar":
+                $v["grupos"] = $d["grupos"] ?? [];
+                $v["items"] = array_column($d["items"] ?? [], 0);
+                shuffle($v["items"]);
+                break;
+            case "huecos":
+                $v["partes"] = explode("___", (string) ($d["texto"] ?? ""));
+                $v["fichas"] = array_merge($d["respuestas"] ?? [], $d["extra"] ?? []);
+                shuffle($v["fichas"]);
+                break;
         }
         return $v;
     }
@@ -680,6 +808,61 @@ class RutaModel
                 ksort($recibido);
                 return ["correcto" => $esperado === $recibido,
                         "solucion" => implode(" · ", array_map(fn($p) => $p[0] . " = " . $p[1], $d["pares"] ?? []))];
+
+            case "dictado":
+                $aceptadas = array_map([self::class, "normalizar"], array_merge([(string) ($d["texto"] ?? "")], $d["aceptadas"] ?? []));
+                $ok = is_string($respuesta) && $respuesta !== "" && in_array(self::normalizar($respuesta), $aceptadas, true);
+                return ["correcto" => $ok, "solucion" => (string) ($d["texto"] ?? "")];
+
+            case "traducir":
+                $aceptadas = array_map([self::class, "normalizar"], $d["respuestas"] ?? []);
+                $ok = is_string($respuesta) && $respuesta !== "" && in_array(self::normalizar($respuesta), $aceptadas, true);
+                return ["correcto" => $ok, "solucion" => (string) ($d["respuestas"][0] ?? "")];
+
+            case "error":
+                $palabras = $d["palabras"] ?? [];
+                $error = (int) ($d["error"] ?? -1);
+                $corregida = $palabras;
+                $corregida[$error] = (string) ($d["correccion"] ?? "");
+                $ok = is_string($respuesta) && ctype_digit($respuesta) && (int) $respuesta === $error;
+                return ["correcto" => $ok, "solucion" => "«" . ($palabras[$error] ?? "") . "» → " . implode(" ", $corregida)];
+
+            case "clasificar":
+                $grupos = $d["grupos"] ?? [];
+                $esperado = [];
+                foreach ($d["items"] ?? [] as [$palabra, $g]) {
+                    $esperado[self::normalizar($palabra)] = self::normalizar((string) ($grupos[$g] ?? ""));
+                }
+                $recibido = [];
+                if (is_array($respuesta)) {
+                    foreach ($respuesta as $par) {
+                        if (is_array($par) && count($par) === 2 && is_string($par[0]) && is_string($par[1])) {
+                            $recibido[self::normalizar($par[0])] = self::normalizar($par[1]);
+                        }
+                    }
+                }
+                ksort($esperado);
+                ksort($recibido);
+                $porGrupo = [];
+                foreach ($d["items"] ?? [] as [$palabra, $g]) {
+                    $porGrupo[$g][] = $palabra;
+                }
+                ksort($porGrupo);
+                return ["correcto" => $esperado === $recibido,
+                        "solucion" => implode(" · ", array_map(fn($g, $lista) => ($grupos[$g] ?? "") . ": " . implode(", ", $lista), array_keys($porGrupo), $porGrupo))];
+
+            case "huecos":
+                $respuestas = $d["respuestas"] ?? [];
+                $ok = is_array($respuesta) && count($respuesta) === count($respuestas);
+                foreach ($respuestas as $i => $r) {
+                    $ok = $ok && is_string($respuesta[$i] ?? null) && self::normalizar($respuesta[$i]) === self::normalizar($r);
+                }
+                $partes = explode("___", (string) ($d["texto"] ?? ""));
+                $solucion = "";
+                foreach ($partes as $i => $p) {
+                    $solucion .= $p . ($respuestas[$i] ?? "");
+                }
+                return ["correcto" => $ok, "solucion" => $solucion];
         }
         return ["correcto" => false, "solucion" => ""];
     }
