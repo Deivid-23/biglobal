@@ -37,6 +37,7 @@ require_once __DIR__ . "/../Views/estudiante/_helpers.php";
  *   estudiante/index.php?page=ruta[&idioma=EN][&nivel=A1] -> ruta()  (Mi ruta)
  *   estudiante/index.php?page=ruta-leccion&id=N           -> rutaLeccion()
  *   estudiante/ruta_responder.php (POST, JSON)            -> rutaResponder()
+ *   estudiante/guardar_zona.php (POST, JSON)              -> guardarZona()
  */
 class EstudianteController
 {
@@ -49,6 +50,9 @@ class EstudianteController
 
         $this->conexion = Conexion::conectar();
         $this->usuarioId = (int) $_SESSION["usuario_id"];
+
+        // Días sin estudiar: gasta protectores o pierde la racha, antes de cualquier página
+        GamificacionModel::actualizarRacha($this->conexion, $this->usuarioId);
     }
 
     /* =========================================================
@@ -75,6 +79,8 @@ class EstudianteController
             "iniciales"     => mb_strtoupper(mb_substr($usuario["nombre"] ?? "E", 0, 1) . mb_substr($apellido, 0, 1)) ?: "E",
         ];
 
+        $zonaUsuario = GamificacionModel::zonaDe($this->conexion, $this->usuarioId);
+
         // Contador de la campana
         $avisosSinLeer = Notificador::noLeidas($this->usuarioId);
 
@@ -94,6 +100,7 @@ class EstudianteController
        GET  -> muestra los datos de la cuenta
        POST -> accion=datos     : cambia nombre, apellido y correo
                accion=password  : cambia la contraseña
+               accion=zona      : cambia la zona horaria (una vez al día)
        Si hay un error, la página se vuelve a mostrar con el mensaje
        y lo que el usuario escribió. Si todo sale bien, se redirige
        (así al recargar no se envía el formulario dos veces).
@@ -137,6 +144,19 @@ class EstudianteController
                     $_POST["password_nueva"] ?? "",
                     $_POST["password_confirmar"] ?? ""
                 );
+            } elseif ($accion === "zona") {
+                $r = GamificacionModel::cambiarZona($conexion, $id, (string) ($_POST["zona_horaria"] ?? ""));
+                $_SESSION["flash_estudiante"] = [
+                    "tipo"    => in_array($r, ["ok", "igual"], true) ? "exito" : "error",
+                    "mensaje" => [
+                        "ok"       => "Zona horaria guardada. Tu racha cuenta los días con esta hora.",
+                        "igual"    => "Ya tenías esa zona horaria.",
+                        "hoy-no"   => "Ya cambiaste tu zona horaria hoy. Podrás cambiarla de nuevo mañana.",
+                        "invalida" => "Elige una zona horaria de la lista.",
+                    ][$r],
+                ];
+                header("Location: index.php?page=perfil#zona");
+                exit;
             }
 
             // Sin errores: guardado. Volvemos a la página con un aviso.
@@ -152,7 +172,9 @@ class EstudianteController
         $suscripcion = Plan::suscripcionVigente($conexion, $id);
 
         $insignias = InsigniaModel::delEstudiante($conexion, $id);
-        $this->render("perfil", "perfil", "Mi perfil", compact("cuenta", "valores", "errores", "reglas", "suscripcion", "insignias"));
+        $zonas = GamificacionModel::zonasParaElegir();
+        $zonaActual = GamificacionModel::zonaDe($conexion, $id);
+        $this->render("perfil", "perfil", "Mi perfil", compact("cuenta", "valores", "errores", "reglas", "suscripcion", "insignias", "zonas", "zonaActual"));
     }
 
     /** Guarda nombre, apellido y correo. Devuelve null si salió bien o el mensaje de error. */
@@ -1079,6 +1101,31 @@ class EstudianteController
             $responder(["error" => "No pudimos guardar tu respuesta. Inténtalo de nuevo."], 500);
         }
         $responder($r, isset($r["error"]) ? 409 : 200);
+    }
+
+    /* =========================================================
+       ZONA HORARIA AUTOMÁTICA
+       POST guardar_zona.php (zona = la que dice el navegador). Contesta JSON.
+       Solo cambia una vez al día (GamificacionModel::cambiarZona).
+    ========================================================= */
+    public function guardarZona(): void
+    {
+        header("Content-Type: application/json; charset=utf-8");
+        header("Cache-Control: no-store");
+        if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+            http_response_code(405);
+            echo json_encode(["ok" => false]);
+            exit;
+        }
+        verificarCsrfFormulario($_POST["csrf_token"] ?? "");
+        try {
+            $r = GamificacionModel::cambiarZona($this->conexion, $this->usuarioId, (string) ($_POST["zona"] ?? ""));
+        } catch (Throwable $e) {
+            error_log("[BiGlobal][zona] " . $e->getMessage());
+            $r = "error";
+        }
+        echo json_encode(["ok" => in_array($r, ["ok", "igual"], true), "resultado" => $r]);
+        exit;
     }
 
     /** Suscripción cancelada que todavía se puede volver a renovar sola. */

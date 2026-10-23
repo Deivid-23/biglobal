@@ -1028,6 +1028,8 @@ a.est-perfil.es-activo { background: var(--azul-100); }
 }
 
 .perfil-salir .perfil-tarjeta__ayuda { margin-bottom: 0; }
+.perfil-zona { display: flex; flex-wrap: wrap; gap: var(--esp-2); }
+.perfil-zona .entrada { flex: 1 1 240px; min-width: 0; }
 .perfil-salir__titulo { font-family: var(--fuente-titulo); font-weight: 800; }
 
 /* Marca (y en celular el botón de cerrar) arriba del menú lateral */
@@ -1643,3 +1645,37 @@ a.ruta-nodo__boton:active { transform: translateY(4px); box-shadow: 0 2px 0 var(
 @media (prefers-reduced-motion: reduce) {
     .ruta-nodo__boton, .ruta-jugar__progreso .progreso__relleno { transition: none; }
 }
+
+/* ---------- Racha: protectores y semana ---------- */
+.racha-protectores { display: flex; flex-wrap: wrap; align-items: center; gap: 4px var(--esp-2); margin-top: var(--esp-2); font-size: var(--texto-xs); color: var(--texto-suave); }
+.racha-protectores i { font-size: 1rem; color: var(--borde-fuerte); }
+.racha-protectores i.es-lleno { color: var(--azul-600); }
+.racha-protectores span { font-weight: 700; }
+
+.racha-semana {
+    grid-column: 1 / -1;
+    list-style: none;
+    margin: 0;
+    padding: var(--esp-3) 0 0;
+    border-top: 1px solid var(--borde);
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: var(--esp-1);
+}
+.racha-dia { display: grid; justify-items: center; gap: 2px; }
+.racha-dia__icono {
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--neutro-100);
+    color: var(--borde-fuerte);
+    font-size: 0.8rem;
+}
+.racha-dia--nada .racha-dia__icono i { font-size: 0.45rem; }
+.racha-dia--estudio .racha-dia__icono { background: var(--naranja-100); color: var(--naranja-500); }
+.racha-dia--protector .racha-dia__icono { background: var(--azul-100); color: var(--azul-700); }
+.racha-dia__letra { font-size: var(--texto-xs); font-weight: 700; color: var(--texto-suave); }
+.racha-dia.es-hoy .racha-dia__icono { outline: 2px solid var(--azul-600); outline-offset: 2px; }
+.racha-dia.es-hoy .racha-dia__letra { color: var(--azul-700); }

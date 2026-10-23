@@ -2,7 +2,7 @@
 /**
  * Parte superior del layout del estudiante.
  * Variables que llegan desde EstudianteController::render():
- *   $titulo, $paginaActiva, $estudiante, $flash, $avisosSinLeer
+ *   $titulo, $paginaActiva, $estudiante, $flash, $avisosSinLeer, $zonaUsuario
  *
  * Igual que los otros roles: menú lateral con las secciones y una barra
  * superior con la campana, el tema y el usuario. En celular el menú
@@ -24,7 +24,7 @@ $menu = [
 $etiquetaCampana = $avisosSinLeer > 0 ? "Notificaciones: " . $avisosSinLeer . " sin leer" : "Notificaciones";
 ?>
 <!DOCTYPE html>
-<html lang="es"<?= Panel::atributosHtml() ?>>
+<html lang="es"<?= Panel::atributosHtml() ?> data-zona="<?= e($zonaUsuario) ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">

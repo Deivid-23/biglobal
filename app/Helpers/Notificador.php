@@ -54,6 +54,8 @@ class Notificador
         "tarea_entrega"     => "fa-file-arrow-up",
         "tarea_calificada"  => "fa-star",
         "insignia"          => "fa-award",
+        "racha_protector"   => "fa-shield-halved",
+        "racha_perdida"     => "fa-fire-flame-curved",
     ];
 
     /**
@@ -150,6 +152,8 @@ class Notificador
         "tarea_entrega"      => "campana",
         "tarea_calificada"   => "opcional",
         "insignia"           => "campana",
+        "racha_protector"    => "campana",
+        "racha_perdida"      => "campana",
     ];
 
     /** ¿Existe usuarios.correos_opcionales? (antes del SQL: todos reciben) */

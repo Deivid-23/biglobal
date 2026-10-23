@@ -192,10 +192,21 @@ class CuentaEliminacionModel
         try {
             // Datos de aprendizaje y avisos (cada tabla, solo si existe)
             foreach (["progreso", "certificados", "recuperacion_password", "estudiante_stats", "xp_movimientos",
-                      "usuario_medallas", "notificaciones", "actividad_intentos", "clase_inscripciones", "clase_invitaciones"] as $tabla) {
+                      "usuario_medallas", "notificaciones", "actividad_intentos", "clase_inscripciones", "clase_invitaciones",
+                      "ruta_progreso", "racha_dias", "grupo_miembros"] as $tabla) {
                 if (self::existeTabla($c, $tabla)) {
                     $c->prepare("DELETE FROM {$tabla} WHERE usuario_id = ?")->execute([$usuarioId]);
                 }
+            }
+            // Lo que escribió o subió en los grupos (comentarios, entregas y sus archivos)
+            if (self::existeTabla($c, "anuncio_comentarios")) {
+                $c->prepare("DELETE FROM anuncio_comentarios WHERE autor_id = ?")->execute([$usuarioId]);
+            }
+            if (self::existeTabla($c, "archivos")) {
+                $c->prepare("DELETE FROM archivos WHERE dueno_id = ? AND contexto = 'entrega'")->execute([$usuarioId]);
+            }
+            if (self::existeTabla($c, "tarea_entregas")) {
+                $c->prepare("DELETE FROM tarea_entregas WHERE estudiante_id = ?")->execute([$usuarioId]);
             }
 
             // Pagos y suscripciones: se quedan por contabilidad, sin datos personales

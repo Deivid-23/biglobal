@@ -80,6 +80,22 @@
     window.matchMedia("(min-width: 900px)").addEventListener("change", function () { cerrar(false); });
 })();
 
+/* Zona horaria: si el navegador está en otra zona, se guarda (la racha cuenta los días con esa hora).
+   El servidor solo acepta un cambio al día. */
+(function () {
+    "use strict";
+    var html = document.documentElement;
+    var zona = "";
+    try { zona = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch (e) { return; }
+    if (!zona || !html.dataset.csrf || zona === html.dataset.zona) return;
+    var clave = "biglobal-zona-enviada";
+    try { if (sessionStorage.getItem(clave) === zona) return; sessionStorage.setItem(clave, zona); } catch (e) { /* sin almacenamiento: se intenta igual */ }
+    var datos = new FormData();
+    datos.append("csrf_token", html.dataset.csrf);
+    datos.append("zona", zona);
+    fetch("guardar_zona.php", { method: "POST", body: datos, credentials: "same-origin" }).catch(function () {});
+})();
+
 /* Formularios con data-confirmar="¿Seguro…?": piden confirmación antes de enviarse. */
 document.querySelectorAll("form[data-confirmar]").forEach(function (form) {
     form.addEventListener("submit", function (evento) {

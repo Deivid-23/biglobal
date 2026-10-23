@@ -3,7 +3,8 @@
  * Mi perfil.
  * Variables: $cuenta (datos guardados), $valores (lo que se muestra en el formulario),
  *            $errores (["datos" => ?, "password" => ?]), $reglas, $estudiante,
- *            $suscripcion (Premium vigente, o null si es Gratuito), $insignias (InsigniaModel::delEstudiante)
+ *            $suscripcion (Premium vigente, o null si es Gratuito), $insignias (InsigniaModel::delEstudiante),
+ *            $zonas (GamificacionModel::zonasParaElegir), $zonaActual
  */
 $tienePassword = (int) $cuenta["tiene_password"] === 1;
 $conGoogle = (int) $cuenta["con_google"] === 1;
@@ -176,6 +177,30 @@ $textoReglas = "Mínimo {$reglas['minimo']} caracteres"
 <div style="margin-top: var(--esp-5);">
     <!-- ================= INSIGNIAS ================= -->
     <?php $listaInsignias = $insignias; $modoInsignias = "completo"; require __DIR__ . "/_insignias.php"; ?>
+
+    <!-- ================= ZONA HORARIA (la racha cuenta los días con esta hora) ================= -->
+    <section class="perfil-tarjeta" id="zona" aria-labelledby="titulo-zona">
+        <h2 id="titulo-zona">Zona horaria</h2>
+        <p class="perfil-tarjeta__ayuda">Tu racha cuenta los días con esta hora. La detectamos sola con tu navegador; puedes cambiarla una vez al día.</p>
+        <form class="perfil-zona" method="POST" action="index.php?page=perfil">
+            <?= campoCsrf() ?>
+            <input type="hidden" name="accion" value="zona">
+            <label class="sr-only" for="zona-horaria">Zona horaria</label>
+            <select class="entrada" id="zona-horaria" name="zona_horaria">
+                <optgroup label="Más usadas">
+                    <?php foreach ($zonas["comunes"] as $valor => $texto): ?>
+                        <option value="<?= e($valor) ?>" <?= $valor === $zonaActual ? "selected" : "" ?>><?= e($texto) ?></option>
+                    <?php endforeach; ?>
+                </optgroup>
+                <optgroup label="Todas">
+                    <?php foreach ($zonas["todas"] as $valor => $texto): ?>
+                        <option value="<?= e($valor) ?>" <?= $valor === $zonaActual ? "selected" : "" ?>><?= e($texto) ?></option>
+                    <?php endforeach; ?>
+                </optgroup>
+            </select>
+            <button class="boton boton--secundario" type="submit">Guardar</button>
+        </form>
+    </section>
 
     <?php $claseTarjeta = "perfil-tarjeta"; require __DIR__ . "/../panel/_personalizacion.php"; ?>
 
