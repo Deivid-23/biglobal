@@ -406,7 +406,7 @@ class RutaModel
         } elseif ($tipo === "error") {
             $frase = trim((string) preg_replace('/\s+/u', " ", (string) ($post["frase"] ?? "")));
             $palabras = $frase === "" ? [] : explode(" ", $frase);
-            $marcadas = array_keys(array_filter($palabras, fn($p) => preg_match('/^\*[^*]+\*[.,;:!?]*$/u', $p)));
+            $marcadas = array_keys(array_filter($palabras, fn($p) => preg_match('/^[¿¡«"(]*\*[^*]+\*[.,;:!?»")]*$/u', $p)));
             if (count($palabras) < 3 || count($palabras) > 15 || count($marcadas) !== 1) {
                 return "Escribe una frase de 3 a 15 palabras y marca la palabra equivocada entre asteriscos, ej. «She *go* to school».";
             }
@@ -606,7 +606,9 @@ class RutaModel
             $conAvance = (bool) array_filter($lista, fn($l) => $l["completada_en"] !== null);
             $estadoNivel = !$anteriorCompleto && !$conAvance ? "bloqueado" : (((int) $n["premium"] === 1 && !$esPremium) ? "premium" : "abierto");
 
-            $abierta = $estadoNivel === "abierto";   // la siguiente lección jugable está disponible
+            // Una lección se abre si la anterior jugable está completada. Así, una lección
+            // agregada después (ej. un repaso en la unidad 1) no bloquea a quien ya iba más adelante.
+            $abierta = $estadoNivel === "abierto";
             $jugables = 0;
             $hechas = 0;
             $unidades = [];
@@ -615,6 +617,7 @@ class RutaModel
                     $l["estado"] = "preparacion";
                 } elseif ($l["completada_en"] !== null) {
                     $l["estado"] = $estadoNivel === "abierto" ? "completada" : "bloqueada";
+                    $abierta = $estadoNivel === "abierto";
                     $jugables++;
                     $hechas++;
                 } else {
@@ -651,19 +654,24 @@ class RutaModel
         return "";
     }
 
-    /** Siguiente lección disponible del idioma (para "Continúa tu ruta"), o null. */
+    /**
+     * Siguiente lección disponible del idioma (para "Continúa tu ruta"), o null.
+     * Si hay varias (lecciones agregadas después en unidades ya hechas), la más
+     * avanzada: es la que sigue el camino donde iba el estudiante.
+     */
     public static function siguiente(PDO $c, int $idiomaId, int $usuarioId, bool $esPremium): ?array
     {
+        $siguiente = null;
         foreach (self::mapa($c, $idiomaId, $usuarioId, $esPremium) as $n) {
             foreach ($n["unidades"] as $u) {
                 foreach ($u["lecciones"] as $l) {
                     if ($l["estado"] === "disponible") {
-                        return $l + ["nivel" => $n["codigo"]];
+                        $siguiente = $l + ["nivel" => $n["codigo"]];
                     }
                 }
             }
         }
-        return null;
+        return $siguiente;
     }
 
     /** Idioma en el que el estudiante practicó por última vez (o null). */
@@ -823,7 +831,9 @@ class RutaModel
                 $palabras = $d["palabras"] ?? [];
                 $error = (int) ($d["error"] ?? -1);
                 $corregida = $palabras;
-                $corregida[$error] = (string) ($d["correccion"] ?? "");
+                // Conserva los signos pegados a la palabra (ej. «¿Fuistes» -> «¿Fuiste»)
+                preg_match('/^([¿¡«"(]*)(.*?)([.,;:!?»")]*)$/u', (string) ($palabras[$error] ?? ""), $signos);
+                $corregida[$error] = ($signos[1] ?? "") . (string) ($d["correccion"] ?? "") . ($signos[3] ?? "");
                 $ok = is_string($respuesta) && ctype_digit($respuesta) && (int) $respuesta === $error;
                 return ["correcto" => $ok, "solucion" => "«" . ($palabras[$error] ?? "") . "» → " . implode(" ", $corregida)];
 

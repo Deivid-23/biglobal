@@ -1010,7 +1010,8 @@ class EstudianteController
             }
             $mapa = RutaModel::mapa($c, (int) $idioma["id"], $this->usuarioId, Plan::esPremium($c, $this->usuarioId));
 
-            // Nivel que se muestra: el pedido, o el que tiene la siguiente lección
+            // Nivel que se muestra: el pedido, o el más avanzado con una lección disponible
+            // (como RutaModel::siguiente: si se agregaron lecciones a un nivel ya hecho, sigue donde iba)
             $nivelPedido = strtoupper(trim((string) ($_GET["nivel"] ?? "")));
             $nivelActivo = $mapa[0]["codigo"] ?? null;
             foreach ($mapa as $n) {
@@ -1020,7 +1021,6 @@ class EstudianteController
                 }
                 if ($nivelPedido === "" && $n["estado"] === "abierto" && $n["hechas"] < $n["jugables"]) {
                     $nivelActivo = $n["codigo"];
-                    break;
                 }
             }
             $datos = ["idioma" => $idioma, "mapa" => $mapa, "nivelActivo" => $nivelActivo] + $datos;
