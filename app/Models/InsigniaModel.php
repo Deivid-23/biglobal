@@ -177,7 +177,7 @@ class InsigniaModel
             return false;
         }
         Notificador::aUsuario($usuarioId, "insignia", "¡Nueva insignia: " . $m["nombre"] . "!",
-            (string) ($m["descripcion"] ?? ""), "estudiante/index.php?page=perfil#insignias");
+            (string) ($m["descripcion"] ?? ""), "estudiante/index.php?page=insignias");
         return true;
     }
 

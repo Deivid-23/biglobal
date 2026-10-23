@@ -2,7 +2,7 @@
 /**
  * Insignias del estudiante.
  * Variables: $listaInsignias (de InsigniaModel::delEstudiante),
- *            $modoInsignias = "resumen" (inicio: las últimas ganadas) | "completo" (Mi perfil, por categoría)
+ *            $modoInsignias = "resumen" (inicio: las últimas ganadas) | "pagina" (página Insignias, por categoría)
  *
  * Las ganadas van con su color; las que faltan en gris y con su avance.
  */
@@ -45,7 +45,7 @@ $tarjetaInsignia = function (array $m): void {
     <section class="bloque" aria-labelledby="titulo-insignias">
         <div class="bloque__cabecera">
             <h2 id="titulo-insignias"><?= $ganadasInsignias ? "Tus últimas insignias" : "Insignias por ganar" ?></h2>
-            <a href="index.php?page=perfil#insignias"><?= count($ganadasInsignias) ?> de <?= count($listaInsignias) ?> · Ver todas</a>
+            <a href="index.php?page=insignias"><?= count($ganadasInsignias) ?> de <?= count($listaInsignias) ?> · Ver todas</a>
         </div>
         <ul class="medallas">
             <?php foreach ($mostrar as $m) { $tarjetaInsignia($m); } ?>
@@ -53,7 +53,7 @@ $tarjetaInsignia = function (array $m): void {
     </section>
 
 <?php elseif ($listaInsignias):
-    // Mi perfil: todas, por categoría
+    // Página Insignias: todas, por categoría
     $porCategoria = [];
     foreach ($listaInsignias as $m) {
         $porCategoria[$m["categoria"]][] = $m;
@@ -61,18 +61,16 @@ $tarjetaInsignia = function (array $m): void {
     $orden = array_keys(InsigniaModel::CATEGORIAS);
     uksort($porCategoria, fn($a, $b) => array_search($a, $orden, true) <=> array_search($b, $orden, true));
 ?>
-    <section class="perfil-tarjeta perfil-insignias" id="insignias" aria-labelledby="titulo-insignias">
-        <div class="bloque__cabecera">
-            <h2 id="titulo-insignias">Insignias</h2>
-            <span class="texto-suave numeros"><?= count($ganadasInsignias) ?> de <?= count($listaInsignias) ?></span>
-        </div>
+    <div class="insignias-catalogo">
         <?php foreach ($porCategoria as $categoria => $lista):
             $ganadasCat = count(array_filter($lista, fn($m) => $m["fecha_ganada"] !== null)); ?>
-            <h3 class="perfil-insignias__categoria"><?= e(InsigniaModel::CATEGORIAS[$categoria] ?? ucfirst($categoria)) ?>
-                <small><?= $ganadasCat ?>/<?= count($lista) ?></small></h3>
-            <ul class="medallas">
-                <?php foreach ($lista as $m) { $tarjetaInsignia($m); } ?>
-            </ul>
+            <section class="insignias-categoria" aria-labelledby="cat-<?= e($categoria) ?>">
+                <h2 class="insignias-categoria__titulo" id="cat-<?= e($categoria) ?>"><?= e(InsigniaModel::CATEGORIAS[$categoria] ?? ucfirst($categoria)) ?>
+                    <small><?= $ganadasCat ?>/<?= count($lista) ?></small></h2>
+                <ul class="medallas">
+                    <?php foreach ($lista as $m) { $tarjetaInsignia($m); } ?>
+                </ul>
+            </section>
         <?php endforeach; ?>
-    </section>
+    </div>
 <?php endif; ?>

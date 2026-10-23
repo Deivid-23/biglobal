@@ -3,7 +3,7 @@
  * Mi perfil.
  * Variables: $cuenta (datos guardados), $valores (lo que se muestra en el formulario),
  *            $errores (["datos" => ?, "password" => ?]), $reglas, $estudiante,
- *            $suscripcion (Premium vigente, o null si es Gratuito), $insignias (InsigniaModel::delEstudiante),
+ *            $suscripcion (Premium vigente, o null si es Gratuito),
  *            $zonas (GamificacionModel::zonasParaElegir), $zonaActual
  */
 $tienePassword = (int) $cuenta["tiene_password"] === 1;
@@ -175,8 +175,12 @@ $textoReglas = "Mínimo {$reglas['minimo']} caracteres"
 </div>
 
 <div style="margin-top: var(--esp-5);">
-    <!-- ================= INSIGNIAS ================= -->
-    <?php $listaInsignias = $insignias; $modoInsignias = "completo"; require __DIR__ . "/_insignias.php"; ?>
+    <!-- Las insignias tienen su propia página (id="insignias": los avisos viejos llegaban aquí) -->
+    <a class="perfil-enlace-insignias" id="insignias" href="index.php?page=insignias">
+        <i class="fa-solid fa-medal" aria-hidden="true"></i>
+        <span><strong>Tus insignias</strong><small>Míralas todas en su propia página</small></span>
+        <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+    </a>
 
     <!-- ================= ZONA HORARIA (la racha cuenta los días con esta hora) ================= -->
     <section class="perfil-tarjeta" id="zona" aria-labelledby="titulo-zona">

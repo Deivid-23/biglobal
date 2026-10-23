@@ -18,6 +18,7 @@ $rutas = [
     "curso"        => "curso",
     "leccion"      => "leccion",
     "certificados" => "certificados",
+    "insignias"    => "insignias",
     "perfil"       => "perfil",
     "plan"         => "plan",
     "clases"       => "clases",

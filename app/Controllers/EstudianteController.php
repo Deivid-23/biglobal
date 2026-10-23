@@ -38,6 +38,7 @@ require_once __DIR__ . "/../Views/estudiante/_helpers.php";
  *   estudiante/index.php?page=ruta-leccion&id=N           -> rutaLeccion()
  *   estudiante/ruta_responder.php (POST, JSON)            -> rutaResponder()
  *   estudiante/guardar_zona.php (POST, JSON)              -> guardarZona()
+ *   estudiante/index.php?page=insignias                   -> insignias()
  */
 class EstudianteController
 {
@@ -171,10 +172,9 @@ class EstudianteController
         // Plan Gratuito o Premium (null = Gratuito)
         $suscripcion = Plan::suscripcionVigente($conexion, $id);
 
-        $insignias = InsigniaModel::delEstudiante($conexion, $id);
         $zonas = GamificacionModel::zonasParaElegir();
         $zonaActual = GamificacionModel::zonaDe($conexion, $id);
-        $this->render("perfil", "perfil", "Mi perfil", compact("cuenta", "valores", "errores", "reglas", "suscripcion", "insignias", "zonas", "zonaActual"));
+        $this->render("perfil", "perfil", "Mi perfil", compact("cuenta", "valores", "errores", "reglas", "suscripcion", "zonas", "zonaActual"));
     }
 
     /** Guarda nombre, apellido y correo. Devuelve null si salió bien o el mensaje de error. */
@@ -1126,6 +1126,24 @@ class EstudianteController
         }
         echo json_encode(["ok" => in_array($r, ["ok", "igual"], true), "resultado" => $r]);
         exit;
+    }
+
+    /* =========================================================
+       INSIGNIAS
+       GET index.php?page=insignias[&ver=ganadas|pendientes]
+    ========================================================= */
+    public function insignias(): void
+    {
+        $todas = InsigniaModel::delEstudiante($this->conexion, $this->usuarioId);
+        $ver = in_array($_GET["ver"] ?? "", ["ganadas", "pendientes"], true) ? $_GET["ver"] : "todas";
+        $lista = $ver === "todas" ? $todas : array_values(array_filter($todas,
+            fn($m) => $ver === "ganadas" ? $m["fecha_ganada"] !== null : $m["fecha_ganada"] === null));
+        $this->render("insignias", "insignias", "Insignias", [
+            "disponible" => InsigniaModel::disponible($this->conexion),
+            "todas"      => $todas,
+            "lista"      => $lista,
+            "ver"        => $ver,
+        ]);
     }
 
     /** Suscripción cancelada que todavía se puede volver a renovar sola. */

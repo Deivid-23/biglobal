@@ -19,6 +19,7 @@ $menu = [
     ["page" => "mis-cursos",   "texto" => "Mis cursos",      "icono" => "fa-book-open", "corto" => "Cursos", "tabbar" => true],
     ["page" => "clases",       "texto" => "Clases en vivo",  "icono" => "fa-video"],
     ["page" => "grupos",       "texto" => "Mis grupos",      "icono" => "fa-people-group", "corto" => "Grupos", "tabbar" => true],
+    ["page" => "insignias",    "texto" => "Insignias",       "icono" => "fa-medal"],
     ["page" => "certificados", "texto" => "Certificados",    "icono" => "fa-award"],
 ];
 $etiquetaCampana = $avisosSinLeer > 0 ? "Notificaciones: " . $avisosSinLeer . " sin leer" : "Notificaciones";
