@@ -1025,6 +1025,8 @@ a.est-perfil.es-activo { background: var(--azul-100); }
 }
 
 .perfil-salir .perfil-tarjeta__ayuda { margin-bottom: 0; }
+/* Tarjetas de abajo del perfil (insignias, zona, apariencia, correos, eliminar): mismo espacio entre todas */
+.perfil-pila { display: grid; gap: var(--esp-5); margin-top: var(--esp-5); }
 .perfil-zona { display: flex; flex-wrap: wrap; gap: var(--esp-2); }
 .perfil-zona .entrada { flex: 1 1 240px; min-width: 0; }
 .perfil-salir__titulo { font-family: var(--fuente-titulo); font-weight: 800; }
@@ -1714,7 +1716,6 @@ a.ruta-nodo__boton:active { transform: translateY(4px); box-shadow: 0 2px 0 var(
     display: flex;
     align-items: center;
     gap: var(--esp-4);
-    margin-bottom: var(--esp-5);
     padding: var(--esp-4) var(--esp-5);
     border-radius: var(--radio-lg);
     background: var(--superficie);

@@ -177,7 +177,7 @@ $textoReglas = "Mínimo {$reglas['minimo']} caracteres"
     </section>
 </div>
 
-<div style="margin-top: var(--esp-5);">
+<div class="perfil-pila">
     <!-- Las insignias tienen su propia página (id="insignias": los avisos viejos llegaban aquí) -->
     <a class="perfil-enlace-insignias" id="insignias" href="index.php?page=insignias">
         <i class="fa-solid fa-medal" aria-hidden="true"></i>
