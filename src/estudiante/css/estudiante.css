@@ -1711,24 +1711,5 @@ a.ruta-nodo__boton:active { transform: translateY(4px); box-shadow: 0 2px 0 var(
 .insignias-categoria__titulo small { margin-left: var(--esp-2); color: var(--texto-suave); font-size: var(--texto-xs); font-weight: 700; }
 .insignias-filtros + .vacio { margin-top: var(--esp-5); }
 
-/* Mi perfil: enlace a la página de insignias */
-.perfil-enlace-insignias {
-    display: flex;
-    align-items: center;
-    gap: var(--esp-4);
-    padding: var(--esp-4) var(--esp-5);
-    border-radius: var(--radio-lg);
-    background: var(--superficie);
-    border: 1px solid var(--borde);
-    color: var(--texto);
-    text-decoration: none;
-}
-.perfil-enlace-insignias > i:first-child { color: var(--naranja-500); font-size: 1.3rem; }
-.perfil-enlace-insignias span { flex: 1; display: grid; }
-.perfil-enlace-insignias strong { font-family: var(--fuente-titulo); }
-.perfil-enlace-insignias small { color: var(--texto-suave); font-size: var(--texto-sm); }
-.perfil-enlace-insignias > i:last-child { color: var(--texto-suave); }
-@media (hover: hover) and (pointer: fine) { .perfil-enlace-insignias:hover { border-color: var(--azul-300); } }
-
 /* Foto de perfil: separada de las tarjetas de abajo */
 .perfil-tarjeta.foto-perfil { margin-bottom: var(--esp-5); }

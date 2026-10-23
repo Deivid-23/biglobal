@@ -178,13 +178,6 @@ $textoReglas = "Mínimo {$reglas['minimo']} caracteres"
 </div>
 
 <div class="perfil-pila">
-    <!-- Las insignias tienen su propia página (id="insignias": los avisos viejos llegaban aquí) -->
-    <a class="perfil-enlace-insignias" id="insignias" href="index.php?page=insignias">
-        <i class="fa-solid fa-medal" aria-hidden="true"></i>
-        <span><strong>Tus insignias</strong><small>Míralas todas en su propia página</small></span>
-        <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
-    </a>
-
     <!-- ================= ZONA HORARIA (la racha cuenta los días con esta hora) ================= -->
     <section class="perfil-tarjeta" id="zona" aria-labelledby="titulo-zona">
         <h2 id="titulo-zona">Zona horaria</h2>
