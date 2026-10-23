@@ -8,6 +8,7 @@
 
 require_once __DIR__ . "/../../app/bootstrap.php";
 require_once __DIR__ . "/../../app/Models/TareaModel.php";
+require_once __DIR__ . "/../../app/Models/InsigniaModel.php";
 
 protegerRol("docente");
 require_once __DIR__ . "/verificar_aprobado.php";
@@ -137,6 +138,11 @@ try {
             $entregaId = (int) ($_POST["entrega_id"] ?? 0);
             $r = TareaModel::calificar($conexion, $grupo, $tarea, $entregaId, $docenteId,
                 (string) ($_POST["puntaje"] ?? ""), (string) ($_POST["comentario"] ?? ""));
+            if ($r === true) {
+                $estudiante = $conexion->prepare("SELECT estudiante_id FROM tarea_entregas WHERE id = ?");
+                $estudiante->execute([$entregaId]);
+                InsigniaModel::revisar($conexion, (int) $estudiante->fetchColumn(), "calificacion");   // le llega a su campana
+            }
             volverGrupo($r === true ? "ok" : "error", $r === true ? "Calificación guardada. Le avisamos al estudiante." : $r, $urlTarea . "#entrega-" . $entregaId);
 
         default:

@@ -3,7 +3,7 @@
 /**
  * GamificacionModel
  *
- * Racha diaria, XP, nivel y medallas del estudiante.
+ * Racha diaria, XP y nivel del estudiante. Las insignias están en InsigniaModel.
  * Usa las tablas de database/gamificacion.sql:
  *   estudiante_stats, xp_movimientos, medallas, usuario_medallas
  *
@@ -88,19 +88,6 @@ class GamificacionModel
         ];
     }
 
-    /** Todas las medallas del catálogo, marcando cuáles ya ganó. */
-    public static function obtenerMedallas(PDO $conexion, int $usuarioId): array
-    {
-        $stmt = $conexion->prepare("
-            SELECT m.codigo, m.nombre, m.descripcion, m.icono, um.fecha AS fecha_ganada
-            FROM medallas m
-            LEFT JOIN usuario_medallas um
-                   ON um.medalla_id = m.id AND um.usuario_id = :usuario_id
-            ORDER BY m.id ASC
-        ");
-        $stmt->execute([":usuario_id" => $usuarioId]);
-        return $stmt->fetchAll();
-    }
 
     /* =========================================================
        ESCRITURA (se llama DENTRO de la transacción de
@@ -167,27 +154,6 @@ class GamificacionModel
         ")->execute([":puntos" => $puntos, ":usuario_id" => $usuarioId]);
 
         self::guardarMovimiento($conexion, $usuarioId, $puntos, $motivo, $referenciaId);
-    }
-
-    /**
-     * Da una medalla por su código. Devuelve su nombre si es NUEVA,
-     * o null si ya la tenía (o el código no existe).
-     */
-    public static function otorgarMedalla(PDO $conexion, int $usuarioId, string $codigo): ?string
-    {
-        $stmt = $conexion->prepare("
-            INSERT IGNORE INTO usuario_medallas (usuario_id, medalla_id)
-            SELECT :usuario_id, id FROM medallas WHERE codigo = :codigo
-        ");
-        $stmt->execute([":usuario_id" => $usuarioId, ":codigo" => $codigo]);
-
-        if ($stmt->rowCount() === 0) {
-            return null;
-        }
-
-        $nombre = $conexion->prepare("SELECT nombre FROM medallas WHERE codigo = :codigo LIMIT 1");
-        $nombre->execute([":codigo" => $codigo]);
-        return $nombre->fetchColumn() ?: null;
     }
 
     /* =========================================================

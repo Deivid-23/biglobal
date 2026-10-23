@@ -61,6 +61,7 @@
             <div data-fin-racha-caja hidden><dt>Racha</dt><dd data-fin-racha>—</dd></div>
         </dl>
         <p class="ruta-fin__mensaje" data-fin-mensaje></p>
+        <p class="ruta-fin__insignia" data-fin-insignia hidden><i class="fa-solid fa-award" aria-hidden="true"></i> <span></span></p>
         <a class="boton boton--primario boton--bloque" href="<?= e($urlRuta) ?>">Seguir en mi ruta</a>
         <a class="boton boton--fantasma boton--bloque" href="index.php?page=ruta-leccion&amp;id=<?= (int) $leccion["id"] ?>">Repetir lección</a>
     </section>

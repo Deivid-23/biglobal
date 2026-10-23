@@ -53,6 +53,7 @@ class Notificador
         "grupo_tarea"       => "fa-clipboard-list",
         "tarea_entrega"     => "fa-file-arrow-up",
         "tarea_calificada"  => "fa-star",
+        "insignia"          => "fa-award",
     ];
 
     /**
@@ -148,6 +149,7 @@ class Notificador
         "grupo_tarea"        => "opcional",
         "tarea_entrega"      => "campana",
         "tarea_calificada"   => "opcional",
+        "insignia"           => "campana",
     ];
 
     /** ¿Existe usuarios.correos_opcionales? (antes del SQL: todos reciben) */

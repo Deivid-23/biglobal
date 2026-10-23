@@ -3,7 +3,7 @@
  * Inicio del estudiante.
  * Variables: $estudiante, $leccionesCompletadas, $totalCertificados,
  *            $cursosEnProgreso, $misCursos, $continuar, $sugeridos,
- *            $gamificacion (racha, XP, nivel y medallas; null si no hay tablas),
+ *            $gamificacion (racha, XP, nivel e insignias; null si no hay tablas),
  *            $ruta (idioma y siguiente lección de la ruta; null si no hay ruta)
  */
 $esNuevo = $leccionesCompletadas === 0;
@@ -127,4 +127,4 @@ $esNuevo = $leccionesCompletadas === 0;
     </div>
 <?php endif; ?>
 
-<?php if ($gamificacion) { require __DIR__ . "/_medallas.php"; } ?>
+<?php if ($gamificacion) { $listaInsignias = $gamificacion["insignias"]; $modoInsignias = "resumen"; require __DIR__ . "/_insignias.php"; } ?>

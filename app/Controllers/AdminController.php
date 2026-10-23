@@ -7,6 +7,7 @@ require_once __DIR__ . "/../Models/ClaseModel.php";
 require_once __DIR__ . "/../Models/DocenteSolicitudModel.php";
 require_once __DIR__ . "/../Models/RevisionModel.php";
 require_once __DIR__ . "/../Models/RutaModel.php";
+require_once __DIR__ . "/../Models/InsigniaModel.php";
 
 /**
  * AdminController
@@ -17,7 +18,7 @@ require_once __DIR__ . "/../Models/RutaModel.php";
  * SuperAdminController y se valida otra vez en el servidor.
  *
  * Páginas: inicio, usuarios, cursos, idiomas, lecciones, actividades,
- *          preguntas (de una actividad), solicitudes, ruta (ruta de aprendizaje), perfil.
+ *          preguntas (de una actividad), solicitudes, ruta (ruta de aprendizaje), insignias, perfil.
  * POST:    accion=crear (modal "Nuevo"), accion=editar, accion=eliminar,
  *          accion=guardar_pregunta, accion=eliminar_pregunta
  */
@@ -202,6 +203,32 @@ class AdminController
             }
         }
         $this->render("ruta", "ruta", $leccion ? $leccion["titulo"] : "Ruta de aprendizaje", $datos);
+    }
+
+    /* =========================================================
+       INSIGNIAS
+       ?page=insignias[&editar=ID]  (los cambios van a src/admin/insignias_acciones.php)
+    ========================================================= */
+    public function insignias(): void
+    {
+        $c = $this->c;
+        $disponible = InsigniaModel::disponible($c);
+        $editar = null;
+        if ($disponible && (int) ($_GET["editar"] ?? 0) > 0) {
+            $editar = InsigniaModel::porId($c, (int) $_GET["editar"]);
+        }
+        $form = $_SESSION["insignia_form"] ?? null;   // lo que escribió si hubo un error
+        unset($_SESSION["insignia_form"]);
+        $this->render("insignias", "insignias", "Insignias", [
+            "disponible" => $disponible,
+            "insignias"  => $disponible ? InsigniaModel::listado($c) : [],
+            "editar"     => $editar,
+            "form"       => $form ?? $editar ?? ["icono" => "fa-star", "color" => "azul", "categoria" => "ruta", "condicion" => "ruta_lecciones", "meta" => 1, "orden" => 100],
+            "niveles"    => RutaModel::disponible($c) ? $c->query("
+                SELECT n.idioma_id, n.codigo, i.nombre AS idioma FROM ruta_niveles n
+                INNER JOIN idiomas i ON i.id = n.idioma_id ORDER BY i.nombre, n.orden
+            ")->fetchAll(PDO::FETCH_ASSOC) : [],
+        ]);
     }
 
     /* =========================================================

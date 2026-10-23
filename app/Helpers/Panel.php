@@ -185,6 +185,7 @@ class Panel
             ["solicitudes", "Solicitudes", "fa-user-clock",  "../admin/index.php?page=solicitudes", $solicitudesPendientes],
             ["revision",    "Revisión de contenido", "fa-clipboard-check", "../admin/index.php?page=revision", $revisionesPendientes],
             ["ruta",        "Ruta de aprendizaje", "fa-route",  "../admin/index.php?page=ruta"],
+            ["insignias",   "Insignias",   "fa-award",       "../admin/index.php?page=insignias"],
         ];
 
         return $menu;

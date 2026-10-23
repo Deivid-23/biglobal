@@ -326,6 +326,11 @@
         $("[data-fin-mensaje]").textContent = r.porcentaje === 100
             ? "¡Perfecta! No fallaste ninguna."
             : (r.primera ? "Se abrió la siguiente lección de tu ruta." : "Buen repaso.");
+        if (r.insignias && r.insignias.length) {
+            const avisoInsignia = $("[data-fin-insignia]");
+            avisoInsignia.querySelector("span").textContent = (r.insignias.length === 1 ? "¡Nueva insignia: " : "¡Nuevas insignias: ") + r.insignias.join(", ") + "!";
+            avisoInsignia.hidden = false;
+        }
         const fin = $("[data-fin]");
         fin.hidden = false;
         fin.querySelector("a").focus();

@@ -9,6 +9,7 @@ require_once __DIR__ . "/../Models/ClaseModel.php";
 require_once __DIR__ . "/../Models/ContenidoModel.php";
 require_once __DIR__ . "/../Models/TareaModel.php";
 require_once __DIR__ . "/../Models/RutaModel.php";
+require_once __DIR__ . "/../Models/InsigniaModel.php";
 require_once __DIR__ . "/../Views/estudiante/_helpers.php";
 
 /**
@@ -150,7 +151,8 @@ class EstudianteController
         // Plan Gratuito o Premium (null = Gratuito)
         $suscripcion = Plan::suscripcionVigente($conexion, $id);
 
-        $this->render("perfil", "perfil", "Mi perfil", compact("cuenta", "valores", "errores", "reglas", "suscripcion"));
+        $insignias = InsigniaModel::delEstudiante($conexion, $id);
+        $this->render("perfil", "perfil", "Mi perfil", compact("cuenta", "valores", "errores", "reglas", "suscripcion", "insignias"));
     }
 
     /** Guarda nombre, apellido y correo. Devuelve null si salió bien o el mensaje de error. */
@@ -307,11 +309,11 @@ class EstudianteController
             $sugeridos = array_slice(EstudianteModel::obtenerCursosPublicados($c, $u), 0, 3);
         }
 
-        // Racha, XP y medallas (null si las tablas aún no existen)
+        // Racha, XP e insignias (null si las tablas aún no existen)
         $gamificacion = null;
         if (GamificacionModel::disponible($c)) {
             $gamificacion = GamificacionModel::obtenerResumen($c, $u);
-            $gamificacion["medallas"] = GamificacionModel::obtenerMedallas($c, $u);
+            $gamificacion["insignias"] = InsigniaModel::delEstudiante($c, $u);
         }
 
         $this->render("inicio", "inicio", "Inicio", [
@@ -507,7 +509,7 @@ class EstudianteController
         $conGamificacion = GamificacionModel::disponible($conexion);
 
         try {
-            // Todo junto o nada: progreso, certificado, XP, racha y medallas
+            // Todo junto o nada: progreso, certificado, XP y racha (las insignias se revisan después)
             $conexion->beginTransaction();
 
             // Si ya la había completado, no vuelve a sumar XP
@@ -526,10 +528,9 @@ class EstudianteController
             }
 
             $xpGanado = 0;
-            $medallasNuevas = [];
 
             if ($conGamificacion && !$yaEstabaHecha) {
-                $racha = GamificacionModel::registrarActividad(
+                GamificacionModel::registrarActividad(
                     $conexion, $usuarioId, GamificacionModel::XP_LECCION, "leccion", $leccionId
                 );
                 $xpGanado = GamificacionModel::XP_LECCION;
@@ -538,27 +539,13 @@ class EstudianteController
                     GamificacionModel::sumarXp($conexion, $usuarioId, GamificacionModel::XP_CURSO, "curso", $cursoId);
                     $xpGanado += GamificacionModel::XP_CURSO;
                 }
-
-                // Medallas que corresponden según lo que acaba de pasar
-                $codigos = ["primera_leccion"];
-                if ($racha >= 3) $codigos[] = "racha_3";
-                if ($racha >= 7) $codigos[] = "racha_7";
-                if ($cursoTerminado) $codigos[] = "primer_curso";
-
-                foreach ($codigos as $codigo) {
-                    $nombre = GamificacionModel::otorgarMedalla($conexion, $usuarioId, $codigo);
-                    if ($nombre !== null) {
-                        $medallasNuevas[] = $nombre;
-                    }
-                }
             }
 
             $conexion->commit();
 
+            $medallasNuevas = $yaEstabaHecha ? [] : InsigniaModel::revisar($conexion, $usuarioId, "curso");
             $textoXp = $xpGanado > 0 ? " +{$xpGanado} XP." : "";
-            $textoMedalla = $medallasNuevas
-                ? " Ganaste la medalla «" . implode("» y «", $medallasNuevas) . "»."
-                : "";
+            $textoMedalla = InsigniaModel::texto($medallasNuevas);
 
             if ($cursoTerminado) {
                 $_SESSION["flash_estudiante"] = ["tipo" => "logro",
@@ -781,10 +768,14 @@ class EstudianteController
         $accion = (string) ($_POST["accion"] ?? "");
         if ($accion === "inscribir") {
             $r = ClaseModel::inscribir($c, $claseId, $this->usuarioId);
-            $_SESSION["flash_estudiante"] = ["tipo" => !$r["ok"] ? "error" : ($r["estado"] === "inscrito" ? "exito" : "info"), "mensaje" => $r["mensaje"]];
+            $insignias = $r["ok"] && $r["estado"] === "inscrito" ? InsigniaModel::revisar($c, $this->usuarioId, "clase") : [];
+            $_SESSION["flash_estudiante"] = ["tipo" => !$r["ok"] ? "error" : ($insignias ? "logro" : ($r["estado"] === "inscrito" ? "exito" : "info")),
+                "mensaje" => $r["mensaje"] . InsigniaModel::texto($insignias)];
         } elseif ($accion === "aceptar_invitacion" || $accion === "rechazar_invitacion") {
             $r = ClaseModel::responderInvitacion($c, $claseId, $this->usuarioId, $accion === "aceptar_invitacion");
-            $_SESSION["flash_estudiante"] = ["tipo" => !$r["ok"] ? "error" : (($r["estado"] ?? "") === "inscrito" ? "exito" : "info"), "mensaje" => $r["mensaje"]];
+            $insignias = $r["ok"] && ($r["estado"] ?? "") === "inscrito" ? InsigniaModel::revisar($c, $this->usuarioId, "clase") : [];
+            $_SESSION["flash_estudiante"] = ["tipo" => !$r["ok"] ? "error" : ($insignias ? "logro" : (($r["estado"] ?? "") === "inscrito" ? "exito" : "info")),
+                "mensaje" => $r["mensaje"] . InsigniaModel::texto($insignias)];
         } elseif ($accion === "retirar") {
             $ok = ClaseModel::retirar($c, $claseId, $this->usuarioId);
             $_SESSION["flash_estudiante"] = ["tipo" => $ok ? "exito" : "error",
@@ -896,7 +887,9 @@ class EstudianteController
                 $volver("error", "Probaste muchos códigos seguidos. Espera unos minutos e inténtalo de nuevo.");
             }
             $r = GrupoModel::unirse($c, (string) ($_POST["codigo"] ?? ""), $this->usuarioId);
-            $volver($r["ok"] ? "exito" : "error", $r["mensaje"], $r["ok"] ? "index.php?page=grupo&id=" . $r["grupo_id"] : "index.php?page=grupos");
+            $insignias = $r["ok"] ? InsigniaModel::revisar($c, $this->usuarioId, "grupo") : [];
+            $volver($r["ok"] ? ($insignias ? "logro" : "exito") : "error", $r["mensaje"] . InsigniaModel::texto($insignias),
+                $r["ok"] ? "index.php?page=grupo&id=" . $r["grupo_id"] : "index.php?page=grupos");
         }
 
         // El resto: tiene que estar en el grupo (y el grupo activo)
@@ -917,7 +910,9 @@ class EstudianteController
                 $volver("error", "Escribiste muchos comentarios seguidos. Espera unos minutos.", $base . "#anuncio-" . $anuncioId);
             }
             $r = GrupoModel::comentar($c, $grupoId, $anuncioId, $this->usuarioId, (string) ($_POST["texto"] ?? ""));
-            $volver($r === true ? "exito" : "error", $r === true ? "Comentario publicado." : $r, $base . "#anuncio-" . $anuncioId);
+            $insignias = $r === true ? InsigniaModel::revisar($c, $this->usuarioId, "comentario") : [];
+            $volver($r === true ? ($insignias ? "logro" : "exito") : "error",
+                $r === true ? "Comentario publicado." . InsigniaModel::texto($insignias) : $r, $base . "#anuncio-" . $anuncioId);
         }
         if ($accion === "borrar_comentario") {
             // Solo los comentarios propios
@@ -939,7 +934,9 @@ class EstudianteController
                 error_log("[BiGlobal][entregar] " . $e->getMessage());
                 $r = "No pudimos guardar tu entrega. Inténtalo de nuevo.";
             }
-            $volver($r === true ? "exito" : "error", $r === true ? "¡Entrega enviada! Tu docente ya recibió el aviso." : $r, $urlTarea);
+            $insignias = $r === true ? InsigniaModel::revisar($c, $this->usuarioId, "tarea") : [];
+            $volver($r === true ? ($insignias ? "logro" : "exito") : "error",
+                $r === true ? "¡Entrega enviada! Tu docente ya recibió el aviso." . InsigniaModel::texto($insignias) : $r, $urlTarea);
         }
         $volver("error", "Acción no válida.", $base);
     }
@@ -1074,6 +1071,9 @@ class EstudianteController
 
         try {
             $r = RutaModel::responder($this->conexion, $this->usuarioId, (int) ($_POST["leccion_id"] ?? 0), (int) ($_POST["ejercicio_id"] ?? 0), $respuesta);
+            if (isset($r["resultado"])) {
+                $r["resultado"]["insignias"] = InsigniaModel::revisar($this->conexion, $this->usuarioId, "ruta");
+            }
         } catch (Throwable $e) {
             error_log("[BiGlobal][ruta] " . $e->getMessage());
             $responder(["error" => "No pudimos guardar tu respuesta. Inténtalo de nuevo."], 500);
@@ -1174,23 +1174,17 @@ class EstudianteController
             $xpGanado = 0;
             $medallasNuevas = [];
             if ($aprobado && !$yaAprobada && GamificacionModel::disponible($conexion)) {
-                $racha = GamificacionModel::registrarActividad(
+                GamificacionModel::registrarActividad(
                     $conexion, $usuarioId, QuizModel::XP_ACTIVIDAD, "actividad", $actividadId
                 );
                 $xpGanado = QuizModel::XP_ACTIVIDAD;
-
-                $codigos = [];
-                if ($racha >= 3) $codigos[] = "racha_3";
-                if ($racha >= 7) $codigos[] = "racha_7";
-                foreach ($codigos as $codigo) {
-                    $nombre = GamificacionModel::otorgarMedalla($conexion, $usuarioId, $codigo);
-                    if ($nombre !== null) {
-                        $medallasNuevas[] = $nombre;
-                    }
-                }
             }
 
             $conexion->commit();
+
+            if ($aprobado && !$yaAprobada) {
+                $medallasNuevas = InsigniaModel::revisar($conexion, $usuarioId, "actividad");
+            }
         } catch (PDOException $e) {
             if ($conexion->inTransaction()) {
                 $conexion->rollBack();

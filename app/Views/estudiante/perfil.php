@@ -3,7 +3,7 @@
  * Mi perfil.
  * Variables: $cuenta (datos guardados), $valores (lo que se muestra en el formulario),
  *            $errores (["datos" => ?, "password" => ?]), $reglas, $estudiante,
- *            $suscripcion (Premium vigente, o null si es Gratuito)
+ *            $suscripcion (Premium vigente, o null si es Gratuito), $insignias (InsigniaModel::delEstudiante)
  */
 $tienePassword = (int) $cuenta["tiene_password"] === 1;
 $conGoogle = (int) $cuenta["con_google"] === 1;
@@ -174,6 +174,9 @@ $textoReglas = "Mínimo {$reglas['minimo']} caracteres"
 </div>
 
 <div style="margin-top: var(--esp-5);">
+    <!-- ================= INSIGNIAS ================= -->
+    <?php $listaInsignias = $insignias; $modoInsignias = "completo"; require __DIR__ . "/_insignias.php"; ?>
+
     <?php $claseTarjeta = "perfil-tarjeta"; require __DIR__ . "/../panel/_personalizacion.php"; ?>
 
     <!-- ================= CORREOS ================= -->

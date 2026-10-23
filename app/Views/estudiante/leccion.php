@@ -112,7 +112,7 @@ foreach ($quiz as $idQuiz => $q) {
                                                 Acertaste <?= (int) $res["aciertos"] ?> de <?= (int) $res["total"] ?>.
                                                 <?php if ($res["xp"] > 0): ?><strong>+<?= (int) $res["xp"] ?> XP.</strong><?php endif; ?>
                                                 <?php if (!empty($res["medallas"])): ?>
-                                                    Ganaste la medalla «<?= e(implode("» y «", $res["medallas"])) ?>».
+                                                    <?= e(trim(InsigniaModel::texto($res["medallas"]))) ?>
                                                 <?php endif; ?>
                                                 <?php if (!$res["aprobado"]): ?>
                                                     Necesitas el <?= QuizModel::PORCENTAJE_APROBAR ?>&nbsp;%. Cambia las respuestas marcadas en rojo.

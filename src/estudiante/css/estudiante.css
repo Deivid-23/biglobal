@@ -449,15 +449,17 @@ body.menu-abierto { overflow: hidden; }
 /* La barra del nivel crece rápido (menos de 300 ms) */
 .juego__nivel .progreso__relleno { animation-duration: var(--dur-lenta); }
 
-/* ---------- Medallas ---------- */
+/* ---------- Insignias (antes «medallas») ---------- */
 .medallas {
     list-style: none;
     margin: 0;
     padding: 0;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
     gap: var(--esp-3);
 }
+
+@media (max-width: 420px) { .medallas { gap: var(--esp-2); } .medalla { padding: var(--esp-3) var(--esp-2); } }
 
 .medalla {
     display: grid;
@@ -488,6 +490,20 @@ body.menu-abierto { overflow: hidden; }
 .medalla--ganada { border-color: var(--naranja-100); }
 .medalla--ganada .medalla__icono { background: var(--naranja-100); color: var(--naranja-500); }
 .medalla--ganada .medalla__estado { color: var(--naranja-700); }
+/* Color elegido por el admin para cada insignia */
+.medalla--azul    .medalla__icono { background: var(--azul-100);    color: var(--azul-700); }
+.medalla--verde   .medalla__icono { background: var(--verde-100);   color: var(--verde-700); }
+.medalla--ambar   .medalla__icono { background: var(--ambar-100);   color: var(--ambar-700); }
+.medalla--rojo    .medalla__icono { background: var(--rojo-100);    color: var(--rojo-700); }
+.medalla--rosa    .medalla__icono { background: #FCE7F3; color: #BE185D; }
+.medalla--morado  .medalla__icono { background: #EDE9FE; color: #6D28D9; }
+:root[data-tema="oscuro"] .medalla--rosa .medalla__icono { background: #3B1530; color: #F9A8D4; }
+:root[data-tema="oscuro"] .medalla--morado .medalla__icono { background: #2A1F4A; color: #C4B5FD; }
+.medalla__progreso { width: 80%; height: 6px; margin-top: var(--esp-1); }
+
+.perfil-insignias .bloque__cabecera { margin-bottom: var(--esp-2); }
+.perfil-insignias__categoria { margin: var(--esp-5) 0 var(--esp-3); font-size: var(--texto-base); font-weight: 800; }
+.perfil-insignias__categoria small { margin-left: var(--esp-2); color: var(--texto-suave); font-size: var(--texto-xs); font-weight: 700; }
 
 .medalla--pendiente .medalla__icono { background: var(--neutro-100); color: var(--texto-tenue); }
 .medalla--pendiente .medalla__nombre { color: var(--texto-suave); }
@@ -1622,6 +1638,7 @@ a.ruta-nodo__boton:active { transform: translateY(4px); box-shadow: 0 2px 0 var(
 .ruta-fin__datos dt { color: var(--texto-suave); font-size: var(--texto-xs); }
 .ruta-fin__datos dd { margin: 0; font-family: var(--fuente-titulo); font-size: var(--texto-xl); font-weight: 800; }
 .ruta-fin__mensaje { color: var(--texto-suave); }
+.ruta-fin__insignia { padding: var(--esp-3); border-radius: var(--radio); background: var(--naranja-100); color: var(--naranja-700); font-family: var(--fuente-titulo); font-weight: 800; }
 
 @media (prefers-reduced-motion: reduce) {
     .ruta-nodo__boton, .ruta-jugar__progreso .progreso__relleno { transition: none; }
