@@ -29,6 +29,7 @@
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" integrity="sha384-9nhczxUqK87bcKHh20fSQcTGD4qq5GhayNYSYWqwBkINBhOfQLg/P5HG5lF1urn4" crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
     <?php endif; ?>
     <script src="../js/panel.js<?= version("js/panel.js") ?>" defer></script>
+    <script src="../js/campana.js<?= version("js/campana.js") ?>" defer></script>
 </head>
 <body class="pnl-body">
 <a class="saltar-contenido" href="#contenido">Saltar al contenido</a>

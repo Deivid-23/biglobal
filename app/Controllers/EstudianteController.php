@@ -86,8 +86,9 @@ class EstudianteController
 
         $zonaUsuario = GamificacionModel::zonaDe($this->conexion, $this->usuarioId);
 
-        // Contador de la campana
+        // Campana flotante (la misma de los otros roles: app/Views/panel/_campana.php)
         $avisosSinLeer = Notificador::noLeidas($this->usuarioId);
+        $campanaPanel = ["noLeidas" => $avisosSinLeer, "lista" => Notificador::recientes($this->usuarioId, 10)];
 
         // Mensaje de una sola vez (ej. "¡Lección completada!")
         $flash = $_SESSION["flash_estudiante"] ?? null;

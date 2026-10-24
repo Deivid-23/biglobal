@@ -16,5 +16,6 @@
 </nav>
 
 <script src="js/estudiante.js<?= version("estudiante/js/estudiante.js") ?>"></script>
+<script src="../js/campana.js<?= version("js/campana.js") ?>"></script>
 </body>
 </html>

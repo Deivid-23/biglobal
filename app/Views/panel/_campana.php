@@ -1,7 +1,8 @@
 <?php
 /**
- * Campana de notificaciones de la barra superior (admin, super admin y docente).
- * Variable: $campanaPanel = ["noLeidas" => int, "lista" => [...]] (desde Panel::render)
+ * Campana de notificaciones de la barra superior (todos los roles).
+ * Variable: $campanaPanel = ["noLeidas" => int, "lista" => [...]]
+ *           (desde Panel::render o EstudianteController::render)
  *
  * Sin JavaScript también funciona: cada aviso es un enlace y
  * "Marcar todas como leídas" es un formulario POST normal.
@@ -36,7 +37,9 @@ $etiquetaCampana = $noLeidas > 0
                 <p>Todavía no hay avisos.</p>
                 <small><?= in_array(rolActual(), ["admin", "superadmin"], true)
                     ? "Aquí verás los registros nuevos, los docentes por aprobar y los cursos creados."
-                    : "Aquí verás la revisión de tus cursos y lecciones y otros avisos." ?></small>
+                    : (rolActual() === "estudiante"
+                        ? "Aquí verás tus clases, tus grupos, tu racha y otros avisos."
+                        : "Aquí verás la revisión de tus cursos y lecciones y otros avisos.") ?></small>
             </div>
         <?php else: ?>
             <ul class="pnl-campana__lista">
@@ -65,6 +68,10 @@ $etiquetaCampana = $noLeidas > 0
                     </li>
                 <?php endforeach; ?>
             </ul>
+        <?php endif; ?>
+
+        <?php if (rolActual() === "estudiante"): ?>
+            <p class="pnl-campana__pie"><a href="index.php?page=avisos">Ver todas las notificaciones</a></p>
         <?php endif; ?>
     </div>
 </div>

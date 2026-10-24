@@ -228,7 +228,8 @@ body.menu-abierto { overflow: hidden; }
 .est-salir { color: var(--texto-suave); }
 
 /* ---------- Botones de ícono (☰, cerrar, campana): con borde, como en los otros roles ---------- */
-.est-icono-boton {
+.est-icono-boton,
+.est-barra .pnl-icono-boton {   /* la campana compartida (app/Views/panel/_campana.php) */
     position: relative;
     width: 44px;
     height: 44px;
@@ -245,8 +246,8 @@ body.menu-abierto { overflow: hidden; }
     cursor: pointer;
     transition: background-color var(--dur) ease, color var(--dur) ease, transform var(--dur-rapida) var(--ease-out);
 }
-.est-icono-boton:active { transform: scale(0.94); }
-@media (hover: hover) and (pointer: fine) { .est-icono-boton:hover { background: var(--azul-50); color: var(--marca-texto); } }
+.est-icono-boton:active, .est-barra .pnl-icono-boton:active { transform: scale(0.94); }
+@media (hover: hover) and (pointer: fine) { .est-icono-boton:hover, .est-barra .pnl-icono-boton:hover { background: var(--azul-50); color: var(--marca-texto); } }
 
 /* ---------- Barra inferior de celular ---------- */
 
@@ -1236,24 +1237,6 @@ button.est-nav__enlace { width: 100%; border: 0; background: none; cursor: point
 .invitacion__acciones { display: flex; gap: var(--esp-2); }
 .invitacion__acciones form { margin: 0; }
 
-/* ---------- Campana (abre la página de notificaciones; su forma viene de .est-icono-boton) ---------- */
-.est-campana[aria-current="page"] { background: var(--azul-100); color: var(--azul-800); }
-.est-campana__contador {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    min-width: 18px;
-    height: 18px;
-    padding: 0 4px;
-    display: grid;
-    place-items: center;
-    border-radius: 999px;
-    background: var(--rojo-600);
-    color: #FFFFFF;
-    font-size: 0.65rem;
-    font-weight: 800;
-    line-height: 1;
-}
 
 /* ---------- Página de notificaciones ---------- */
 .avisos { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--esp-2); max-width: 760px; }

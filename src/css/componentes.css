@@ -573,3 +573,212 @@ textarea.entrada { min-height: 110px; padding: var(--esp-3) var(--esp-4); resize
 
 .grupo-casilla { display: flex; align-items: center; gap: var(--esp-2); font-size: var(--texto-sm); }
 .grupo-casilla input { width: 18px; height: 18px; flex: none; }
+
+/* ==========================================================================
+   CAMPANA DE NOTIFICACIONES (barra superior de todos los roles)
+   La usan app/Views/panel/_campana.php y js/campana.js.
+   ========================================================================== */
+.pnl-campana { position: relative; flex: 0 0 auto; }
+
+.pnl-campana__boton {
+    position: relative;
+    transition: background-color var(--dur) ease, color var(--dur) ease, transform var(--dur-rapida) var(--ease-out);
+}
+
+.pnl-campana__boton:active { transform: scale(0.94); }
+.pnl-campana__boton[aria-expanded="true"] { background: var(--azul-50); color: var(--marca-texto); }
+
+@media (hover: hover) and (pointer: fine) {
+    .pnl-campana__boton:hover { background: var(--azul-50); color: var(--marca-texto); }
+}
+
+/* Contador de no leídas */
+.pnl-campana__contador {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radio-pill);
+    border: 2px solid var(--superficie);
+    background: var(--rojo-600);
+    color: #fff;
+    font-family: var(--fuente-titulo);
+    font-size: 0.68rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+/* Panel desplegable */
+.pnl-campana__panel {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    z-index: 60;
+    width: min(380px, calc(100vw - 2 * var(--esp-4)));
+    max-height: min(70vh, 520px);
+    display: flex;
+    flex-direction: column;
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio-lg);
+    box-shadow: var(--sombra-3);
+    overflow: hidden;
+    transform-origin: top right;
+    animation: campana-abre 180ms var(--ease-out);
+}
+
+@keyframes campana-abre {
+    from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+    to   { opacity: 1; transform: none; }
+}
+
+/* En celular el panel se ancla a los bordes de la pantalla */
+@media (max-width: 519.98px) {
+    .pnl-campana { position: static; }
+    .pnl-campana__panel {
+        position: fixed;
+        top: calc(68px + env(safe-area-inset-top));
+        left: var(--esp-3);
+        right: var(--esp-3);
+        width: auto;
+    }
+}
+
+.pnl-campana__cabecera {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--esp-3);
+    padding: var(--esp-3) var(--esp-4);
+    border-bottom: 1px solid var(--borde);
+}
+
+.pnl-campana__titulo {
+    margin: 0;
+    font-family: var(--fuente-titulo);
+    font-weight: 800;
+}
+
+.pnl-campana__marcar {
+    min-height: 36px;
+    padding: 0 var(--esp-2);
+    border: 0;
+    border-radius: var(--radio-sm);
+    background: transparent;
+    color: var(--azul-700);
+    font-family: var(--fuente-titulo);
+    font-size: var(--texto-sm);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .pnl-campana__marcar:hover { background: var(--azul-50); }
+}
+
+.pnl-campana__lista {
+    list-style: none;
+    margin: 0;
+    padding: var(--esp-2);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.pnl-aviso {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+    gap: var(--esp-3);
+    align-items: start;
+    padding: var(--esp-3);
+    border-radius: var(--radio);
+    color: inherit;
+    text-decoration: none;
+    transition: background-color var(--dur) ease;
+}
+
+.pnl-aviso.es-nueva { background: var(--azul-50); }
+
+@media (hover: hover) and (pointer: fine) {
+    .pnl-aviso:hover { background: var(--neutro-100); }
+}
+
+.pnl-aviso__icono {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radio);
+    background: var(--azul-100);
+    color: var(--marca-texto);
+    font-size: 0.95rem;
+}
+
+.pnl-aviso__icono--docente_pendiente { background: var(--ambar-100); color: var(--ambar-700); }
+.pnl-aviso__icono--resumen_semanal   { background: var(--verde-100); color: var(--verde-700); }
+
+.pnl-aviso__texto { display: grid; gap: 2px; min-width: 0; }
+
+.pnl-aviso__texto strong {
+    font-family: var(--fuente-titulo);
+    font-size: var(--texto-sm);
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.pnl-aviso__texto span {
+    color: var(--texto-suave);
+    font-size: var(--texto-sm);
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* El resumen semanal se lee completo, una línea por dato */
+.pnl-aviso--resumen_semanal .pnl-aviso__texto span {
+    display: block;
+    -webkit-line-clamp: unset;
+    overflow: visible;
+    white-space: pre-line;
+}
+
+.pnl-aviso__texto time {
+    margin-top: 2px;
+    color: var(--texto-suave);
+    font-size: var(--texto-xs);
+}
+
+.pnl-aviso__punto {
+    width: 9px;
+    height: 9px;
+    margin-top: 6px;
+    border-radius: 50%;
+    background: var(--azul-600);
+}
+
+.pnl-campana__vacio {
+    display: grid;
+    justify-items: center;
+    gap: var(--esp-2);
+    padding: var(--esp-8) var(--esp-6);
+    text-align: center;
+    color: var(--texto-suave);
+}
+
+.pnl-campana__vacio i { font-size: 1.6rem; color: var(--azul-300); }
+.pnl-campana__vacio p { margin: 0; font-family: var(--fuente-titulo); font-weight: 700; color: var(--texto); }
+.pnl-campana__vacio small { max-width: 30ch; line-height: 1.5; }
+
+@media (prefers-reduced-motion: reduce) {
+    .pnl-campana__panel { animation: none; }
+}
+
+/* Pie: "Ver todas" (estudiante, que tiene su página de avisos) */
+.pnl-campana__pie { padding: var(--esp-2) var(--esp-4); border-top: 1px solid var(--borde); text-align: center; }
+.pnl-campana__pie a { font-family: var(--fuente-titulo); font-size: var(--texto-sm); font-weight: 700; color: var(--azul-700); }

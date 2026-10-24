@@ -2,7 +2,7 @@
 /**
  * Parte superior del layout del estudiante.
  * Variables que llegan desde EstudianteController::render():
- *   $titulo, $paginaActiva, $estudiante, $flash, $avisosSinLeer, $zonaUsuario
+ *   $titulo, $paginaActiva, $estudiante, $flash, $avisosSinLeer, $campanaPanel, $zonaUsuario
  *
  * Igual que los otros roles: menú lateral con las secciones y una barra
  * superior con la campana, el tema y el usuario. En celular el menú
@@ -22,7 +22,6 @@ $menu = [
     ["page" => "insignias",    "texto" => "Insignias",       "icono" => "fa-medal"],
     ["page" => "certificados", "texto" => "Certificados",    "icono" => "fa-award"],
 ];
-$etiquetaCampana = $avisosSinLeer > 0 ? "Notificaciones: " . $avisosSinLeer . " sin leer" : "Notificaciones";
 ?>
 <!DOCTYPE html>
 <html lang="es"<?= Panel::atributosHtml() ?> data-zona="<?= e($zonaUsuario) ?>">
@@ -107,11 +106,7 @@ $etiquetaCampana = $avisosSinLeer > 0 ? "Notificaciones: " . $avisosSinLeer . " 
             </a>
             <p class="est-barra__titulo"><?= e($titulo) ?></p>
 
-            <a class="est-icono-boton est-campana" href="index.php?page=avisos" aria-label="<?= e($etiquetaCampana) ?>"
-               <?= $paginaActiva === "avisos" ? 'aria-current="page"' : "" ?>>
-                <i class="fa-solid fa-bell" aria-hidden="true"></i>
-                <?php if ($avisosSinLeer > 0): ?><span class="est-campana__contador" aria-hidden="true"><?= $avisosSinLeer > 9 ? "9+" : $avisosSinLeer ?></span><?php endif; ?>
-            </a>
+            <?php require __DIR__ . "/../panel/_campana.php"; ?>
 
             <button class="boton-tema" type="button" data-alternar-tema aria-label="Cambiar a modo oscuro">
                 <i class="fa-solid fa-sun icono-sol" aria-hidden="true"></i>
