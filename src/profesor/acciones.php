@@ -31,7 +31,7 @@ function volverCon(string $tipo, string $mensaje, string $url = "index.php?page=
     exit;
 }
 
-verificarCsrfFormulario($_POST["csrf_token"] ?? $_GET["csrf_token"] ?? "");
+verificarCsrfFormulario($_POST["csrf_token"] ?? "");
 
 $accion = $_POST["accion"] ?? "";
 

@@ -666,7 +666,7 @@ class EstudianteController
             if ($fin === null) {
                 $volver("info", "La prueba gratis no está disponible para tu cuenta: es una sola vez y solo si nunca has tenido Premium.");
             }
-            Auditoria::registrar("plan.prueba", "usuario", $this->usuarioId, (string) ($_SESSION["nombre"] ?? ""), null, "Premium de prueba hasta " . fechaCorta($fin));
+            Auditoria::registrar("plan.prueba", "cuenta", $this->usuarioId, (string) ($_SESSION["nombre"] ?? ""), null, "Premium de prueba hasta " . fechaCorta($fin));
             $volver("exito", "¡Listo! Tienes Premium gratis hasta el " . fechaCorta($fin) . ". Ya puedes unirte a las clases en vivo y a los grupos con docentes.");
         }
 
