@@ -1,7 +1,8 @@
 <?php
 /**
  * Mi ruta: el camino de lecciones de un idioma.
- * Variables: $disponible, $idiomas, $idioma, $mapa (niveles con unidades y lecciones), $nivelActivo
+ * Variables: $disponible, $idiomas, $idioma, $mapa (niveles con unidades y lecciones), $nivelActivo,
+ *            $examen (examen de ubicación: fila, puedeHoy, destacar; null si el idioma no tiene)
  */
 $iconoEstado = ["completada" => "fa-check", "disponible" => "fa-star", "bloqueada" => "fa-lock", "preparacion" => "fa-screwdriver-wrench"];
 $textoEstado = ["completada" => "Completada", "disponible" => "Siguiente lección", "bloqueada" => "Bloqueada", "preparacion" => "En preparación"];
@@ -30,6 +31,38 @@ $codigoIdioma = $idioma ? strtoupper($idioma["codigo"]) : "";
 <?php if (!$mapa): ?>
     <p class="texto-suave ruta-vacia">Este idioma todavía no tiene niveles publicados.</p>
 <?php return; endif; ?>
+
+<?php if (!empty($examen)):
+    $urlExamen = "index.php?page=ubicacion&amp;idioma=" . e(rawurlencode($idioma["codigo"]));
+    $ubicado = $examen["fila"]["nivel_codigo"] ?? null;
+?>
+    <?php if ($ubicado === null && $examen["destacar"]): ?>
+        <section class="ubicacion-aviso" aria-labelledby="titulo-ubicacion">
+            <span class="ubicacion-aviso__icono" aria-hidden="true"><i class="fa-solid fa-compass"></i></span>
+            <div class="ubicacion-aviso__texto">
+                <h2 id="titulo-ubicacion">¿Ya sabes <?= e(mb_strtolower($idioma["nombre"])) ?>?</h2>
+                <p>Haz el examen de ubicación y empieza en tu nivel. Son unos 10 minutos.</p>
+            </div>
+            <?php if ($examen["puedeHoy"]): ?>
+                <a class="boton boton--primario" href="<?= $urlExamen ?>">Hacer el examen</a>
+            <?php else: ?>
+                <p class="ubicacion-aviso__nota">Ya lo intentaste hoy. Puedes repetirlo mañana.</p>
+            <?php endif; ?>
+        </section>
+    <?php else: ?>
+        <p class="ubicacion-linea">
+            <i class="fa-solid fa-compass" aria-hidden="true"></i>
+            <?php if ($ubicado !== null): ?>
+                Examen de ubicación: empiezas en el <strong><?= e($ubicado) ?></strong><?php if ($examen["fila"]["detalle"]): ?> <span class="ubicacion-linea__detalle">(<?= e($examen["fila"]["detalle"]) ?>)</span><?php endif; ?>.
+                <?php if ($examen["puedeHoy"]): ?><a href="<?= $urlExamen ?>">Repetir el examen</a><?php endif; ?>
+            <?php elseif ($examen["puedeHoy"]): ?>
+                ¿Ya sabes más? <a href="<?= $urlExamen ?>">Haz el examen de ubicación</a> y empieza en tu nivel.
+            <?php else: ?>
+                Ya intentaste hoy el examen de ubicación. Puedes repetirlo mañana.
+            <?php endif; ?>
+        </p>
+    <?php endif; ?>
+<?php endif; ?>
 
 <nav class="ruta-niveles" aria-label="Niveles">
     <?php foreach ($mapa as $n):

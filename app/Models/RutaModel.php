@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . "/GamificacionModel.php";
+require_once __DIR__ . "/UbicacionModel.php";
 
 /**
  * RutaModel
@@ -572,6 +573,8 @@ class RutaModel
      * de cada una para el estudiante:
      *   lección: completada | disponible | bloqueada | preparacion
      *   nivel:   abierto | bloqueado
+     * Con examen de ubicación (UbicacionModel): su nivel queda abierto y en los
+     * anteriores ("saltado" = true) todas las lecciones se pueden hacer, en cualquier orden.
      */
     public static function mapa(PDO $c, int $idiomaId, int $usuarioId): array
     {
@@ -579,6 +582,8 @@ class RutaModel
         if (!$niveles) {
             return [];
         }
+        $ubicado = UbicacionModel::nivelDe($c, $usuarioId, $idiomaId);
+        $ordenUbicado = $ubicado !== null ? array_search($ubicado, self::NIVELES, true) : false;
         $stmt = $c->prepare("
             SELECT l.id, l.titulo, l.descripcion, l.xp, l.orden, l.unidad_id,
                    u.titulo AS unidad, u.descripcion AS unidad_descripcion, u.icono, u.orden AS unidad_orden, u.nivel_id,
@@ -605,7 +610,10 @@ class RutaModel
             $lista = $porNivel[(int) $n["id"]] ?? [];
             // Si ya avanzó en este nivel, sigue abierto aunque después se agreguen lecciones al anterior
             $conAvance = (bool) array_filter($lista, fn($l) => $l["completada_en"] !== null);
-            $estadoNivel = !$anteriorCompleto && !$conAvance ? "bloqueado" : "abierto";
+            $ordenNivel = array_search($n["codigo"], self::NIVELES, true);
+            $saltado = $ordenUbicado !== false && $ordenNivel !== false && $ordenNivel < $ordenUbicado;
+            $hastaUbicado = $ordenUbicado !== false && $ordenNivel !== false && $ordenNivel <= $ordenUbicado;
+            $estadoNivel = !$anteriorCompleto && !$conAvance && !$hastaUbicado ? "bloqueado" : "abierto";
 
             // Una lección se abre si la anterior jugable está completada. Así, una lección
             // agregada después (ej. un repaso en la unidad 1) no bloquea a quien ya iba más adelante.
@@ -622,7 +630,7 @@ class RutaModel
                     $jugables++;
                     $hechas++;
                 } else {
-                    $l["estado"] = $abierta ? "disponible" : "bloqueada";
+                    $l["estado"] = $abierta || $saltado ? "disponible" : "bloqueada";
                     $abierta = false;
                     $jugables++;
                 }
@@ -634,8 +642,8 @@ class RutaModel
             }
 
             $completo = $jugables > 0 ? $hechas === $jugables : true;
-            $resultado[] = $n + ["estado" => $estadoNivel, "unidades" => array_values($unidades), "jugables" => $jugables, "hechas" => $hechas];
-            $anteriorCompleto = $completo && $estadoNivel === "abierto";
+            $resultado[] = $n + ["estado" => $estadoNivel, "saltado" => $saltado, "unidades" => array_values($unidades), "jugables" => $jugables, "hechas" => $hechas];
+            $anteriorCompleto = ($completo || $saltado) && $estadoNivel === "abierto";
         }
         return $resultado;
     }

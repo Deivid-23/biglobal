@@ -37,6 +37,8 @@ require_once __DIR__ . "/../Views/estudiante/_helpers.php";
  *   estudiante/index.php?page=ruta[&idioma=EN][&nivel=A1] -> ruta()  (Mi ruta)
  *   estudiante/index.php?page=ruta-leccion&id=N           -> rutaLeccion()
  *   estudiante/ruta_responder.php (POST, JSON)            -> rutaResponder()
+ *   estudiante/index.php?page=ubicacion&idioma=EN         -> ubicacion()  (examen de ubicación)
+ *   estudiante/ubicacion_responder.php (POST, JSON)       -> ubicacionResponder()
  *   estudiante/guardar_zona.php (POST, JSON)              -> guardarZona()
  *   estudiante/index.php?page=insignias                   -> insignias()
  */
@@ -1032,7 +1034,17 @@ class EstudianteController
                     $nivelActivo = $n["codigo"];
                 }
             }
-            $datos = ["idioma" => $idioma, "mapa" => $mapa, "nivelActivo" => $nivelActivo] + $datos;
+            // Examen de ubicación: se destaca si casi no ha empezado este idioma
+            $examen = null;
+            if (UbicacionModel::disponible($c) && UbicacionModel::tieneExamen($idioma)) {
+                $hechas = array_sum(array_column($mapa, "hechas"));
+                $examen = [
+                    "fila"     => UbicacionModel::de($c, $this->usuarioId, (int) $idioma["id"]),
+                    "puedeHoy" => UbicacionModel::puedeHoy($c, $this->usuarioId, (int) $idioma["id"]),
+                    "destacar" => $hechas < 8,
+                ];
+            }
+            $datos = ["idioma" => $idioma, "mapa" => $mapa, "nivelActivo" => $nivelActivo, "examen" => $examen] + $datos;
         }
         $this->render("ruta", "ruta", "Mi ruta", $datos);
     }
@@ -1070,6 +1082,88 @@ class EstudianteController
         ]);
     }
 
+    /* =========================================================
+       EXAMEN DE UBICACIÓN (UbicacionModel)
+       GET  index.php?page=ubicacion&idioma=EN
+       POST ubicacion_responder.php (JSON)
+    ========================================================= */
+    public function ubicacion(): void
+    {
+        $c = $this->conexion;
+        $volver = function (string $tipo, string $mensaje, string $url = "index.php?page=ruta"): void {
+            $_SESSION["flash_estudiante"] = ["tipo" => $tipo, "mensaje" => $mensaje];
+            header("Location: " . $url);
+            exit;
+        };
+        if (!UbicacionModel::disponible($c)) {
+            $volver("info", "El examen de ubicación todavía no está disponible.");
+        }
+        $codigo = strtoupper(trim((string) ($_GET["idioma"] ?? "")));
+        $idioma = null;
+        foreach (RutaModel::idiomas($c, true) as $i) {
+            if (strtoupper($i["codigo"]) === $codigo) {
+                $idioma = $i;
+            }
+        }
+        if (!$idioma || !UbicacionModel::tieneExamen($idioma)) {
+            $volver("info", "Ese idioma todavía no tiene examen de ubicación.");
+        }
+        $urlRuta = "index.php?page=ruta&idioma=" . rawurlencode($idioma["codigo"]);
+        if (!UbicacionModel::puedeHoy($c, $this->usuarioId, (int) $idioma["id"])) {
+            $volver("info", "Ya hiciste hoy el examen de ubicación de " . $idioma["nombre"] . ". Puedes repetirlo mañana.", $urlRuta);
+        }
+        $ejercicios = UbicacionModel::iniciar($c, $this->usuarioId, (int) $idioma["id"]);
+        if (!$ejercicios) {
+            $volver("info", "El examen de ubicación de " . $idioma["nombre"] . " todavía no tiene ejercicios.", $urlRuta);
+        }
+        $this->render("ubicacion", "ruta", "Examen de ubicación", [
+            "idioma"     => $idioma,
+            "urlRuta"    => $urlRuta,
+            "niveles"    => array_column($_SESSION["ruta_ubicacion"]["bloques"], "codigo"),
+            "ejercicios" => array_map(fn($e) => RutaModel::vistaPublica($e, (string) $idioma["codigo"]), $ejercicios),
+        ]);
+    }
+
+    public function ubicacionResponder(): void
+    {
+        header("Content-Type: application/json; charset=utf-8");
+        header("Cache-Control: no-store");
+        $responder = function (array $datos, int $codigo = 200): void {
+            http_response_code($codigo);
+            echo json_encode($datos, JSON_UNESCAPED_UNICODE);
+            exit;
+        };
+        if ($_SERVER["REQUEST_METHOD"] !== "POST" || !UbicacionModel::disponible($this->conexion)) {
+            $responder(["error" => "Petición no válida."], 405);
+        }
+        verificarCsrfFormulario($_POST["csrf_token"] ?? "");
+        if (!LimiteIntentos::permitir("ruta:usuario:" . $this->usuarioId, 400, 600)) {
+            $responder(["error" => "Vas muy rápido. Espera unos minutos."], 429);
+        }
+        $respuesta = $this->respuestaRuta();
+        try {
+            $r = UbicacionModel::responder($this->conexion, $this->usuarioId, (int) ($_POST["idioma_id"] ?? 0), (int) ($_POST["ejercicio_id"] ?? 0), $respuesta);
+        } catch (Throwable $e) {
+            error_log("[BiGlobal][ubicacion] " . $e->getMessage());
+            $responder(["error" => "No pudimos guardar tu respuesta. Inténtalo de nuevo."], 500);
+        }
+        $responder($r, isset($r["error"]) ? 409 : 200);
+    }
+
+    /** La respuesta que manda el reproductor: texto o lista (respuesta_json). */
+    private function respuestaRuta()
+    {
+        $respuesta = $_POST["respuesta"] ?? "";
+        if (isset($_POST["respuesta_json"])) {
+            $json = (string) $_POST["respuesta_json"];
+            $respuesta = strlen($json) <= 4000 ? json_decode($json, true) : null;
+        }
+        if (is_string($respuesta) && mb_strlen($respuesta) > 500) {
+            $respuesta = mb_substr($respuesta, 0, 500);
+        }
+        return $respuesta;
+    }
+
     /** POST (fetch) con una respuesta. Contesta JSON. */
     public function rutaResponder(): void
     {
@@ -1088,14 +1182,7 @@ class EstudianteController
             $responder(["error" => "Vas muy rápido. Espera unos minutos."], 429);
         }
 
-        $respuesta = $_POST["respuesta"] ?? "";
-        if (isset($_POST["respuesta_json"])) {
-            $json = (string) $_POST["respuesta_json"];
-            $respuesta = strlen($json) <= 4000 ? json_decode($json, true) : null;
-        }
-        if (is_string($respuesta) && mb_strlen($respuesta) > 500) {
-            $respuesta = mb_substr($respuesta, 0, 500);
-        }
+        $respuesta = $this->respuestaRuta();
 
         try {
             $r = RutaModel::responder($this->conexion, $this->usuarioId, (int) ($_POST["leccion_id"] ?? 0), (int) ($_POST["ejercicio_id"] ?? 0), $respuesta);

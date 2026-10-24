@@ -1695,6 +1695,39 @@ a.ruta-nodo__boton:active { transform: translateY(4px); box-shadow: 0 2px 0 var(
 .ruta-fin__datos dt { color: var(--texto-suave); font-size: var(--texto-xs); }
 .ruta-fin__datos dd { margin: 0; font-family: var(--fuente-titulo); font-size: var(--texto-xl); font-weight: 800; }
 .ruta-fin__mensaje { color: var(--texto-suave); }
+.ruta-fin__detalle { color: var(--texto-suave); font-size: var(--texto-sm); }
+
+/* ---------- Examen de ubicación ---------- */
+.ubicacion-aviso {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--esp-4);
+    margin-bottom: var(--esp-5);
+    padding: var(--esp-5);
+    border: 1px solid var(--azul-300);
+    border-radius: var(--radio-lg, var(--radio));
+    background: var(--azul-50);
+}
+.ubicacion-aviso__icono {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--superficie);
+    color: var(--azul-700);
+    font-size: 1.4rem;
+}
+.ubicacion-aviso__texto { flex: 1; min-width: 200px; }
+.ubicacion-aviso__texto h2 { font-size: var(--texto-lg); font-weight: 800; }
+.ubicacion-aviso__texto p, .ubicacion-aviso__nota { color: var(--texto-suave); font-size: var(--texto-sm); }
+.ubicacion-linea { margin-bottom: var(--esp-4); color: var(--texto-suave); font-size: var(--texto-sm); }
+.ubicacion-linea i { color: var(--azul-700); }
+.ubicacion-linea__detalle { white-space: nowrap; }
+.ubicacion-reglas { display: grid; gap: var(--esp-2); margin: 0; padding: var(--esp-4); list-style: none; text-align: left; border: 1px solid var(--borde); border-radius: var(--radio); background: var(--superficie); }
+.ubicacion-reglas i { width: 1.2em; color: var(--azul-700); text-align: center; }
 .ruta-fin__insignia { padding: var(--esp-3); border-radius: var(--radio); background: var(--naranja-100); color: var(--naranja-700); font-family: var(--fuente-titulo); font-weight: 800; }
 
 @media (prefers-reduced-motion: reduce) {

@@ -5,6 +5,8 @@
  * - "Comprobar" envía la respuesta a ruta_responder.php, que califica en el
  *   servidor y dice cuál ejercicio sigue (los fallados vuelven al final).
  * - Todo el texto se pone con textContent: nada de HTML desde los datos.
+ * - data-modo="ubicacion": examen de ubicación. Envía a data-endpoint con
+ *   idioma_id y al final muestra el nivel donde quedó.
  */
 (function () {
     "use strict";
@@ -23,6 +25,8 @@
     const retro = $("[data-retro]");
     const barra = $("[data-progreso]");
     const csrf = document.documentElement.dataset.csrf || "";
+    const esExamen = raiz.dataset.modo === "ubicacion";
+    const endpoint = raiz.dataset.endpoint || "ruta_responder.php";
 
     let actual = ejercicios.length ? ejercicios[0].id : null;
     let obtenerRespuesta = null;   // función que devuelve la respuesta o null si falta
@@ -410,14 +414,15 @@
 
         const datos = new FormData();
         datos.append("csrf_token", csrf);
-        datos.append("leccion_id", raiz.dataset.leccion);
+        if (esExamen) datos.append("idioma_id", raiz.dataset.idioma);
+        else datos.append("leccion_id", raiz.dataset.leccion);
         datos.append("ejercicio_id", String(actual));
         if (Array.isArray(respuesta)) datos.append("respuesta_json", JSON.stringify(respuesta));
         else datos.append("respuesta", respuesta);
 
         let r;
         try {
-            const res = await fetch("ruta_responder.php", { method: "POST", body: datos, credentials: "same-origin" });
+            const res = await fetch(endpoint, { method: "POST", body: datos, credentials: "same-origin" });
             r = await res.json();
         } catch (err) {
             r = { error: "Se perdió la conexión. Revisa tu internet e inténtalo de nuevo." };
@@ -459,7 +464,29 @@
         }
     }
 
+    /** Final del examen de ubicación: el nivel donde quedó. */
+    function terminarExamen(r) {
+        caja.hidden = true;
+        pie.hidden = true;
+        retro.hidden = true;
+        $("[data-fin-titulo]").textContent = "Empiezas en el " + r.nivel + (r.nombre ? " · " + r.nombre : "");
+        let mensaje = r.aprobados > 0
+            ? "Aprobaste " + r.aprobados + (r.aprobados === 1 ? " nivel" : " niveles") + ". Los anteriores quedan abiertos para repasar cuando quieras."
+            : "Tu ruta empieza desde el principio. ¡Vamos paso a paso!";
+        if (!r.mejoro && r.antes) mensaje = "Esta vez no superaste tu resultado anterior: sigues en el " + r.antes + ".";
+        $("[data-fin-mensaje]").textContent = mensaje;
+        $("[data-fin-detalle]").textContent = r.detalle || "";
+        const ir = $("[data-fin-ir]");
+        if (typeof r.url === "string" && r.url.indexOf("index.php?page=ruta") === 0) ir.setAttribute("href", r.url);
+        ir.textContent = "Ir al " + r.nivel;
+        const fin = $("[data-fin]");
+        fin.hidden = false;
+        ir.focus();
+        avance(100);
+    }
+
     function terminar(r) {
+        if (esExamen) return terminarExamen(r);
         caja.hidden = true;
         pie.hidden = true;
         retro.hidden = true;
@@ -508,6 +535,7 @@
 
     // Salir a mitad de la lección: pide confirmación
     $("[data-salir]").addEventListener("click", (ev) => {
-        if (!caja.hidden && !window.confirm("¿Salir de la lección? Perderás el avance de este intento.")) ev.preventDefault();
+        const texto = raiz.dataset.salirTexto || "¿Salir de la lección? Perderás el avance de este intento.";
+        if (!caja.hidden && !window.confirm(texto)) ev.preventDefault();
     });
 })();
