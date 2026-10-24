@@ -2,7 +2,8 @@
 /**
  * Mi ruta: el camino de lecciones de un idioma.
  * Variables: $disponible, $idiomas, $idioma, $mapa (niveles con unidades y lecciones), $nivelActivo,
- *            $examen (examen de ubicación: fila, puedeHoy, destacar; null si el idioma no tiene)
+ *            $examen (examen de ubicación: fila, puedeHoy, destacar; null si el idioma no tiene),
+ *            $repasoPendientes (ejercicios fallados por repasar en este idioma)
  */
 $iconoEstado = ["completada" => "fa-check", "disponible" => "fa-star", "bloqueada" => "fa-lock", "preparacion" => "fa-screwdriver-wrench"];
 $textoEstado = ["completada" => "Completada", "disponible" => "Siguiente lección", "bloqueada" => "Bloqueada", "preparacion" => "En preparación"];
@@ -31,6 +32,17 @@ $codigoIdioma = $idioma ? strtoupper($idioma["codigo"]) : "";
 <?php if (!$mapa): ?>
     <p class="texto-suave ruta-vacia">Este idioma todavía no tiene niveles publicados.</p>
 <?php return; endif; ?>
+
+<?php if (!empty($repasoPendientes)): ?>
+    <section class="repaso-aviso" aria-labelledby="titulo-repaso">
+        <span class="repaso-aviso__icono" aria-hidden="true"><i class="fa-solid fa-rotate-left"></i></span>
+        <div class="repaso-aviso__texto">
+            <h2 id="titulo-repaso">Repasa tus errores <span class="chip chip--logro"><?= (int) $repasoPendientes ?></span></h2>
+            <p>Los ejercicios que fallaste en tus lecciones. Si los aciertas, salen de la lista.</p>
+        </div>
+        <a class="boton boton--primario" href="index.php?page=repaso&amp;idioma=<?= e(rawurlencode($idioma["codigo"])) ?>">Repasar</a>
+    </section>
+<?php endif; ?>
 
 <?php if (!empty($examen)):
     $urlExamen = "index.php?page=ubicacion&amp;idioma=" . e(rawurlencode($idioma["codigo"]));

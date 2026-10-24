@@ -39,6 +39,8 @@ require_once __DIR__ . "/../Views/estudiante/_helpers.php";
  *   estudiante/ruta_responder.php (POST, JSON)            -> rutaResponder()
  *   estudiante/index.php?page=ubicacion&idioma=EN         -> ubicacion()  (examen de ubicación)
  *   estudiante/ubicacion_responder.php (POST, JSON)       -> ubicacionResponder()
+ *   estudiante/index.php?page=repaso&idioma=EN            -> repaso()  (repaso de errores)
+ *   estudiante/repaso_responder.php (POST, JSON)          -> repasoResponder()
  *   estudiante/guardar_zona.php (POST, JSON)              -> guardarZona()
  *   estudiante/index.php?page=insignias                   -> insignias()
  */
@@ -1061,7 +1063,8 @@ class EstudianteController
                     "destacar" => $hechas < 8,
                 ];
             }
-            $datos = ["idioma" => $idioma, "mapa" => $mapa, "nivelActivo" => $nivelActivo, "examen" => $examen] + $datos;
+            $datos = ["idioma" => $idioma, "mapa" => $mapa, "nivelActivo" => $nivelActivo, "examen" => $examen,
+                      "repasoPendientes" => RepasoModel::pendientes($c, $this->usuarioId, (int) $idioma["id"])] + $datos;
         }
         $this->render("ruta", "ruta", "Mi ruta", $datos);
     }
@@ -1140,6 +1143,70 @@ class EstudianteController
             "niveles"    => array_column($_SESSION["ruta_ubicacion"]["bloques"], "codigo"),
             "ejercicios" => array_map(fn($e) => RutaModel::vistaPublica($e, (string) $idioma["codigo"]), $ejercicios),
         ]);
+    }
+
+    /* =========================================================
+       REPASO DE ERRORES (RepasoModel)
+       GET  index.php?page=repaso&idioma=EN
+       POST repaso_responder.php (JSON)
+    ========================================================= */
+    public function repaso(): void
+    {
+        $c = $this->conexion;
+        $volver = function (string $tipo, string $mensaje, string $url = "index.php?page=ruta"): void {
+            $_SESSION["flash_estudiante"] = ["tipo" => $tipo, "mensaje" => $mensaje];
+            header("Location: " . $url);
+            exit;
+        };
+        if (!RepasoModel::disponible($c)) {
+            $volver("info", "El repaso de errores todavía no está disponible.");
+        }
+        $codigo = strtoupper(trim((string) ($_GET["idioma"] ?? "")));
+        $idioma = null;
+        foreach (RutaModel::idiomas($c, true) as $i) {
+            if (strtoupper($i["codigo"]) === $codigo) {
+                $idioma = $i;
+            }
+        }
+        if (!$idioma) {
+            $volver("info", "Ese idioma no tiene ruta.");
+        }
+        $urlRuta = "index.php?page=ruta&idioma=" . rawurlencode($idioma["codigo"]);
+        $ejercicios = RepasoModel::iniciar($c, $this->usuarioId, (int) $idioma["id"]);
+        if (!$ejercicios) {
+            $volver("exito", "¡No tienes errores por repasar en " . $idioma["nombre"] . "!", $urlRuta);
+        }
+        $this->render("repaso", "ruta", "Repaso de errores", [
+            "idioma"     => $idioma,
+            "urlRuta"    => $urlRuta,
+            "pendientes" => RepasoModel::pendientes($c, $this->usuarioId, (int) $idioma["id"]),
+            "ejercicios" => array_map(fn($e) => RutaModel::vistaPublica($e, (string) $idioma["codigo"]), $ejercicios),
+        ]);
+    }
+
+    public function repasoResponder(): void
+    {
+        header("Content-Type: application/json; charset=utf-8");
+        header("Cache-Control: no-store");
+        $responder = function (array $datos, int $codigo = 200): void {
+            http_response_code($codigo);
+            echo json_encode($datos, JSON_UNESCAPED_UNICODE);
+            exit;
+        };
+        if ($_SERVER["REQUEST_METHOD"] !== "POST" || !RepasoModel::disponible($this->conexion)) {
+            $responder(["error" => "Petición no válida."], 405);
+        }
+        verificarCsrfFormulario($_POST["csrf_token"] ?? "");
+        if (!LimiteIntentos::permitir("ruta:usuario:" . $this->usuarioId, 400, 600)) {
+            $responder(["error" => "Vas muy rápido. Espera unos minutos."], 429);
+        }
+        try {
+            $r = RepasoModel::responder($this->conexion, $this->usuarioId, (int) ($_POST["idioma_id"] ?? 0), (int) ($_POST["ejercicio_id"] ?? 0), $this->respuestaRuta());
+        } catch (Throwable $e) {
+            error_log("[BiGlobal][repaso] " . $e->getMessage());
+            $responder(["error" => "No pudimos guardar tu respuesta. Inténtalo de nuevo."], 500);
+        }
+        $responder($r, isset($r["error"]) ? 409 : 200);
     }
 
     public function ubicacionResponder(): void

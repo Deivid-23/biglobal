@@ -3,6 +3,7 @@
 require_once __DIR__ . "/GamificacionModel.php";
 require_once __DIR__ . "/UbicacionModel.php";
 require_once __DIR__ . "/RutaEstadisticasModel.php";
+require_once __DIR__ . "/RepasoModel.php";
 
 /**
  * RutaModel
@@ -926,6 +927,9 @@ class RutaModel
         $r = self::calificar($e, $respuesta);
         // Estadísticas: "primera" = todavía no lo había fallado en este intento
         RutaEstadisticasModel::respuesta($c, $intento["registro"] ?? null, $ejercicioId, (bool) $r["correcto"], empty($intento["fallados"][$ejercicioId]));
+        if (!$r["correcto"]) {
+            RepasoModel::anotarFallo($c, $usuarioId, $ejercicioId);   // entra a su repaso de errores
+        }
         array_shift($intento["cola"]);
         if ($r["correcto"]) {
             if (empty($intento["fallados"][$ejercicioId])) {

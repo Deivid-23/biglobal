@@ -193,7 +193,7 @@ class CuentaEliminacionModel
             // Datos de aprendizaje y avisos (cada tabla, solo si existe)
             foreach (["progreso", "certificados", "recuperacion_password", "estudiante_stats", "xp_movimientos",
                       "usuario_medallas", "notificaciones", "actividad_intentos", "clase_inscripciones", "clase_invitaciones",
-                      "ruta_progreso", "racha_dias", "grupo_miembros", "usuario_fotos", "ruta_ubicacion", "ruta_intentos",
+                      "ruta_progreso", "racha_dias", "grupo_miembros", "usuario_fotos", "ruta_ubicacion", "ruta_intentos", "ruta_repaso",
                       // Docente: su solicitud y los documentos que subió (pueden ser de identidad)
                       "docente_documentos", "docente_solicitudes"] as $tabla) {
                 if (self::existeTabla($c, $tabla)) {

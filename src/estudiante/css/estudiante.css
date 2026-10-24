@@ -1700,6 +1700,33 @@ a.ruta-nodo__boton:active { transform: translateY(4px); box-shadow: 0 2px 0 var(
 .ruta-fin__mensaje { color: var(--texto-suave); }
 .ruta-fin__detalle { color: var(--texto-suave); font-size: var(--texto-sm); }
 
+/* ---------- Repaso de errores ---------- */
+.repaso-aviso {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--esp-4);
+    margin-bottom: var(--esp-5);
+    padding: var(--esp-4) var(--esp-5);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio-lg, var(--radio));
+    background: var(--superficie);
+}
+.repaso-aviso__icono {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--azul-50);
+    color: var(--azul-700);
+    font-size: 1.2rem;
+}
+.repaso-aviso__texto { flex: 1; min-width: 200px; }
+.repaso-aviso__texto h2 { display: flex; align-items: center; gap: var(--esp-2); font-size: var(--texto-lg); font-weight: 800; }
+.repaso-aviso__texto p { color: var(--texto-suave); font-size: var(--texto-sm); }
+
 /* ---------- Examen de ubicación ---------- */
 .ubicacion-aviso {
     display: flex;

@@ -638,6 +638,21 @@ CREATE TABLE `ruta_progreso` (
   CONSTRAINT `fk_rprogreso_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `ruta_repaso`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `ruta_repaso` (
+  `usuario_id` int(11) NOT NULL,
+  `ejercicio_id` int(11) NOT NULL,
+  `fallado_en` datetime NOT NULL DEFAULT current_timestamp(),
+  `resuelto_en` datetime DEFAULT NULL,
+  PRIMARY KEY (`usuario_id`,`ejercicio_id`),
+  KEY `idx_repaso_pendiente` (`usuario_id`,`resuelto_en`,`fallado_en`),
+  KEY `fk_repaso_ejercicio` (`ejercicio_id`),
+  CONSTRAINT `fk_repaso_ejercicio` FOREIGN KEY (`ejercicio_id`) REFERENCES `ruta_ejercicios` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_repaso_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `ruta_respuestas`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;

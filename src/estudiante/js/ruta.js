@@ -7,6 +7,8 @@
  * - Todo el texto se pone con textContent: nada de HTML desde los datos.
  * - data-modo="ubicacion": examen de ubicación. Envía a data-endpoint con
  *   idioma_id y al final muestra el nivel donde quedó.
+ * - data-modo="repaso": repaso de errores. Igual, y al final muestra cuántos
+ *   resolvió y cuántos le quedan.
  */
 (function () {
     "use strict";
@@ -26,6 +28,7 @@
     const barra = $("[data-progreso]");
     const csrf = document.documentElement.dataset.csrf || "";
     const esExamen = raiz.dataset.modo === "ubicacion";
+    const esRepaso = raiz.dataset.modo === "repaso";
     const endpoint = raiz.dataset.endpoint || "ruta_responder.php";
 
     let actual = ejercicios.length ? ejercicios[0].id : null;
@@ -414,7 +417,7 @@
 
         const datos = new FormData();
         datos.append("csrf_token", csrf);
-        if (esExamen) datos.append("idioma_id", raiz.dataset.idioma);
+        if (esExamen || esRepaso) datos.append("idioma_id", raiz.dataset.idioma);
         else datos.append("leccion_id", raiz.dataset.leccion);
         datos.append("ejercicio_id", String(actual));
         if (Array.isArray(respuesta)) datos.append("respuesta_json", JSON.stringify(respuesta));
@@ -485,8 +488,31 @@
         avance(100);
     }
 
+    /** Final del repaso de errores. */
+    function terminarRepaso(r) {
+        caja.hidden = true;
+        pie.hidden = true;
+        retro.hidden = true;
+        $("[data-fin-porcentaje]").textContent = r.resueltos + " de " + r.total;
+        $("[data-fin-xp]").textContent = "+" + r.xp;
+        if (r.racha) {
+            $("[data-fin-racha-caja]").hidden = false;
+            $("[data-fin-racha]").textContent = r.racha + (r.racha === 1 ? " día" : " días");
+        }
+        $("[data-fin-mensaje]").textContent = r.quedan > 0
+            ? "Te " + (r.quedan === 1 ? "queda 1 ejercicio" : "quedan " + r.quedan + " ejercicios") + " por repasar. Los que fallaste hoy siguen en tu lista."
+            : "¡Resolviste todos tus errores de este idioma!";
+        const otro = $("[data-fin-otro]");
+        if (otro) otro.hidden = r.quedan === 0;
+        const fin = $("[data-fin]");
+        fin.hidden = false;
+        fin.querySelector("a").focus();
+        avance(100);
+    }
+
     function terminar(r) {
         if (esExamen) return terminarExamen(r);
+        if (esRepaso) return terminarRepaso(r);
         caja.hidden = true;
         pie.hidden = true;
         retro.hidden = true;

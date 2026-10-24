@@ -28,6 +28,7 @@ $rutas = [
     "ruta"         => "ruta",
     "ruta-leccion" => "rutaLeccion",
     "ubicacion"    => "ubicacion",
+    "repaso"       => "repaso",
 ];
 
 $pagina = $_GET["page"] ?? "inicio";
