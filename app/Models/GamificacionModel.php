@@ -110,6 +110,14 @@ class GamificacionModel
         return (new DateTimeImmutable("now", new DateTimeZone($zona)))->format("Y-m-d");
     }
 
+    /** Día (AAAA-MM-DD) en una zona horaria de una fecha guardada por la BD (hora de Colombia, -05:00). */
+    public static function diaEn(string $fechaBd, string $zona = self::ZONA_DEFECTO): string
+    {
+        return (new DateTimeImmutable($fechaBd, new DateTimeZone("-05:00")))
+            ->setTimezone(new DateTimeZone($zona))
+            ->format("Y-m-d");
+    }
+
     /**
      * Cambia la zona del estudiante. Solo una vez al día, para que nadie
      * cambie de zona a propósito para salvar su racha.

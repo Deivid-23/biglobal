@@ -5,7 +5,7 @@
 -- los cursos que crean los docentes.
 --
 --   ruta_niveles     : A1–C1 de cada idioma (en LSC, su equivalente).
---                      premium = 1 -> solo Premium (B1 en adelante).
+--                      Toda la ruta es gratis (database/acceso_gratis_y_pago.sql).
 --   ruta_unidades    : unidades de cada nivel.
 --   ruta_lecciones   : lecciones de cada unidad, con espacio para el video
 --                      de LSC (YouTube o Vimeo).
@@ -30,7 +30,6 @@ CREATE TABLE IF NOT EXISTS ruta_niveles (
     nombre       VARCHAR(60) NOT NULL,
     descripcion  VARCHAR(255) NULL,
     orden        TINYINT NOT NULL,
-    premium      TINYINT(1) NOT NULL DEFAULT 0,
     publicado    TINYINT(1) NOT NULL DEFAULT 0,
     UNIQUE KEY uq_nivel (idioma_id, codigo),
     CONSTRAINT fk_nivel_idioma FOREIGN KEY (idioma_id) REFERENCES idiomas (id) ON DELETE CASCADE
@@ -94,15 +93,14 @@ CREATE TABLE IF NOT EXISTS ruta_progreso (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------- Niveles de cada idioma (A1 publicado; el resto en borrador) ----------
--- A1 y A2 son gratis; B1, B2 y C1 son Premium.
-INSERT IGNORE INTO ruta_niveles (idioma_id, codigo, nombre, descripcion, orden, premium, publicado)
-SELECT i.id, n.codigo, n.nombre, n.descripcion, n.orden, n.premium, n.publicado
+INSERT IGNORE INTO ruta_niveles (idioma_id, codigo, nombre, descripcion, orden, publicado)
+SELECT i.id, n.codigo, n.nombre, n.descripcion, n.orden, n.publicado
 FROM idiomas i
 INNER JOIN (
-    SELECT 'A1' AS codigo, 'Inicial' AS nombre, 'Saludos, números, la familia y la vida diaria.' AS descripcion, 1 AS orden, 0 AS premium, 1 AS publicado
-    UNION ALL SELECT 'A2', 'Básico', 'Conversaciones sencillas sobre temas cotidianos.', 2, 0, 0
-    UNION ALL SELECT 'B1', 'Intermedio', 'Viajes, trabajo y experiencias propias.', 3, 1, 0
-    UNION ALL SELECT 'B2', 'Intermedio alto', 'Opiniones, debates y textos más largos.', 4, 1, 0
-    UNION ALL SELECT 'C1', 'Avanzado', 'Lenguaje fluido y preciso en cualquier contexto.', 5, 1, 0
+    SELECT 'A1' AS codigo, 'Inicial' AS nombre, 'Saludos, números, la familia y la vida diaria.' AS descripcion, 1 AS orden, 1 AS publicado
+    UNION ALL SELECT 'A2', 'Básico', 'Conversaciones sencillas sobre temas cotidianos.', 2, 0
+    UNION ALL SELECT 'B1', 'Intermedio', 'Viajes, trabajo y experiencias propias.', 3, 0
+    UNION ALL SELECT 'B2', 'Intermedio alto', 'Opiniones, debates y textos más largos.', 4, 0
+    UNION ALL SELECT 'C1', 'Avanzado', 'Lenguaje fluido y preciso en cualquier contexto.', 5, 0
 ) n
 WHERE i.codigo IN ('EN', 'ES', 'LSC');

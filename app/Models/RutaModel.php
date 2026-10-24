@@ -941,7 +941,7 @@ class RutaModel
         $c->beginTransaction();
         try {
             $stmt = $c->prepare("
-                SELECT mejor_porcentaje, intentos, (DATE(ultima_vez) = CURDATE()) AS hoy
+                SELECT mejor_porcentaje, intentos, ultima_vez
                 FROM ruta_progreso WHERE usuario_id = ? AND leccion_id = ? FOR UPDATE
             ");
             $stmt->execute([$usuarioId, $leccionId]);
@@ -957,8 +957,11 @@ class RutaModel
                     UPDATE ruta_progreso SET intentos = intentos + 1, mejor_porcentaje = GREATEST(mejor_porcentaje, ?), ultima_vez = NOW()
                     WHERE usuario_id = ? AND leccion_id = ?
                 ")->execute([$porcentaje, $usuarioId, $leccionId]);
-                // Practicar: 2 XP una vez al día (el día en que se completó también cuenta un repaso)
-                $yaRepasoHoy = (int) $previo["hoy"] === 1 && (int) $previo["intentos"] > 1;
+                // Practicar: 2 XP una vez al día (el día en que se completó también cuenta un repaso).
+                // "Hoy" es el día del estudiante en su zona horaria, como la racha.
+                $zona = GamificacionModel::zonaDe($c, $usuarioId);
+                $esHoy = $previo["ultima_vez"] !== null && GamificacionModel::diaEn((string) $previo["ultima_vez"], $zona) === GamificacionModel::hoy($zona);
+                $yaRepasoHoy = $esHoy && (int) $previo["intentos"] > 1;
                 $xp = $yaRepasoHoy ? 0 : self::XP_PRACTICA;
                 $motivo = "ruta_practica";
             }

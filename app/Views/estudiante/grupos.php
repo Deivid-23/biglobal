@@ -53,6 +53,18 @@
                         </span>
                         <i class="fa-solid fa-chevron-right grupo-tarjeta__flecha" aria-hidden="true"></i>
                     </a>
+                    <?php if (!$g["permitido"]): ?>
+                        <!-- Sin Premium no entra al grupo, pero sí puede quitarlo de su lista -->
+                        <form class="grupo-salir" method="POST" action="grupo.php"
+                              data-confirmar="¿Salir de «<?= e($g["nombre"]) ?>»? Para volver necesitarás el código.">
+                            <?= campoCsrf() ?>
+                            <input type="hidden" name="accion" value="salir">
+                            <input type="hidden" name="grupo_id" value="<?= (int) $g["id"] ?>">
+                            <button class="boton boton--fantasma boton--sm" type="submit">
+                                <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i> Salir del grupo
+                            </button>
+                        </form>
+                    <?php endif; ?>
                 </li>
             <?php endforeach; ?>
         </ul>
