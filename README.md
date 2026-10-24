@@ -63,6 +63,21 @@ BiGlobal/
 Para crear un admin a mano: `php tools/generar_hash.php "TuClave"` y luego el `INSERT`
 que aparece al final de `database/schema.sql`.
 
+### Pruebas automáticas
+
+Con el MySQL de XAMPP encendido y la base local `biglobal_prueba` cargada:
+
+```
+php tools/probar.php           # todas
+php tools/probar.php racha     # solo las de un archivo de tests/
+```
+
+Cubren la calificación de los 11 tipos de ejercicio, el desbloqueo de la ruta, la regla
+de acceso, el examen de ubicación, la racha, la prueba gratis de Premium, la seguridad
+y las estadísticas. El comando fija la conexión a `biglobal_prueba` y se niega a correr
+en cualquier otra base (nunca toca TiDB). Cada prueba crea usuarios temporales y los
+borra al terminar. Si algo falla, termina con código distinto de 0.
+
 ## 4. Sistema de diseño
 
 - **Un solo archivo de tokens**: `src/css/tokens.css`. Azul de marca `#2563EB` (hover `#1D4ED8`),
