@@ -849,6 +849,11 @@ class EstudianteController
             header("Location: index.php?page=grupos");
             exit;
         }
+        if (!$grupo["permitido"]) {
+            $_SESSION["flash_estudiante"] = ["tipo" => "info", "mensaje" => "El grupo «" . $grupo["nombre"] . "» es parte de Premium. Con Premium vuelves a verlo con todo tu trabajo."];
+            header("Location: index.php?page=grupos");
+            exit;
+        }
         $grupoId = (int) $grupo["id"];
         $tareasDisponibles = TareaModel::disponible($c);
         $tab = in_array($_GET["tab"] ?? "", ["tareas", "material"], true) ? $_GET["tab"] : "tablon";
@@ -910,7 +915,7 @@ class EstudianteController
             }
             $r = GrupoModel::unirse($c, (string) ($_POST["codigo"] ?? ""), $this->usuarioId);
             $insignias = $r["ok"] ? InsigniaModel::revisar($c, $this->usuarioId, "grupo") : [];
-            $volver($r["ok"] ? ($insignias ? "logro" : "exito") : "error", $r["mensaje"] . InsigniaModel::texto($insignias),
+            $volver($r["ok"] ? ($insignias ? "logro" : "exito") : (!empty($r["premium"]) ? "info" : "error"), $r["mensaje"] . InsigniaModel::texto($insignias),
                 $r["ok"] ? "index.php?page=grupo&id=" . $r["grupo_id"] : "index.php?page=grupos");
         }
 
@@ -926,6 +931,10 @@ class EstudianteController
         if ($accion === "salir") {
             GrupoModel::salir($c, $grupoId, $this->usuarioId);
             $volver("info", "Saliste del grupo «" . $grupo["nombre"] . "». Puedes volver con el código.");
+        }
+        // Lo demás pide que su plan lo deje entrar (Premium o grupo gratuito)
+        if (!$grupo["permitido"]) {
+            $volver("info", "El grupo «" . $grupo["nombre"] . "» es parte de Premium.");
         }
         if ($accion === "comentar") {
             if (!LimiteIntentos::permitir("grupo_comentario:usuario:" . $this->usuarioId, 30, 600)) {
@@ -988,7 +997,7 @@ class EstudianteController
         return [
             "idioma"    => $idioma,
             "empezo"    => $reciente !== null,
-            "siguiente" => RutaModel::siguiente($c, (int) $idioma["id"], $this->usuarioId, Plan::esPremium($c, $this->usuarioId)),
+            "siguiente" => RutaModel::siguiente($c, (int) $idioma["id"], $this->usuarioId),
         ];
     }
 
@@ -1008,7 +1017,7 @@ class EstudianteController
                     $idioma = $i;
                 }
             }
-            $mapa = RutaModel::mapa($c, (int) $idioma["id"], $this->usuarioId, Plan::esPremium($c, $this->usuarioId));
+            $mapa = RutaModel::mapa($c, (int) $idioma["id"], $this->usuarioId);
 
             // Nivel que se muestra: el pedido, o el más avanzado con una lección disponible
             // (como RutaModel::siguiente: si se agregaron lecciones a un nivel ya hecho, sigue donde iba)
@@ -1042,10 +1051,7 @@ class EstudianteController
         }
         $urlRuta = "index.php?page=ruta&idioma=" . rawurlencode($leccion["idioma_codigo"]) . "&nivel=" . rawurlencode($leccion["nivel_codigo"]);
 
-        $estado = RutaModel::estadoLeccion($c, $leccion, $this->usuarioId, Plan::esPremium($c, $this->usuarioId));
-        if ($estado === "premium") {
-            $volver("info", "El nivel " . $leccion["nivel_codigo"] . " es parte de Premium.", "index.php?page=plan");
-        }
+        $estado = RutaModel::estadoLeccion($c, $leccion, $this->usuarioId);
         if ($estado === "bloqueada") {
             $volver("info", "Primero completa las lecciones anteriores.", $urlRuta);
         }

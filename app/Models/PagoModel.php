@@ -426,7 +426,7 @@ class PagoModel
         foreach ($porVencer as $s) {
             $c->prepare("UPDATE suscripciones SET recordatorio_enviado_en = NOW() WHERE id = ?")->execute([$s["id"]]);
             Notificador::aUsuario((int) $s["usuario_id"], "premium_por_vencer", "Tu Premium vence pronto",
-                "Tu Premium termina el " . self::fecha($s["fin"]) . ". Si quieres seguir en las clases en vivo, renuévalo desde tu plan.",
+                "Tu Premium termina el " . self::fecha($s["fin"]) . ". Si quieres seguir en las clases en vivo y los grupos con docentes, renuévalo desde tu plan.",
                 "estudiante/index.php?page=plan");
             $r["recordatorios"]++;
         }

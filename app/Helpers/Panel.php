@@ -182,6 +182,7 @@ class Panel
             ["lecciones",   "Lecciones",   "fa-book-open",   "../admin/index.php?page=lecciones"],
             ["actividades", "Actividades", "fa-list-check",  "../admin/index.php?page=actividades"],
             ["clases",      "Clases en vivo", "fa-video",    "../admin/index.php?page=clases"],
+            ["grupos",      "Grupos",      "fa-people-group", "../admin/index.php?page=grupos"],
             ["solicitudes", "Solicitudes", "fa-user-clock",  "../admin/index.php?page=solicitudes", $solicitudesPendientes],
             ["revision",    "Revisión de contenido", "fa-clipboard-check", "../admin/index.php?page=revision", $revisionesPendientes],
             ["ruta",        "Ruta de aprendizaje", "fa-route",  "../admin/index.php?page=ruta"],

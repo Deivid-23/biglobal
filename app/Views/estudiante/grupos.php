@@ -1,5 +1,5 @@
 <?php
-/** Mis grupos: entrar con código y lista de grupos. Variables: $disponible, $grupos */
+/** Mis grupos: entrar con código y lista de grupos. Variables: $disponible, $grupos (con "permitido") */
 ?>
 <header class="encabezado-pagina">
     <h1>Mis grupos</h1>
@@ -16,7 +16,7 @@
     <section class="grupo-unirse" aria-labelledby="titulo-unirse">
         <div>
             <h2 id="titulo-unirse">Entrar a un grupo</h2>
-            <p>Escribe el código de <?= GrupoModel::LARGO_CODIGO ?> caracteres que te dio tu docente.</p>
+            <p>Escribe el código de <?= GrupoModel::LARGO_CODIGO ?> caracteres que te dio tu docente. Los grupos con docentes son parte de Premium, salvo los que son gratuitos para todos.</p>
         </div>
         <form class="grupo-unirse__form" method="POST" action="grupo.php">
             <?= campoCsrf() ?>
@@ -39,7 +39,7 @@
         <ul class="grupos-lista">
             <?php foreach ($grupos as $g): ?>
                 <li>
-                    <a class="grupo-tarjeta" href="index.php?page=grupo&amp;id=<?= (int) $g["id"] ?>">
+                    <a class="grupo-tarjeta" href="<?= $g["permitido"] ? "index.php?page=grupo&amp;id=" . (int) $g["id"] : "index.php?page=plan" ?>">
                         <span class="grupo-tarjeta__icono" aria-hidden="true"><i class="fa-solid fa-people-group"></i></span>
                         <span class="grupo-tarjeta__cuerpo">
                             <strong><?= e($g["nombre"]) ?></strong>
@@ -48,7 +48,8 @@
                                 · <?= e(plural((int) $g["miembros"], "estudiante", "estudiantes")) ?>
                                 <?php if ($g["curso"]): ?> · <?= e($g["curso"]) ?><?php endif; ?>
                             </small>
-                            <?php if ($g["ultimo_anuncio"]): ?><small>Último anuncio <?= e(hace_panel($g["ultimo_anuncio"])) ?></small><?php endif; ?>
+                            <?php if (!$g["permitido"]): ?><small><span class="chip chip--logro"><i class="fa-solid fa-crown" aria-hidden="true"></i> Premium</span> Este grupo es parte de Premium. Toca para ver el plan.</small>
+                            <?php elseif ($g["ultimo_anuncio"]): ?><small>Último anuncio <?= e(hace_panel($g["ultimo_anuncio"])) ?></small><?php endif; ?>
                         </span>
                         <i class="fa-solid fa-chevron-right grupo-tarjeta__flecha" aria-hidden="true"></i>
                     </a>

@@ -57,8 +57,8 @@ $textoReglas = "Mínimo {$reglas['minimo']} caracteres"
                 <span class="chip chip--neutro">Gratuito</span>
             </div>
             <p class="perfil-tarjeta__ayuda">
-                Tienes la ruta de aprendizaje completa de cada idioma y las clases en vivo abiertas para todos.
-                Con Premium te unes a todas las clases en vivo con docentes.
+                Tienes la ruta de aprendizaje completa de cada idioma, de A1 a C1, y las clases y grupos gratuitos para todos.
+                Con Premium te unes a todas las clases en vivo y los grupos con docentes.
             </p>
             <ul class="perfil-plan__precios">
                 <li>

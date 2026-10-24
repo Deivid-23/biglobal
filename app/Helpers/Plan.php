@@ -6,9 +6,10 @@
  * Planes de BiGlobal: GRATUITO y PREMIUM (mensual o anual).
  * Tabla: suscripciones (database/planes_suscripciones.sql).
  *
- *   Gratuito: ruta de aprendizaje completa de cada idioma. Solo puede
- *             unirse a las clases en vivo marcadas "abiertas para todos".
- *   Premium : ruta de aprendizaje + todas las clases en vivo.
+ *   Gratuito: ruta de aprendizaje completa de cada idioma (toda la ruta es
+ *             gratis). Solo puede unirse a las clases en vivo y a los grupos
+ *             que un admin marcó como gratuitos para todos.
+ *   Premium : además, todas las clases en vivo y todos los grupos con docentes.
  *
  * Regla única: un usuario es Premium si tiene una suscripción cuya fecha
  * "fin" todavía no pasa. Al vencer o cancelarse vuelve solo a Gratuito y
@@ -133,6 +134,15 @@ class Plan
     public static function puedeUnirseAClase(PDO $c, int $usuarioId, bool $abiertaParaTodos): bool
     {
         return $abiertaParaTodos || self::esPremium($c, $usuarioId);
+    }
+
+    /**
+     * ¿Puede entrar a un grupo de Classroom? Premium: a todos.
+     * Gratuito: solo a los que un admin marcó como gratuitos (grupos.gratuito).
+     */
+    public static function puedeEntrarAGrupo(PDO $c, int $usuarioId, bool $gratuito): bool
+    {
+        return $gratuito || self::esPremium($c, $usuarioId);
     }
 
     /* =========================================================

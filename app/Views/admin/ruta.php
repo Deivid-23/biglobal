@@ -55,7 +55,6 @@ $interruptor = function (string $nombre, bool $marcado, string $titulo, string $
             <a class="pnl-pestana <?= $activo ? "es-activa" : "" ?>" href="index.php?page=ruta&amp;nivel=<?= (int) $n["id"] ?>" <?= $activo ? 'aria-current="page"' : "" ?>>
                 <?= e($n["codigo"]) ?>
                 <?php if ((int) $n["publicado"] === 0): ?><span class="chip chip--neutro">Borrador</span><?php endif; ?>
-                <?php if ((int) $n["premium"] === 1): ?><i class="fa-solid fa-crown" aria-label="Premium"></i><?php endif; ?>
             </a>
         <?php endforeach; ?>
     </nav>
@@ -340,7 +339,6 @@ $interruptor = function (string $nombre, bool $marcado, string $titulo, string $
                         <textarea class="entrada" id="n-desc" name="descripcion" rows="2" maxlength="255"><?= e($nivel["descripcion"] ?? "") ?></textarea>
                     </div>
                     <?php $interruptor("publicado", (int) $nivel["publicado"] === 1, "Publicado", "Los estudiantes ven este nivel en su ruta."); ?>
-                    <?php $interruptor("premium", (int) $nivel["premium"] === 1, "Solo Premium", "El plan Gratuito lo ve con candado."); ?>
                     <div class="pnl-form__acciones"><button class="boton boton--primario" type="submit">Guardar nivel</button></div>
                 </form>
             </section>

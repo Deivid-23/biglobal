@@ -1445,8 +1445,7 @@ button.est-nav__enlace { width: 100%; border: 0; background: none; cursor: point
 .ruta-nivel strong { font-family: var(--fuente-titulo); font-size: var(--texto-lg); }
 .ruta-nivel small { color: var(--texto-suave); font-size: var(--texto-xs); }
 .ruta-nivel.es-activo { border-color: var(--azul-600); box-shadow: 0 2px 0 var(--azul-600); }
-.ruta-nivel--bloqueado, .ruta-nivel--premium { color: var(--texto-suave); }
-.ruta-nivel--premium i { color: var(--naranja-700); }
+.ruta-nivel--bloqueado { color: var(--texto-suave); }
 
 .ruta-nivel-info { margin-top: var(--esp-5); }
 .ruta-nivel-info h2 { font-size: var(--texto-xl); font-weight: 800; }

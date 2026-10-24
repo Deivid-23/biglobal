@@ -12,6 +12,8 @@
  *   tenga permiso por su plan, y se le avisa (campana + correo).
  * - Premium: todas las clases. Gratuito: solo las "abiertas para todos"
  *   (Plan::puedeUnirseAClase). Se revisa al inscribirse Y al entrar.
+ * - Solo el admin marca una clase como gratuita para todos (marcarAbierta).
+ *   El docente crea y edita sus clases, pero no cambia esa marca.
  * - El enlace nunca va en la página: "Entrar" pasa por el servidor, que
  *   redirige solo si está inscrito y faltan 15 minutos o menos.
  * - Las horas se comparan en SQL con NOW() (la conexión usa hora de Colombia).
@@ -87,8 +89,6 @@ class ClaseModel
             "enlace"       => $enlace,
             "cupo"         => $cupo,
             "idioma_id"    => $idiomaId,
-            // Gratuita para todos: también la ve (y recibe invitación) el plan Gratuito
-            "abierta"      => !empty($post["abierta_para_todos"]) ? 1 : 0,
         ];
     }
 
@@ -108,8 +108,8 @@ class ClaseModel
     {
         $c->prepare("
             INSERT INTO clases_vivo (docente_id, idioma_id, titulo, descripcion, inicio, duracion_min, enlace, cupo, abierta_para_todos)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ")->execute([$docenteId, $d["idioma_id"], $d["titulo"], $d["descripcion"], $d["inicio"], $d["duracion_min"], $d["enlace"], $d["cupo"], $d["abierta"]]);
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
+        ")->execute([$docenteId, $d["idioma_id"], $d["titulo"], $d["descripcion"], $d["inicio"], $d["duracion_min"], $d["enlace"], $d["cupo"]]);
         return (int) $c->lastInsertId();
     }
 
@@ -119,9 +119,9 @@ class ClaseModel
         $c->beginTransaction();
         try {
             $c->prepare("
-                UPDATE clases_vivo SET idioma_id = ?, titulo = ?, descripcion = ?, inicio = ?, duracion_min = ?, enlace = ?, cupo = ?, abierta_para_todos = ?
+                UPDATE clases_vivo SET idioma_id = ?, titulo = ?, descripcion = ?, inicio = ?, duracion_min = ?, enlace = ?, cupo = ?
                 WHERE id = ?
-            ")->execute([$d["idioma_id"], $d["titulo"], $d["descripcion"], $d["inicio"], $d["duracion_min"], $d["enlace"], $d["cupo"], $d["abierta"], $claseId]);
+            ")->execute([$d["idioma_id"], $d["titulo"], $d["descripcion"], $d["inicio"], $d["duracion_min"], $d["enlace"], $d["cupo"], $claseId]);
             $clase = self::bloquear($c, $claseId);
             $avisos = self::promover($c, $clase);
             $c->commit();
@@ -383,7 +383,7 @@ class ClaseModel
             }
             if (!Plan::puedeUnirseAClase($c, $usuarioId, (int) $clase["abierta_para_todos"] === 1)) {
                 $c->rollBack();
-                return ["ok" => false, "mensaje" => "Esta clase es para el plan Premium. Con Premium te unes a todas las clases en vivo."];
+                return ["ok" => false, "mensaje" => "Esta clase es para el plan Premium. Con Premium te unes a todas las clases en vivo y los grupos con docentes."];
             }
 
             $stmt = $c->prepare("SELECT id, estado FROM clase_inscripciones WHERE clase_id = ? AND usuario_id = ? FOR UPDATE");

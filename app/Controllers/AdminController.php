@@ -4,6 +4,7 @@ require_once __DIR__ . "/../Models/AdminModel.php";
 require_once __DIR__ . "/../Models/ContenidoModel.php";
 require_once __DIR__ . "/../Models/QuizModel.php";
 require_once __DIR__ . "/../Models/ClaseModel.php";
+require_once __DIR__ . "/../Models/GrupoModel.php";
 require_once __DIR__ . "/../Models/DocenteSolicitudModel.php";
 require_once __DIR__ . "/../Models/RevisionModel.php";
 require_once __DIR__ . "/../Models/RutaModel.php";
@@ -18,9 +19,11 @@ require_once __DIR__ . "/../Models/InsigniaModel.php";
  * SuperAdminController y se valida otra vez en el servidor.
  *
  * Páginas: inicio, usuarios, cursos, idiomas, lecciones, actividades,
- *          preguntas (de una actividad), solicitudes, ruta (ruta de aprendizaje), insignias, perfil.
+ *          preguntas (de una actividad), solicitudes, ruta (ruta de aprendizaje), insignias,
+ *          clases, grupos, perfil.
  * POST:    accion=crear (modal "Nuevo"), accion=editar, accion=eliminar,
- *          accion=guardar_pregunta, accion=eliminar_pregunta
+ *          accion=guardar_pregunta, accion=eliminar_pregunta, accion=abrir_clase,
+ *          accion=gratuito_grupo
  */
 class AdminController
 {
@@ -129,6 +132,34 @@ class AdminController
             "disponible" => $disponible,
             "clases"     => $disponible ? ClaseModel::listado($this->c) : [],
         ]);
+    }
+
+    /** Grupos de Classroom de todos los docentes: el admin decide cuáles son gratuitos. */
+    public function grupos(): void
+    {
+        $disponible = GrupoModel::disponible($this->c);
+        $this->render("grupos", "grupos", "Grupos", [
+            "disponible" => $disponible,
+            "grupos"     => $disponible ? GrupoModel::listadoAdmin($this->c) : [],
+        ]);
+    }
+
+    /** Marca o quita "gratuito para todos" en un grupo (solo el admin). */
+    public function gratuitoGrupo(): void
+    {
+        verificarCsrfFormulario($_POST["csrf_token"] ?? "");
+        $volver = "index.php?page=grupos";
+        $grupo = GrupoModel::disponible($this->c) ? GrupoModel::porId($this->c, (int) ($_POST["grupo_id"] ?? 0)) : null;
+        if (!$grupo) {
+            Panel::volver($volver, "error", "El grupo no existe.");
+        }
+        $gratuito = (int) ($_POST["gratuito"] ?? 0) === 1;
+        GrupoModel::marcarGratuito($this->c, (int) $grupo["id"], $gratuito);
+        Auditoria::registrar("grupo.gratuito", "grupo", (int) $grupo["id"], $grupo["nombre"],
+            (int) $grupo["gratuito"] === 1 ? "gratuito para todos" : "solo Premium", $gratuito ? "gratuito para todos" : "solo Premium");
+        Panel::volver($volver, "ok", $gratuito
+            ? "El grupo «" . $grupo["nombre"] . "» ahora es gratuito para todos."
+            : "El grupo «" . $grupo["nombre"] . "» vuelve a ser solo para Premium. Los miembros del plan Gratuito no lo ven hasta tener Premium.");
     }
 
     public function cancelarClase(): void

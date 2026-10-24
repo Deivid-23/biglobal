@@ -9,7 +9,8 @@ require_once __DIR__ . "/GamificacionModel.php";
  * Lo usan el admin (src/admin/ruta_acciones.php y AdminController::ruta)
  * y el estudiante (EstudianteController). Todas las reglas viven aquí:
  *
- * - Niveles A1–C1 por idioma. A1 y A2 gratis; desde B1, Premium.
+ * - Niveles A1–C1 por idioma. Toda la ruta es gratis para cualquier
+ *   usuario registrado (lo de pago son las clases con docentes, ver Plan).
  * - Se avanza en orden: cada lección se abre al completar la anterior y
  *   cada nivel al completar el anterior. Una lección sin ejercicios que se
  *   puedan jugar aparece "en preparación" y no bloquea el camino.
@@ -160,7 +161,7 @@ class RutaModel
     {
         $stmt = $c->prepare("
             SELECT l.*, u.titulo AS unidad, u.nivel_id, u.publicado AS unidad_publicada,
-                   n.codigo AS nivel_codigo, n.idioma_id, n.premium, n.publicado AS nivel_publicado,
+                   n.codigo AS nivel_codigo, n.idioma_id, n.publicado AS nivel_publicado,
                    i.codigo AS idioma_codigo, i.nombre AS idioma
             FROM ruta_lecciones l
             INNER JOIN ruta_unidades u ON u.id = l.unidad_id
@@ -233,8 +234,8 @@ class RutaModel
         if (mb_strlen($descripcion) > 255) {
             return "La descripción puede tener máximo 255 caracteres.";
         }
-        $c->prepare("UPDATE ruta_niveles SET nombre = ?, descripcion = ?, premium = ?, publicado = ? WHERE id = ?")
-          ->execute([$nombre, $descripcion !== "" ? $descripcion : null, !empty($post["premium"]) ? 1 : 0, !empty($post["publicado"]) ? 1 : 0, (int) $nivel["id"]]);
+        $c->prepare("UPDATE ruta_niveles SET nombre = ?, descripcion = ?, publicado = ? WHERE id = ?")
+          ->execute([$nombre, $descripcion !== "" ? $descripcion : null, !empty($post["publicado"]) ? 1 : 0, (int) $nivel["id"]]);
         return true;
     }
 
@@ -570,9 +571,9 @@ class RutaModel
      * Niveles publicados del idioma con sus unidades y lecciones, y el estado
      * de cada una para el estudiante:
      *   lección: completada | disponible | bloqueada | preparacion
-     *   nivel:   abierto | bloqueado | premium
+     *   nivel:   abierto | bloqueado
      */
-    public static function mapa(PDO $c, int $idiomaId, int $usuarioId, bool $esPremium): array
+    public static function mapa(PDO $c, int $idiomaId, int $usuarioId): array
     {
         $niveles = self::niveles($c, $idiomaId, true);
         if (!$niveles) {
@@ -604,7 +605,7 @@ class RutaModel
             $lista = $porNivel[(int) $n["id"]] ?? [];
             // Si ya avanzó en este nivel, sigue abierto aunque después se agreguen lecciones al anterior
             $conAvance = (bool) array_filter($lista, fn($l) => $l["completada_en"] !== null);
-            $estadoNivel = !$anteriorCompleto && !$conAvance ? "bloqueado" : (((int) $n["premium"] === 1 && !$esPremium) ? "premium" : "abierto");
+            $estadoNivel = !$anteriorCompleto && !$conAvance ? "bloqueado" : "abierto";
 
             // Una lección se abre si la anterior jugable está completada. Así, una lección
             // agregada después (ej. un repaso en la unidad 1) no bloquea a quien ya iba más adelante.
@@ -640,13 +641,13 @@ class RutaModel
     }
 
     /** Estado de una lección para el estudiante ("" si no aparece en su ruta). */
-    public static function estadoLeccion(PDO $c, array $leccion, int $usuarioId, bool $esPremium): string
+    public static function estadoLeccion(PDO $c, array $leccion, int $usuarioId): string
     {
-        foreach (self::mapa($c, (int) $leccion["idioma_id"], $usuarioId, $esPremium) as $n) {
+        foreach (self::mapa($c, (int) $leccion["idioma_id"], $usuarioId) as $n) {
             foreach ($n["unidades"] as $u) {
                 foreach ($u["lecciones"] as $l) {
                     if ((int) $l["id"] === (int) $leccion["id"]) {
-                        return $n["estado"] === "premium" ? "premium" : $l["estado"];
+                        return $l["estado"];
                     }
                 }
             }
@@ -659,10 +660,10 @@ class RutaModel
      * Si hay varias (lecciones agregadas después en unidades ya hechas), la más
      * avanzada: es la que sigue el camino donde iba el estudiante.
      */
-    public static function siguiente(PDO $c, int $idiomaId, int $usuarioId, bool $esPremium): ?array
+    public static function siguiente(PDO $c, int $idiomaId, int $usuarioId): ?array
     {
         $siguiente = null;
-        foreach (self::mapa($c, $idiomaId, $usuarioId, $esPremium) as $n) {
+        foreach (self::mapa($c, $idiomaId, $usuarioId) as $n) {
             foreach ($n["unidades"] as $u) {
                 foreach ($u["lecciones"] as $l) {
                     if ($l["estado"] === "disponible") {

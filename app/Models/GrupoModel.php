@@ -12,6 +12,10 @@
  *   para que no se confundan al dictarlo). Se limita el número de intentos.
  * - Un grupo archivado no acepta estudiantes nuevos y desaparece para los
  *   estudiantes; el docente lo sigue viendo y lo puede restaurar.
+ * - Los grupos son del plan Premium. Un admin puede marcar uno como gratuito
+ *   (grupos.gratuito). Sin permiso no se une ni entra; si deja de ser Premium
+ *   sigue como miembro (no pierde sus entregas) pero no ve el grupo, solo puede
+ *   salir. Se revisa en el servidor (Plan::puedeEntrarAGrupo).
  * - Tablón: solo el docente publica; docente y miembros comentan. Cada quien
  *   borra sus comentarios y el docente puede borrar cualquiera de su grupo.
  * - Material: archivo (PDF, imagen o audio, máx. 5 MB), enlace https o video
@@ -181,7 +185,7 @@ class GrupoModel
             return ["ok" => false, "mensaje" => "El código tiene " . self::LARGO_CODIGO . " letras y números. Revísalo e inténtalo de nuevo.", "grupo_id" => 0];
         }
 
-        $stmt = $c->prepare("SELECT id, nombre, docente_id, archivado FROM grupos WHERE codigo = ? LIMIT 1");
+        $stmt = $c->prepare("SELECT id, nombre, docente_id, archivado, gratuito FROM grupos WHERE codigo = ? LIMIT 1");
         $stmt->execute([$codigo]);
         $grupo = $stmt->fetch(PDO::FETCH_ASSOC);
         if (!$grupo || (int) $grupo["archivado"] === 1) {
@@ -189,6 +193,9 @@ class GrupoModel
         }
 
         $grupoId = (int) $grupo["id"];
+        if (!Plan::puedeEntrarAGrupo($c, $usuarioId, (int) $grupo["gratuito"] === 1)) {
+            return ["ok" => false, "premium" => true, "mensaje" => "El grupo «" . $grupo["nombre"] . "» es parte de Premium. Con Premium te unes a todos los grupos y clases con docentes.", "grupo_id" => 0];
+        }
         if (self::esMiembro($c, $grupoId, $usuarioId)) {
             return ["ok" => true, "mensaje" => "Ya estabas en el grupo «" . $grupo["nombre"] . "».", "grupo_id" => $grupoId];
         }
@@ -228,11 +235,11 @@ class GrupoModel
         return (bool) $stmt->fetchColumn();
     }
 
-    /** Grupos activos del estudiante, con su docente. */
+    /** Grupos activos del estudiante, con su docente y si su plan lo deja entrar ("permitido"). */
     public static function gruposEstudiante(PDO $c, int $usuarioId): array
     {
         $stmt = $c->prepare("
-            SELECT g.id, g.nombre, g.descripcion, cu.nombre AS curso, m.unido_en,
+            SELECT g.id, g.nombre, g.descripcion, g.gratuito, cu.nombre AS curso, m.unido_en,
                    TRIM(CONCAT(d.nombre, ' ', IF(d.apellido = 'No especificado', '', COALESCE(d.apellido, '')))) AS docente,
                    (SELECT COUNT(*) FROM grupo_miembros m2 WHERE m2.grupo_id = g.id) AS miembros,
                    (SELECT MAX(a.creado) FROM grupo_anuncios a WHERE a.grupo_id = g.id) AS ultimo_anuncio
@@ -244,14 +251,23 @@ class GrupoModel
             ORDER BY m.unido_en DESC
         ");
         $stmt->execute([$usuarioId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $grupos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $premium = $grupos && Plan::esPremium($c, $usuarioId);
+        foreach ($grupos as &$g) {
+            $g["permitido"] = $premium || (int) $g["gratuito"] === 1;
+        }
+        unset($g);
+        return $grupos;
     }
 
-    /** Un grupo para el estudiante: solo si es miembro y no está archivado. */
+    /**
+     * Un grupo para el estudiante: solo si es miembro y no está archivado.
+     * "permitido" = su plan lo deja entrar; si es false, solo puede salir.
+     */
     public static function paraEstudiante(PDO $c, int $grupoId, int $usuarioId): ?array
     {
         $stmt = $c->prepare("
-            SELECT g.id, g.nombre, g.descripcion, g.curso_id, cu.nombre AS curso,
+            SELECT g.id, g.nombre, g.descripcion, g.curso_id, g.gratuito, cu.nombre AS curso,
                    TRIM(CONCAT(d.nombre, ' ', IF(d.apellido = 'No especificado', '', COALESCE(d.apellido, '')))) AS docente,
                    (SELECT COUNT(*) FROM grupo_miembros m2 WHERE m2.grupo_id = g.id) AS miembros
             FROM grupos g
@@ -262,7 +278,50 @@ class GrupoModel
             LIMIT 1
         ");
         $stmt->execute([$usuarioId, $grupoId]);
+        $grupo = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$grupo) {
+            return null;
+        }
+        $grupo["permitido"] = Plan::puedeEntrarAGrupo($c, $usuarioId, (int) $grupo["gratuito"] === 1);
+        return $grupo;
+    }
+
+    /** ¿Es miembro de un grupo activo Y su plan lo deja entrar? (para los archivos) */
+    private static function puedeVerComoEstudiante(PDO $c, array $grupo, int $usuarioId): bool
+    {
+        return (int) $grupo["archivado"] === 0
+            && self::esMiembro($c, (int) $grupo["id"], $usuarioId)
+            && Plan::puedeEntrarAGrupo($c, $usuarioId, (int) $grupo["gratuito"] === 1);
+    }
+
+    /* =========================================================
+       ADMIN: todos los grupos y la marca "gratuito"
+    ========================================================= */
+
+    public static function listadoAdmin(PDO $c): array
+    {
+        return $c->query("
+            SELECT g.id, g.nombre, g.archivado, g.gratuito, g.creado, cu.nombre AS curso,
+                   TRIM(CONCAT(d.nombre, ' ', IF(d.apellido = 'No especificado', '', COALESCE(d.apellido, '')))) AS docente,
+                   (SELECT COUNT(*) FROM grupo_miembros m WHERE m.grupo_id = g.id) AS miembros
+            FROM grupos g
+            INNER JOIN usuarios d ON d.id = g.docente_id
+            LEFT JOIN cursos cu ON cu.id = g.curso_id
+            ORDER BY g.archivado ASC, g.creado DESC
+            LIMIT 500
+        ")->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function porId(PDO $c, int $grupoId): ?array
+    {
+        $stmt = $c->prepare("SELECT * FROM grupos WHERE id = ? LIMIT 1");
+        $stmt->execute([$grupoId]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+
+    public static function marcarGratuito(PDO $c, int $grupoId, bool $gratuito): void
+    {
+        $c->prepare("UPDATE grupos SET gratuito = ? WHERE id = ?")->execute([$gratuito ? 1 : 0, $grupoId]);
     }
 
     /**
@@ -590,7 +649,7 @@ class GrupoModel
 
         if ($archivo["contexto"] === "material") {
             $stmt = $c->prepare("
-                SELECT g.id, g.docente_id, g.archivado
+                SELECT g.id, g.docente_id, g.archivado, g.gratuito
                 FROM grupo_material gm
                 INNER JOIN grupos g ON g.id = gm.grupo_id
                 WHERE gm.id = ? AND gm.archivo_id = ?
@@ -603,16 +662,16 @@ class GrupoModel
             }
             $puede = in_array($rol, ["admin", "superadmin"], true)
                 || ($rol === "docente" && (int) $grupo["docente_id"] === $usuarioId)
-                || ($rol === "estudiante" && (int) $grupo["archivado"] === 0 && self::esMiembro($c, (int) $grupo["id"], $usuarioId));
+                || ($rol === "estudiante" && self::puedeVerComoEstudiante($c, $grupo, $usuarioId));
             return $puede ? $archivo : null;
         }
 
         if ($archivo["contexto"] === "tarea" || $archivo["contexto"] === "entrega") {
             $sql = $archivo["contexto"] === "tarea"
-                ? "SELECT g.id, g.docente_id, g.archivado, NULL AS estudiante_id
+                ? "SELECT g.id, g.docente_id, g.archivado, g.gratuito, NULL AS estudiante_id
                    FROM grupo_tareas t INNER JOIN grupos g ON g.id = t.grupo_id
                    WHERE t.id = ? LIMIT 1"
-                : "SELECT g.id, g.docente_id, g.archivado, e.estudiante_id
+                : "SELECT g.id, g.docente_id, g.archivado, g.gratuito, e.estudiante_id
                    FROM tarea_entregas e
                    INNER JOIN grupo_tareas t ON t.id = e.tarea_id
                    INNER JOIN grupos g ON g.id = t.grupo_id
@@ -629,7 +688,7 @@ class GrupoModel
                 // Su propia entrega la ve siempre; los adjuntos de la tarea, si sigue en el grupo activo
                 $puede = $archivo["contexto"] === "entrega"
                     ? (int) $grupo["estudiante_id"] === $usuarioId
-                    : (int) $grupo["archivado"] === 0 && self::esMiembro($c, (int) $grupo["id"], $usuarioId);
+                    : self::puedeVerComoEstudiante($c, $grupo, $usuarioId);
             }
             return $puede ? $archivo : null;
         }

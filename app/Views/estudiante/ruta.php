@@ -34,7 +34,7 @@ $codigoIdioma = $idioma ? strtoupper($idioma["codigo"]) : "";
 <nav class="ruta-niveles" aria-label="Niveles">
     <?php foreach ($mapa as $n):
         $activo = $n["codigo"] === $nivelActivo;
-        $icono = $n["estado"] === "premium" ? "fa-crown" : ($n["estado"] === "bloqueado" ? "fa-lock" : ($n["jugables"] > 0 && $n["hechas"] === $n["jugables"] ? "fa-check" : ""));
+        $icono = $n["estado"] === "bloqueado" ? "fa-lock" : ($n["jugables"] > 0 && $n["hechas"] === $n["jugables"] ? "fa-check" : "");
     ?>
         <a class="ruta-nivel <?= $activo ? "es-activo" : "" ?> ruta-nivel--<?= e($n["estado"]) ?>"
            href="index.php?page=ruta&amp;idioma=<?= e(rawurlencode($idioma["codigo"])) ?>&amp;nivel=<?= e($n["codigo"]) ?>"
@@ -60,14 +60,7 @@ $codigoIdioma = $idioma ? strtoupper($idioma["codigo"]) : "";
         <?php endif; ?>
     </div>
 
-    <?php if ($n["estado"] === "premium"): ?>
-        <div class="vacio">
-            <span class="vacio__icono vacio__icono--logro" aria-hidden="true"><i class="fa-solid fa-crown"></i></span>
-            <p class="vacio__titulo">El nivel <?= e($n["codigo"]) ?> es parte de Premium</p>
-            <p class="vacio__texto">Con Premium sigues tu ruta hasta C1 y entras a todas las clases en vivo.</p>
-            <a class="boton boton--primario" href="index.php?page=plan">Ver Premium</a>
-        </div>
-    <?php elseif ($n["estado"] === "bloqueado"): ?>
+    <?php if ($n["estado"] === "bloqueado"): ?>
         <div class="vacio">
             <span class="vacio__icono" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
             <p class="vacio__titulo">Termina el nivel anterior</p>
@@ -77,7 +70,7 @@ $codigoIdioma = $idioma ? strtoupper($idioma["codigo"]) : "";
         <p class="texto-suave ruta-vacia">Este nivel todavía no tiene lecciones.</p>
     <?php endif; ?>
 
-    <?php if ($n["estado"] !== "premium"): foreach ($n["unidades"] as $numero => $u): ?>
+    <?php foreach ($n["unidades"] as $numero => $u): ?>
         <section class="ruta-unidad" aria-labelledby="unidad-<?= (int) $u["id"] ?>">
             <div class="ruta-unidad__cabecera">
                 <span class="ruta-unidad__icono" aria-hidden="true"><i class="fa-solid <?= e($u["icono"]) ?>"></i></span>
@@ -113,6 +106,6 @@ $codigoIdioma = $idioma ? strtoupper($idioma["codigo"]) : "";
                 <?php endforeach; ?>
             </ol>
         </section>
-    <?php endforeach; endif; ?>
+    <?php endforeach; ?>
 
 <?php endforeach; ?>

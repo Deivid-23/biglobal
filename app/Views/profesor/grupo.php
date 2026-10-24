@@ -30,6 +30,7 @@ $esDocente = true;
         <h1 style="margin-top: var(--esp-2);"><?= e($grupoActual["nombre"]) ?></h1>
         <p>
             <?php if ($archivado): ?><span class="chip chip--neutro">Archivado</span><?php endif; ?>
+            <?= (int) ($grupoActual["gratuito"] ?? 0) === 1 ? "<span class=\"chip chip--exito\">Gratuito para todos</span>" : "<span class=\"chip chip--logro\" title=\"Solo un administrador puede hacerlo gratuito\"><i class=\"fa-solid fa-crown\" aria-hidden=\"true\"></i> Premium</span>" ?>
             <?php if ($grupoActual["curso"]): ?><span class="chip"><i class="fa-solid fa-book" aria-hidden="true"></i> <?= e($grupoActual["curso"]) ?></span><?php endif; ?>
             <?= $grupoActual["descripcion"] ? e($grupoActual["descripcion"]) : "" ?>
         </p>

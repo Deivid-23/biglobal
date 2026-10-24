@@ -25,7 +25,7 @@ $precio = Plan::PLANES[$elegido]["centavos"];
 
 <header class="encabezado-pagina">
     <h1>Mi plan</h1>
-    <p>Gratuito: toda la ruta de aprendizaje. Premium: además, todas las clases en vivo con docentes.</p>
+    <p>Gratuito: toda la ruta de aprendizaje, de A1 a C1. Premium: además, todas las clases en vivo y los grupos con docentes.</p>
 </header>
 
 <?php if ($pagoConsultado):
@@ -34,7 +34,7 @@ $precio = Plan::PLANES[$elegido]["centavos"];
         <i class="fa-solid <?= $ep === "APPROVED" ? "fa-circle-check" : ($ep === "PENDING" ? "fa-hourglass-half" : "fa-circle-exclamation") ?>" aria-hidden="true"></i>
         <span>
             <?php if ($ep === "APPROVED"): ?>
-                <strong>Pago aprobado.</strong> Ya eres Premium. ¡Nos vemos en las clases en vivo!
+                <strong>Pago aprobado.</strong> Ya eres Premium. ¡Nos vemos en las clases y los grupos con docentes!
             <?php elseif ($ep === "PENDING"): ?>
                 <strong>Estamos confirmando tu pago con Wompi.</strong> Puede tardar unos minutos (con PSE, hasta que el banco responda).
                 Te avisaremos por correo. <a href="index.php?page=plan&amp;ref=<?= e(rawurlencode($pagoConsultado["referencia"])) ?>">Actualizar</a>
