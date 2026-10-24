@@ -77,7 +77,7 @@ header("X-Robots-Tag: noindex");
 
 <header class="pagina-cabecera">
     <div class="pagina-cabecera__barra">
-        <a class="pagina-logo" href="index.html"><img src="img/logo-Biglobal.png" alt="" width="34" height="34"> <?= e($sitio) ?></a>
+        <a class="pagina-logo" href="index.html"><img src="img/logo-Biglobal-icono.png" alt="" width="34" height="34"> <?= e($sitio) ?></a>
         <div class="cabecera-acciones">
             <a class="boton boton--secundario boton--sm" href="index.html">Ir al inicio</a>
             <button class="boton-tema" type="button" data-alternar-tema aria-label="Cambiar a modo oscuro">
@@ -150,7 +150,7 @@ header("X-Robots-Tag: noindex");
                 <!-- Franja lateral: marca, idioma y verificación -->
                 <aside class="diploma__franja">
                     <span class="diploma__marca">
-                        <img src="img/logo-Biglobal.png" alt="" width="40" height="40">
+                        <img src="img/logo-Biglobal-icono.png" alt="" width="40" height="40">
                         <span><?= e($sitio) ?></span>
                     </span>
 

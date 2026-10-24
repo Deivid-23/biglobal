@@ -77,7 +77,7 @@ unset($_SESSION["aviso_documentos"]);
 
 <main class="auth-shell">
     <a class="marca-logo" href="../index.html">
-        <img src="../img/logo-Biglobal.png" alt="" width="40" height="40"> BiGlobal
+        <img src="../img/logo-Biglobal-icono.png" alt="" width="40" height="40"> BiGlobal
     </a>
 
     <section class="auth-card auth-card--center">

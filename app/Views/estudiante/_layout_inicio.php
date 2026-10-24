@@ -50,7 +50,7 @@ $menu = [
     <aside class="est-lateral" id="est-menu" aria-label="Menú del estudiante">
         <div class="est-lateral__cabecera">
             <a class="est-marca" href="index.php">
-                <img src="../img/logo-Biglobal.png" alt="" width="36" height="36">
+                <img src="../img/logo-Biglobal-icono.png" alt="" width="36" height="36">
                 <span>BiGlobal</span>
             </a>
             <button class="est-icono-boton est-cerrar-menu" type="button" data-cerrar-menu aria-label="Cerrar menú">
@@ -101,7 +101,7 @@ $menu = [
             </button>
 
             <a class="est-marca est-barra__marca" href="index.php">
-                <img src="../img/logo-Biglobal.png" alt="" width="32" height="32">
+                <img src="../img/logo-Biglobal-icono.png" alt="" width="32" height="32">
                 <span>BiGlobal</span>
             </a>
             <p class="est-barra__titulo"><?= e($titulo) ?></p>

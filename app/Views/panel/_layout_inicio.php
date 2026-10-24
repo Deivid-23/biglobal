@@ -39,7 +39,7 @@
     <!-- ================= BARRA LATERAL ================= -->
     <aside class="pnl-lateral" id="pnl-menu" aria-label="Menú del panel">
         <a class="pnl-marca" href="<?= e($menuPanel[array_key_first($menuPanel)][0][3]) ?>">
-            <img src="../img/logo-Biglobal.png" alt="" width="36" height="36">
+            <img src="../img/logo-Biglobal-icono.png" alt="" width="36" height="36">
             <span>BiGlobal</span>
         </a>
 

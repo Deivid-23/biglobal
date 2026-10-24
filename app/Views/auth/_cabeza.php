@@ -25,5 +25,5 @@
 </div>
 <main class="auth-shell" id="contenido">
     <a class="marca-logo" href="../index.html">
-        <img src="../img/logo-Biglobal.png" alt="" width="40" height="40"> BiGlobal
+        <img src="../img/logo-Biglobal-icono.png" alt="" width="40" height="40"> BiGlobal
     </a>
