@@ -35,6 +35,7 @@ class Notificador
         "resumen_semanal"   => "fa-chart-simple",
         "contenido_revision"=> "fa-clipboard-check",
         "contenido_revisado"=> "fa-clipboard-check",
+        "racha_recordatorio"=> "fa-fire",
         "docente_aprobado"  => "fa-user-check",
         "docente_rechazado" => "fa-user-xmark",
         "cuenta_eliminacion"=> "fa-user-slash",
@@ -101,8 +102,10 @@ class Notificador
      *
      * El correo depende de Notificador::CANAL y de la preferencia del usuario.
      * @param bool $porCorreo false = solo la campana aunque el tipo lleve correo.
+     * @param string|null $pie texto al final del correo (por defecto, el de la cuenta).
+     * @return bool true si además salió el correo.
      */
-    public static function aUsuario(int $usuarioId, string $tipo, string $titulo, string $mensaje = "", ?string $enlace = null, bool $porCorreo = true): void
+    public static function aUsuario(int $usuarioId, string $tipo, string $titulo, string $mensaje = "", ?string $enlace = null, bool $porCorreo = true, ?string $pie = null): bool
     {
         try {
             $conexion = Conexion::conectar();
@@ -110,18 +113,20 @@ class Notificador
             $stmt->execute([$usuarioId]);
             $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
             if (!$usuario) {
-                return;
+                return false;
             }
 
             self::guardar($conexion, [$usuario], $tipo, $titulo, $mensaje, $enlace);
 
-            if ($porCorreo && self::quiereCorreo($tipo, $usuario)) {
+            if ($porCorreo && self::quiereCorreo($tipo, $usuario) && Correo::estaConfigurado()) {
                 self::mandarCorreo([$usuario["correo"]], $titulo, $mensaje, $enlace,
-                    "Recibes este correo porque tienes una cuenta en BiGlobal.");
+                    $pie ?? "Recibes este correo porque tienes una cuenta en BiGlobal.");
+                return true;
             }
         } catch (Throwable $e) {
             error_log("[BiGlobal][Notificador][aUsuario] " . $e->getMessage());
         }
+        return false;
     }
 
     /**
@@ -154,6 +159,7 @@ class Notificador
         "insignia"           => "campana",
         "racha_protector"    => "campana",
         "racha_perdida"      => "campana",
+        "racha_recordatorio" => "opcional",
     ];
 
     /** ¿Existe usuarios.correos_opcionales? (antes del SQL: todos reciben) */
@@ -227,6 +233,26 @@ class Notificador
     public const TOPE_CORREOS_MASIVOS_DIA = 200;
 
     /**
+     * Cuántos correos masivos quedan hoy. La cuenta vive en la tabla
+     * configuracion como "AAAAMMDD:cantidad" (una sola clave; se reinicia cada día).
+     * La comparten aVarios y los recordatorios de racha.
+     */
+    public static function cupoMasivo(): int
+    {
+        [$dia, $cuenta] = array_pad(explode(":", (string) Config::get("correos_masivos_hoy", "")), 2, "0");
+        $usados = $dia === date("Ymd") ? (int) $cuenta : 0;
+        return max(0, self::TOPE_CORREOS_MASIVOS_DIA - $usados);
+    }
+
+    public static function gastarCupoMasivo(int $cantidad): void
+    {
+        if ($cantidad > 0) {
+            $usados = self::TOPE_CORREOS_MASIVOS_DIA - self::cupoMasivo();
+            Config::set("correos_masivos_hoy", date("Ymd") . ":" . ($usados + $cantidad));
+        }
+    }
+
+    /**
      * El mismo aviso para MUCHAS personas (ej. invitación a una clase gratuita).
      * - La campana siempre le llega a todos.
      * - El correo sale en grupos de 50 con copia oculta y con un tope diario
@@ -253,20 +279,15 @@ class Notificador
                 $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 self::guardar($conexion, $usuarios, $tipo, $titulo, $mensaje, $enlace);
 
-                // Tope diario de correos masivos (se lleva la cuenta en la tabla configuracion)
-                // Valor guardado: "AAAAMMDD:cantidad" (una sola clave; se reinicia cada día)
-                [$dia, $cuenta] = array_pad(explode(":", (string) Config::get("correos_masivos_hoy", "")), 2, "0");
-                $usados = $dia === date("Ymd") ? (int) $cuenta : 0;
+                // Tope diario de correos masivos (cupoMasivo)
                 $correos = array_values(array_column(array_filter($usuarios, fn($u) => self::quiereCorreo($tipo, $u)), "correo"));
-                $correos = array_slice($correos, 0, max(0, self::TOPE_CORREOS_MASIVOS_DIA - $usados));
+                $correos = array_slice($correos, 0, self::cupoMasivo());
 
                 foreach (array_chunk($correos, 50) as $grupo) {
                     self::mandarCorreo($grupo, $titulo, $mensaje, $enlace, "Recibes este correo porque tienes una cuenta en BiGlobal.");
                     $enviados += count($grupo);
                 }
-                if ($correos) {
-                    Config::set("correos_masivos_hoy", date("Ymd") . ":" . ($usados + count($correos)));
-                }
+                self::gastarCupoMasivo(count($correos));
             }
             return $enviados;
         } catch (Throwable $e) {

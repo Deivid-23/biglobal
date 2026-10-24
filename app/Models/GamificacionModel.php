@@ -453,4 +453,122 @@ class GamificacionModel
     {
         return (new DateTimeImmutable($fecha))->modify("-1 day")->format("Y-m-d");
     }
+
+    /* =========================================================
+       RECORDATORIO DE RACHA (database/recordatorio_racha.sql)
+       Lo lanza src/tareas/recordatorio_racha.php cada hora.
+    ========================================================= */
+
+    /** Entre estas horas (de la zona del estudiante) sale el aviso: 7 a 10 p. m. */
+    public const RECORDATORIO_DESDE = 19;
+    public const RECORDATORIO_HASTA = 22;
+
+    /** ¿Ya se ejecutó database/recordatorio_racha.sql? */
+    public static function conRecordatorio(PDO $conexion): bool
+    {
+        static $hay = null;
+        if ($hay === null) {
+            try {
+                $hay = (int) $conexion->query("
+                    SELECT COUNT(*) FROM information_schema.columns
+                    WHERE table_schema = DATABASE()
+                      AND ((table_name = 'estudiante_stats' AND column_name = 'recordatorio_dia')
+                        OR (table_name = 'usuarios' AND column_name = 'recordatorio_racha'))
+                ")->fetchColumn() === 2;
+            } catch (Throwable $e) {
+                $hay = false;
+            }
+        }
+        return $hay;
+    }
+
+    /** ¿Quiere el recordatorio de racha? (true si la columna aún no existe) */
+    public static function quiereRecordatorio(PDO $conexion, int $usuarioId): bool
+    {
+        if (!self::conRecordatorio($conexion)) {
+            return true;
+        }
+        $stmt = $conexion->prepare("SELECT recordatorio_racha FROM usuarios WHERE id = ? LIMIT 1");
+        $stmt->execute([$usuarioId]);
+        return (int) $stmt->fetchColumn() !== 0;
+    }
+
+    public static function guardarRecordatorio(PDO $conexion, int $usuarioId, bool $quiere): bool
+    {
+        if (!self::conRecordatorio($conexion)) {
+            return false;
+        }
+        $conexion->prepare("UPDATE usuarios SET recordatorio_racha = ? WHERE id = ?")->execute([$quiere ? 1 : 0, $usuarioId]);
+        return true;
+    }
+
+    /**
+     * Avisa a quien tiene la racha viva y hoy no ha estudiado, si en su zona
+     * son entre las 7 y las 10 p. m. y hoy no se le avisó. Antes revisa su racha
+     * (actualizarRacha), así los protectores y la racha perdida ya cuentan.
+     * Los correos gastan el cupo diario de correos masivos; sin cupo, solo campana.
+     * $ahora (timestamp) solo se pasa en las pruebas.
+     * @return array estado, revisados, avisados, correos
+     */
+    public static function recordatoriosRacha(PDO $conexion, ?int $ahora = null): array
+    {
+        $r = ["estado" => "ok", "revisados" => 0, "avisados" => 0, "correos" => 0];
+        if (!self::disponible($conexion) || !self::conProtectores($conexion) || !self::conRecordatorio($conexion)) {
+            return ["estado" => "sin_sql"] + $r;
+        }
+        if (!Config::getBool("racha_recordatorio", true)) {
+            return ["estado" => "desactivado"] + $r;
+        }
+        $momento = new DateTimeImmutable("@" . ($ahora ?? time()));
+
+        // Candidatos: racha > 0 y algo cubierto hace poco (con 2 protectores al mes, más de una semana ya es racha perdida)
+        $filas = $conexion->query("
+            SELECT s.usuario_id, s.recordatorio_dia, u.zona_horaria
+            FROM estudiante_stats s
+            INNER JOIN usuarios u ON u.id = s.usuario_id AND u.activo = 1 AND u.recordatorio_racha = 1
+            INNER JOIN roles ro ON ro.id = u.rol_id AND ro.nombre = 'estudiante'
+            WHERE s.racha_actual > 0 AND COALESCE(s.racha_hasta, s.ultima_actividad) >= CURDATE() - INTERVAL 8 DAY
+        ")->fetchAll(PDO::FETCH_ASSOC);
+
+        $marcar = $conexion->prepare("UPDATE estudiante_stats SET recordatorio_dia = ? WHERE usuario_id = ?");
+        $leer = $conexion->prepare("SELECT racha_actual, racha_hasta, ultima_actividad, protectores FROM estudiante_stats WHERE usuario_id = ?");
+        $cupo = Notificador::cupoMasivo();
+
+        foreach ($filas as $f) {
+            $uid = (int) $f["usuario_id"];
+            $zona = self::zonaValida((string) $f["zona_horaria"]) ? (string) $f["zona_horaria"] : self::ZONA_DEFECTO;
+            $local = $momento->setTimezone(new DateTimeZone($zona));
+            $hora = (int) $local->format("G");
+            $hoy = $local->format("Y-m-d");
+            if ($hora < self::RECORDATORIO_DESDE || $hora >= self::RECORDATORIO_HASTA || $f["recordatorio_dia"] === $hoy) {
+                continue;
+            }
+            $r["revisados"]++;
+            self::actualizarRacha($conexion, $uid, $hoy);
+            $marcar->execute([$hoy, $uid]);   // uno por día, aunque al final no haga falta avisar
+
+            $leer->execute([$uid]);
+            $s = $leer->fetch(PDO::FETCH_ASSOC);
+            $racha = (int) ($s["racha_actual"] ?? 0);
+            $hasta = $s["racha_hasta"] ?? $s["ultima_actividad"] ?? null;
+            if ($racha <= 0 || $hasta !== self::diaAnterior($hoy)) {
+                continue;   // ya estudió hoy (hasta = hoy) o la racha terminó
+            }
+
+            $protectores = (int) ($s["protectores"] ?? 0);
+            $titulo = "Tu racha de {$racha} " . ($racha === 1 ? "día" : "días") . " termina hoy";
+            $mensaje = "Haz una lección corta y mantenla viva. "
+                . ($protectores > 1 ? "Si hoy no puedes, usaremos 1 de tus {$protectores} protectores."
+                    : ($protectores === 1 ? "Si hoy no puedes, usaremos tu último protector del mes." : "Este mes ya no te quedan protectores."));
+            $correo = Notificador::aUsuario($uid, "racha_recordatorio", $titulo, $mensaje, "estudiante/index.php?page=ruta", $cupo > 0,
+                "Recibes este recordatorio porque tienes una racha en BiGlobal. Puedes apagarlo en Mi perfil → Correos.");
+            $r["avisados"]++;
+            if ($correo) {
+                $cupo--;
+                $r["correos"]++;
+            }
+        }
+        Notificador::gastarCupoMasivo($r["correos"]);
+        return $r;
+    }
 }

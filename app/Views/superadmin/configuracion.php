@@ -124,6 +124,10 @@ $g = fn(string $clave, $defecto = "") => Config::get($clave, $defecto);
                 <input type="checkbox" name="<?= $clave ?>" <?= Config::getBool($clave, $porDefecto) ? "checked" : "" ?>>
             </label>
         <?php endforeach; ?>
+        <label class="pnl-interruptor">
+            <span><strong>Recordatorio de racha a estudiantes</strong><small>Entre las 7 y las 10 p. m. de su zona, a quien tiene racha y hoy no ha estudiado (campana y correo). Cada estudiante también lo puede apagar en su perfil.</small></span>
+            <input type="checkbox" name="racha_recordatorio" <?= Config::getBool("racha_recordatorio", true) ? "checked" : "" ?>>
+        </label>
         <p class="campo__ayuda">
             Los avisos aparecen en la campana del panel.
             <?php if (Correo::estaConfigurado()): ?>

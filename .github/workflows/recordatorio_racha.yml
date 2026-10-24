@@ -1,0 +1,33 @@
+# Recordatorio de racha de BiGlobal
+# Cada hora llama a la tarea del sitio. La tarea avisa (campana + correo)
+# a quien tiene la racha viva y hoy no ha estudiado, si en SU zona horaria
+# son entre las 7 y las 10 p. m. Cada estudiante recibe uno solo por día.
+# Usa el mismo secreto TAREAS_TOKEN del resumen semanal.
+#
+# Se apaga sin tocar esto en Super admin → Configuración → Notificaciones.
+# También se puede lanzar a mano desde la pestaña Actions ("Run workflow").
+
+name: Recordatorio de racha
+
+on:
+  schedule:
+    - cron: "5 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  recordatorio:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Llamar a la tarea del recordatorio
+        env:
+          TAREAS_TOKEN: ${{ secrets.TAREAS_TOKEN }}
+        run: |
+          # El plan gratis de Render se duerme: el primer intento puede tardar en despertar
+          curl --fail-with-body --silent --show-error \
+               --retry 3 --retry-delay 20 --retry-all-errors --max-time 120 \
+               -X POST \
+               -H "X-Tarea-Token: ${TAREAS_TOKEN}" \
+               https://biglobal.onrender.com/tareas/recordatorio_racha.php

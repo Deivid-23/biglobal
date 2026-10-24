@@ -127,6 +127,8 @@ try {
             foreach (Notificador::TIPOS as $clave) {
                 $preferencias[$clave] = isset($_POST[$clave]) ? "1" : "0";
             }
+            // Aviso a estudiantes (no es del equipo): GamificacionModel::recordatoriosRacha
+            $preferencias["racha_recordatorio"] = isset($_POST["racha_recordatorio"]) ? "1" : "0";
             guardarConfig($accion, $preferencias);
 
             redirigirCon("notificaciones", "ok", "Preferencias de notificaciones guardadas.");
