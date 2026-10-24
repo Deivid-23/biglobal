@@ -6,8 +6,10 @@
  *   php tools/probar.php            -> todas
  *   php tools/probar.php racha      -> solo los archivos cuyo nombre contiene "racha"
  *
- * Seguridad: fija las variables DB_ hacia el MySQL local y se NIEGA a correr
- * si la base conectada no es biglobal_prueba. Nunca escribe en TiDB.
+ * Seguridad: fija las variables DB_ hacia el MySQL local (127.0.0.1, root) y se
+ * NIEGA a correr si la base conectada no es biglobal_prueba. Nunca escribe en TiDB.
+ * PRUEBAS_DB=biglobal_prueba_ci permite otra base, pero solo con ese prefijo
+ * (la usa GitHub Actions: .github/workflows/pruebas.yml).
  * Cada prueba crea sus propios usuarios temporales y los borra al terminar.
  */
 
@@ -15,8 +17,14 @@ if (PHP_SAPI !== "cli") {
     exit("Este script solo funciona desde la terminal.\n");
 }
 
-// Siempre la base local de pruebas (aunque el .env apunte a producción)
-foreach (["DB_HOST" => "127.0.0.1", "DB_PORT" => "3306", "DB_NAME" => "biglobal_prueba", "DB_USER" => "root", "DB_PASS" => "", "DB_SSL" => "false"] as $k => $v) {
+// Siempre una base local de pruebas (aunque el .env apunte a producción).
+// PRUEBAS_DB permite otra, pero solo si se llama biglobal_prueba_algo (ej. biglobal_prueba_ci).
+$nombreBase = getenv("PRUEBAS_DB") ?: "biglobal_prueba";
+if (!preg_match('/^biglobal_prueba(_[a-z0-9]+)?$/', $nombreBase)) {
+    fwrite(STDERR, "ALTO: PRUEBAS_DB debe llamarse biglobal_prueba o biglobal_prueba_algo. No se ejecuta nada.\n");
+    exit(2);
+}
+foreach (["DB_HOST" => "127.0.0.1", "DB_PORT" => "3306", "DB_NAME" => $nombreBase, "DB_USER" => "root", "DB_PASS" => "", "DB_SSL" => "false"] as $k => $v) {
     putenv("$k=$v");
     $_ENV[$k] = $v;
 }
@@ -36,8 +44,8 @@ try {
     fwrite(STDERR, "No hay conexión con el MySQL local (¿está encendido XAMPP?): " . $e->getMessage() . "\n");
     exit(2);
 }
-if ($base !== "biglobal_prueba") {
-    fwrite(STDERR, "ALTO: la base conectada es «{$base}», no biglobal_prueba. No se ejecuta nada.\n");
+if ($base !== $nombreBase) {
+    fwrite(STDERR, "ALTO: la base conectada es «{$base}», no {$nombreBase}. No se ejecuta nada.\n");
     exit(2);
 }
 

@@ -78,6 +78,11 @@ y las estadísticas. El comando fija la conexión a `biglobal_prueba` y se niega
 en cualquier otra base (nunca toca TiDB). Cada prueba crea usuarios temporales y los
 borra al terminar. Si algo falla, termina con código distinto de 0.
 
+En GitHub corren solas en cada push (`.github/workflows/pruebas.yml`) sobre un MariaDB
+temporal cargado con `tests/base_pruebas.sql` (estructura + contenido de la ruta, sin
+usuarios). **Cuando cambie la estructura** (un SQL nuevo en `database/`), aplícalo en
+`biglobal_prueba` y vuelve a generar ese archivo con `php tools/generar_base_pruebas.php`.
+
 ## 4. Sistema de diseño
 
 - **Un solo archivo de tokens**: `src/css/tokens.css`. Azul de marca `#2563EB` (hover `#1D4ED8`),

@@ -1,0 +1,55 @@
+# Pruebas automáticas de BiGlobal
+# En cada push a main y en cada pull request: levanta un MariaDB temporal
+# (se destruye al terminar), carga tests/base_pruebas.sql (estructura +
+# contenido de la ruta, sin usuarios ni datos personales) y corre
+# php tools/probar.php. No usa TiDB, ni el .env, ni ningún secreto.
+#
+# Con Render en "Auto-Deploy: After CI Checks Pass", solo se publica
+# cuando esto termina en verde.
+
+name: Pruebas
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    services:
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: "1"
+          MARIADB_DATABASE: biglobal_prueba
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Instalar PHP 8.2 (la misma versión de Render)
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: pdo_mysql, mbstring
+          coverage: none
+
+      - name: Cargar la base de pruebas
+        run: mysql --host=127.0.0.1 --port=3306 --user=root --default-character-set=utf8mb4 biglobal_prueba < tests/base_pruebas.sql
+
+      - name: Correr las pruebas
+        run: php tools/probar.php
