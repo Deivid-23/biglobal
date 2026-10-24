@@ -40,6 +40,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 }
 
-$paginas = ["inicio", "usuarios", "cursos", "idiomas", "lecciones", "actividades", "preguntas", "clases", "grupos", "revision", "solicitudes", "ruta", "insignias", "perfil"];
+$paginas = ["inicio", "usuarios", "cursos", "idiomas", "lecciones", "actividades", "preguntas", "clases", "grupos", "estadisticas", "revision", "solicitudes", "ruta", "insignias", "perfil"];
 
 $controlador->{in_array($pagina, $paginas, true) ? $pagina : "inicio"}();

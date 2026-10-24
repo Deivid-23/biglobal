@@ -8,6 +8,7 @@ require_once __DIR__ . "/../Models/GrupoModel.php";
 require_once __DIR__ . "/../Models/DocenteSolicitudModel.php";
 require_once __DIR__ . "/../Models/RevisionModel.php";
 require_once __DIR__ . "/../Models/RutaModel.php";
+require_once __DIR__ . "/../Models/RutaEstadisticasModel.php";
 require_once __DIR__ . "/../Models/InsigniaModel.php";
 
 /**
@@ -20,7 +21,7 @@ require_once __DIR__ . "/../Models/InsigniaModel.php";
  *
  * Páginas: inicio, usuarios, cursos, idiomas, lecciones, actividades,
  *          preguntas (de una actividad), solicitudes, ruta (ruta de aprendizaje), insignias,
- *          clases, grupos, perfil.
+ *          clases, grupos, estadisticas (de la ruta), perfil.
  * POST:    accion=crear (modal "Nuevo"), accion=editar, accion=eliminar,
  *          accion=guardar_pregunta, accion=eliminar_pregunta, accion=abrir_clase,
  *          accion=gratuito_grupo
@@ -173,6 +174,44 @@ class AdminController
         $avisados = ClaseModel::cancelar($this->c, (int) $clase["id"], (string) ($_POST["motivo"] ?? ""));
         Auditoria::registrar("clase.cancelar", "clase", (int) $clase["id"], $clase["titulo"] . " · " . ClaseModel::fechaHora($clase["inicio"]));
         Panel::volver($volver, "ok", "Clase cancelada. Avisamos a " . plural_panel($avisados, "estudiante", "estudiantes") . ".");
+    }
+
+    /* =========================================================
+       ESTADÍSTICAS DE LA RUTA (solo lectura)
+       ?page=estadisticas[&idioma=ID][&nivel=ID][&periodo=30|90|todo]
+    ========================================================= */
+    public function estadisticas(): void
+    {
+        $c = $this->c;
+        $disponible = RutaModel::disponible($c) && RutaEstadisticasModel::disponible($c);
+        $idiomas = $disponible ? RutaModel::idiomas($c, true) : [];
+        $idiomaId = (int) ($_GET["idioma"] ?? 0);
+        if (!in_array($idiomaId, array_map("intval", array_column($idiomas, "id")), true)) {
+            $idiomaId = (int) ($idiomas[0]["id"] ?? 0);
+        }
+        $niveles = $idiomaId ? RutaModel::niveles($c, $idiomaId, true) : [];
+        $nivelId = (int) ($_GET["nivel"] ?? 0);
+        if (!in_array($nivelId, array_map("intval", array_column($niveles, "id")), true)) {
+            $nivelId = 0;   // otro idioma o un nivel que no existe: todos
+        }
+        $periodo = (string) ($_GET["periodo"] ?? "30");
+        if (!isset(RutaEstadisticasModel::PERIODOS[$periodo])) {
+            $periodo = "30";
+        }
+        $nivel = $nivelId ?: null;
+        $hay = $disponible && $idiomaId;
+        $this->render("estadisticas_ruta", "ruta", "Estadísticas de la ruta", [
+            "disponible" => $disponible,
+            "idiomas"    => $idiomas,
+            "idiomaId"   => $idiomaId,
+            "niveles"    => $niveles,
+            "nivelId"    => $nivelId,
+            "periodo"    => $periodo,
+            "resumen"    => $hay ? RutaEstadisticasModel::resumen($c, $idiomaId, $nivel, $periodo) : ["activos7" => 0, "activos30" => 0, "empezadas" => 0, "terminadas" => 0, "abandonadas" => 0, "abandono" => null],
+            "dificiles"  => $hay ? RutaEstadisticasModel::ejerciciosDificiles($c, $idiomaId, $nivel, $periodo) : [],
+            "abandono"   => $hay ? RutaEstadisticasModel::leccionesAbandono($c, $idiomaId, $nivel, $periodo) : [],
+            "avance"     => $hay ? RutaEstadisticasModel::avancePorNivel($c, $idiomaId) : [],
+        ]);
     }
 
     /* =========================================================

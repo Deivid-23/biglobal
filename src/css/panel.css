@@ -1019,3 +1019,7 @@ button.pnl-nav__enlace { width: 100%; border: 0; background: none; cursor: point
 
 /* Segunda sección dentro de la misma tarjeta (ej. Configuración → General → Prueba gratis) */
 .pnl-tarjeta__cabecera--separada { margin-top: var(--esp-8); padding-top: var(--esp-6); border-top: 1px solid var(--borde); }
+
+/* Estadísticas de la ruta: filtros */
+.estadisticas-filtros { margin-bottom: var(--esp-5); }
+div.pnl-dato { cursor: default; }

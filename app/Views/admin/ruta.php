@@ -33,6 +33,9 @@ $interruptor = function (string $nombre, bool $marcado, string $titulo, string $
         <h1>Ruta de aprendizaje</h1>
         <p>El camino tipo Duolingo de cada idioma: niveles, unidades, lecciones y ejercicios. Los estudiantes solo ven lo publicado.</p>
     </div>
+    <?php if ($disponible): ?>
+        <a class="boton boton--secundario" href="index.php?page=estadisticas&amp;idioma=<?= (int) ($idiomaId ?? 0) ?>"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Estadísticas</a>
+    <?php endif; ?>
 </header>
 
 <?php if (!$disponible): ?>

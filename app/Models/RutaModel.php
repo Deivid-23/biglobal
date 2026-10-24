@@ -2,6 +2,7 @@
 
 require_once __DIR__ . "/GamificacionModel.php";
 require_once __DIR__ . "/UbicacionModel.php";
+require_once __DIR__ . "/RutaEstadisticasModel.php";
 
 /**
  * RutaModel
@@ -886,8 +887,11 @@ class RutaModel
         return ["correcto" => false, "solucion" => ""];
     }
 
-    /** Empieza (o reinicia) el intento de una lección en la sesión. */
-    public static function iniciarIntento(int $leccionId, array $ejercicios): void
+    /**
+     * Empieza (o reinicia) el intento de una lección en la sesión.
+     * $registro = id en ruta_intentos (RutaEstadisticasModel), o null.
+     */
+    public static function iniciarIntento(int $leccionId, array $ejercicios, ?int $registro = null): void
     {
         $ids = array_map(fn($e) => (int) $e["id"], $ejercicios);
         $_SESSION["ruta_intento"] = [
@@ -896,6 +900,7 @@ class RutaModel
             "fallados" => [],
             "aciertos" => 0,
             "total"    => count($ids),
+            "registro" => $registro,
         ];
     }
 
@@ -919,6 +924,8 @@ class RutaModel
         }
 
         $r = self::calificar($e, $respuesta);
+        // Estadísticas: "primera" = todavía no lo había fallado en este intento
+        RutaEstadisticasModel::respuesta($c, $intento["registro"] ?? null, $ejercicioId, (bool) $r["correcto"], empty($intento["fallados"][$ejercicioId]));
         array_shift($intento["cola"]);
         if ($r["correcto"]) {
             if (empty($intento["fallados"][$ejercicioId])) {
@@ -935,7 +942,9 @@ class RutaModel
 
         if ($r["siguiente"] === null) {
             unset($_SESSION["ruta_intento"]);
-            $r["resultado"] = self::terminar($c, $usuarioId, $leccionId, $intento["total"] > 0 ? (int) round($intento["aciertos"] * 100 / $intento["total"]) : 100);
+            $porcentaje = $intento["total"] > 0 ? (int) round($intento["aciertos"] * 100 / $intento["total"]) : 100;
+            $r["resultado"] = self::terminar($c, $usuarioId, $leccionId, $porcentaje);
+            RutaEstadisticasModel::terminar($c, $intento["registro"] ?? null, $porcentaje);
         } else {
             $_SESSION["ruta_intento"] = $intento;
         }

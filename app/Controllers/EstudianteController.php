@@ -1089,7 +1089,8 @@ class EstudianteController
         }
 
         $ejercicios = RutaModel::ejercicios($c, (int) $leccion["id"], true);
-        RutaModel::iniciarIntento((int) $leccion["id"], $ejercicios);
+        RutaModel::iniciarIntento((int) $leccion["id"], $ejercicios,
+            $ejercicios ? RutaEstadisticasModel::abrirIntento($c, $this->usuarioId, (int) $leccion["id"]) : null);
         $this->render("ruta_leccion", "ruta", $leccion["titulo"], [
             "leccion"    => $leccion,
             "urlRuta"    => $urlRuta,
