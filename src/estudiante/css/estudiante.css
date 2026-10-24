@@ -107,7 +107,14 @@ body.menu-abierto { overflow: hidden; }
     white-space: nowrap;
 }
 @media (min-width: 720px) { .est-usuario__nombre { display: block; } }
-@media (max-width: 360px) { .est-barra__marca span { display: none; } }
+/* Teléfonos angostos (360 px es muy común en Android): todo un poco más junto
+   para que el nombre "BiGlobal" quepa al lado del logo. Solo se oculta en
+   pantallas de menos de 355 px, donde ya no cabe con aire antes de la campana. */
+@media (max-width: 380px) {
+    .est-barra { gap: 6px; padding-left: var(--esp-3); padding-right: var(--esp-3); }
+    .est-barra__marca { gap: 6px; font-size: 1.05rem; }
+}
+@media (max-width: 354.98px) { .est-barra__marca span { display: none; } }
 
 .est-principal {
     width: 100%;
