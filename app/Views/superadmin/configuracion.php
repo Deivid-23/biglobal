@@ -272,16 +272,6 @@ $g = fn(string $clave, $defecto = "") => Config::get($clave, $defecto);
             <div><dt><?= e($k) ?></dt><dd><?= e($v ?: "—") ?></dd></div>
         <?php endforeach; ?>
     </dl>
-
-    <?php /* TEMPORAL (revisión de seguridad): cómo llega la IP de TU visita detrás del proxy de Render.
-             Sirve para que LimiteIntentos::ipCliente use la IP correcta. Se quita después. */ ?>
-    <div class="pnl-tarjeta__cabecera pnl-tarjeta__cabecera--separada"><div><h2>IP de tu visita (temporal)</h2><p>Solo para ajustar los límites de intentos. Son datos de tu propia conexión.</p></div></div>
-    <dl class="pnl-definiciones">
-        <?php foreach (["REMOTE_ADDR", "HTTP_X_FORWARDED_FOR", "HTTP_X_REAL_IP", "HTTP_TRUE_CLIENT_IP", "HTTP_CF_CONNECTING_IP", "HTTP_X_FORWARDED_PROTO"] as $cab): ?>
-            <div><dt><?= e($cab) ?></dt><dd><?= e((string) ($_SERVER[$cab] ?? "—")) ?></dd></div>
-        <?php endforeach; ?>
-        <div><dt>IP que usa hoy BiGlobal</dt><dd><?= e(LimiteIntentos::ipCliente()) ?></dd></div>
-    </dl>
     <form method="POST" action="configuracion.php" style="margin-top: var(--esp-6);">
         <?= campoCsrf() ?><input type="hidden" name="accion" value="sistema"><input type="hidden" name="sub" value="limpiar_cache">
         <button class="boton boton--secundario" type="submit"><i class="fa-solid fa-broom" aria-hidden="true"></i> Limpiar caché de configuración</button>

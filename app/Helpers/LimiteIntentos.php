@@ -134,19 +134,24 @@ class LimiteIntentos
     ========================================================= */
 
     /**
-     * IP del visitante. En Render llega en X-Forwarded-For (la primera es
-     * la del cliente). Ese encabezado se puede falsificar, por eso la IP
-     * solo es una capa extra: las protecciones principales van por
-     * cuenta (correo) y con topes globales.
+     * IP del visitante. En Render todo pasa por Cloudflare, que pone la IP
+     * real en CF-Connecting-IP y REEMPLAZA la que mande el cliente.
+     * X-Forwarded-For llega así: "cliente, Cloudflare, red interna de Render",
+     * pero lo que va antes de las dos últimas lo puede inventar quien hace la
+     * petición; por eso solo se usa si falta CF-Connecting-IP, y contando
+     * desde el final (la que agregó Cloudflare). En local queda REMOTE_ADDR.
+     * La IP es una capa extra: las protecciones principales van por cuenta
+     * (correo) y con topes globales.
      */
     public static function ipCliente(): string
     {
-        $reenviada = (string) ($_SERVER["HTTP_X_FORWARDED_FOR"] ?? "");
-        if ($reenviada !== "") {
-            $primera = trim(explode(",", $reenviada)[0]);
-            if (filter_var($primera, FILTER_VALIDATE_IP)) {
-                return $primera;
-            }
+        $cloudflare = trim((string) ($_SERVER["HTTP_CF_CONNECTING_IP"] ?? ""));
+        if ($cloudflare !== "" && filter_var($cloudflare, FILTER_VALIDATE_IP)) {
+            return $cloudflare;
+        }
+        $reenviada = array_map("trim", explode(",", (string) ($_SERVER["HTTP_X_FORWARDED_FOR"] ?? "")));
+        if (count($reenviada) >= 3 && filter_var($reenviada[count($reenviada) - 3], FILTER_VALIDATE_IP)) {
+            return $reenviada[count($reenviada) - 3];
         }
         return (string) ($_SERVER["REMOTE_ADDR"] ?? "desconocida");
     }
