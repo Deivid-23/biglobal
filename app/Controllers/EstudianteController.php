@@ -176,7 +176,8 @@ class EstudianteController
 
         $zonas = GamificacionModel::zonasParaElegir();
         $zonaActual = GamificacionModel::zonaDe($conexion, $id);
-        $this->render("perfil", "perfil", "Mi perfil", compact("cuenta", "valores", "errores", "reglas", "suscripcion", "zonas", "zonaActual"));
+        $puedeProbar = Plan::puedeProbar($this->conexion, $this->usuarioId);
+        $this->render("perfil", "perfil", "Mi perfil", compact("cuenta", "valores", "errores", "reglas", "suscripcion", "zonas", "zonaActual", "puedeProbar"));
     }
 
     /** Guarda nombre, apellido y correo. Devuelve null si salió bien o el mensaje de error. */
@@ -628,6 +629,7 @@ class EstudianteController
             "disponible"     => $disponible,
             "configurado"    => Wompi::configurado(),
             "suscripcion"    => $suscripcion,
+            "puedeProbar"    => Plan::puedeProbar($c, $this->usuarioId),
             "conRenovacion"  => $conRenovacion,
             "reactivable"    => $disponible ? $this->suscripcionReactivable() : null,
             "pagoConsultado" => $pagoConsultado,
@@ -654,6 +656,19 @@ class EstudianteController
             header("Location: index.php?page=plan" . $extra);
             exit;
         };
+
+        // Prueba gratis: no necesita Wompi ni tarjeta (Plan::puedeProbar)
+        if (($_POST["accion"] ?? "") === "empezar_prueba") {
+            if (!LimiteIntentos::permitir("prueba:usuario:" . $this->usuarioId, 5, 3600)) {
+                $volver("error", "Hiciste muchos intentos seguidos. Espera un rato.");
+            }
+            $fin = Plan::puedeProbar($c, $this->usuarioId) ? Plan::empezarPrueba($c, $this->usuarioId) : null;
+            if ($fin === null) {
+                $volver("info", "La prueba gratis no está disponible para tu cuenta: es una sola vez y solo si nunca has tenido Premium.");
+            }
+            Auditoria::registrar("plan.prueba", "usuario", $this->usuarioId, (string) ($_SESSION["nombre"] ?? ""), null, "Premium de prueba hasta " . fechaCorta($fin));
+            $volver("exito", "¡Listo! Tienes Premium gratis hasta el " . fechaCorta($fin) . ". Ya puedes unirte a las clases en vivo y a los grupos con docentes.");
+        }
 
         if (!PagoModel::disponible($c)) {
             $volver("error", "Los pagos todavía no están disponibles.");
@@ -764,6 +779,7 @@ class EstudianteController
             "clases"     => $disponible ? ClaseModel::paraEstudiante($c, $this->usuarioId) : [],
             "invitaciones" => $disponible ? ClaseModel::invitacionesPendientes($c, $this->usuarioId) : [],
             "premium"    => Plan::esPremium($c, $this->usuarioId),
+            "puedeProbar"=> Plan::puedeProbar($c, $this->usuarioId),
         ]);
     }
 
@@ -839,6 +855,7 @@ class EstudianteController
         $this->render("grupos", "grupos", "Mis grupos", [
             "disponible" => $disponible,
             "grupos"     => $disponible ? GrupoModel::gruposEstudiante($this->conexion, $this->usuarioId) : [],
+            "puedeProbar"=> Plan::puedeProbar($this->conexion, $this->usuarioId),
         ]);
     }
 

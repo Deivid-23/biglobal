@@ -49,7 +49,11 @@ $tarjeta = function (array $cl) {
                     <button class="boton boton--fantasma boton--sm" type="submit">Liberar mi cupo</button>
                 </form>
             <?php elseif (!$cl["permitida"]): ?>
-                <a class="boton boton--secundario boton--sm" href="index.php?page=plan">Ver Premium</a>
+                <?php if (!empty($puedeProbar)): ?>
+                    <a class="boton boton--secundario boton--sm" href="index.php?page=plan#prueba">Pruébalo gratis <?= Plan::diasPrueba() ?> días</a>
+                <?php else: ?>
+                    <a class="boton boton--secundario boton--sm" href="index.php?page=plan">Ver Premium</a>
+                <?php endif; ?>
             <?php elseif ($estado === "inscrito"): ?>
                 <span class="chip chip--exito"><i class="fa-solid fa-check" aria-hidden="true"></i> Inscrito</span>
                 <?php if ((int) $cl["enlace_abierto"] === 1): ?>

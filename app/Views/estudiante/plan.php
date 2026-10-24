@@ -3,7 +3,7 @@
  * Mi plan: Premium, pago con Wompi, renovación e historial.
  * Variables: $disponible, $configurado, $suscripcion, $conRenovacion, $reactivable,
  *            $pagoConsultado, $historial, $elegido, $puedeComprar, $terminos,
- *            $wompiApi, $wompiPublica
+ *            $wompiApi, $wompiPublica, $puedeProbar (prueba gratis disponible para esta cuenta)
  *
  * Seguridad: los campos de la tarjeta NO tienen "name": nunca se envían a
  * BiGlobal. js/pago.js los manda directo a Wompi y aquí solo llega el token.
@@ -92,9 +92,26 @@ $precio = Plan::PLANES[$elegido]["centavos"];
             </form>
         <?php endif; ?>
     <?php else: ?>
-        <p class="perfil-tarjeta__ayuda">Tienes la ruta de aprendizaje completa y las clases en vivo abiertas para todos.</p>
+        <p class="perfil-tarjeta__ayuda">Tienes la ruta de aprendizaje completa y las clases y grupos gratuitos para todos.</p>
     <?php endif; ?>
 </section>
+
+<!-- ================= PRUEBA GRATIS (una vez, sin tarjeta) ================= -->
+<?php if ($puedeProbar): ?>
+    <section class="perfil-tarjeta plan-compra plan-gratis" id="prueba" aria-labelledby="titulo-prueba">
+        <span class="plan-gratis__icono" aria-hidden="true"><i class="fa-solid fa-gift"></i></span>
+        <div class="plan-gratis__texto">
+            <h2 id="titulo-prueba">Prueba Premium gratis <?= Plan::diasPrueba() ?> días</h2>
+            <p class="perfil-tarjeta__ayuda">Sin tarjeta y sin cobros: únete a las clases en vivo y a los grupos con docentes.
+                Al terminar vuelves al plan Gratuito sin perder nada. Es una sola vez por cuenta.</p>
+        </div>
+        <form method="POST" action="pagar.php">
+            <?= campoCsrf() ?>
+            <input type="hidden" name="accion" value="empezar_prueba">
+            <button class="boton boton--primario" type="submit">Empezar mi prueba</button>
+        </form>
+    </section>
+<?php endif; ?>
 
 <!-- ================= COMPRAR / EXTENDER PREMIUM ================= -->
 <?php if (!$disponible || !$configurado): ?>

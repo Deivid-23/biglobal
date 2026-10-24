@@ -410,8 +410,11 @@ class PagoModel
         foreach ($terminadas as $s) {
             $c->prepare("UPDATE suscripciones SET estado = 'vencida' WHERE id = ?")->execute([$s["id"]]);
             if (!Plan::esPremium($c, (int) $s["usuario_id"])) {   // si tiene otra vigente, no se avisa
-                Notificador::aUsuario((int) $s["usuario_id"], "premium_terminado", "Tu Premium terminó",
-                    "Pasaste al plan Gratuito. Tu progreso, XP y medallas siguen intactos y puedes volver a Premium cuando quieras.",
+                $prueba = $s["plan"] === Plan::PRUEBA;
+                Notificador::aUsuario((int) $s["usuario_id"], "premium_terminado", $prueba ? "Tu prueba de Premium terminó" : "Tu Premium terminó",
+                    $prueba
+                        ? "Pasaste al plan Gratuito: sigues con toda la ruta de aprendizaje. Si te gustaron las clases y los grupos con docentes, pásate a Premium cuando quieras."
+                        : "Pasaste al plan Gratuito. Tu progreso, XP y medallas siguen intactos y puedes volver a Premium cuando quieras.",
                     "estudiante/index.php?page=plan");
             }
             $r["vencidas"]++;
@@ -419,14 +422,17 @@ class PagoModel
 
         // 3) Recordatorio de los pagos únicos (y cortesías) que vencen pronto
         $porVencer = $c->query("
-            SELECT id, usuario_id, fin FROM suscripciones
+            SELECT id, usuario_id, plan, fin FROM suscripciones
             WHERE estado IN ('activa', 'manual') AND renovacion_automatica = 0 AND recordatorio_enviado_en IS NULL
               AND fin > NOW() AND fin <= NOW() + INTERVAL " . self::DIAS_RECORDATORIO . " DAY
         ")->fetchAll(PDO::FETCH_ASSOC);
         foreach ($porVencer as $s) {
             $c->prepare("UPDATE suscripciones SET recordatorio_enviado_en = NOW() WHERE id = ?")->execute([$s["id"]]);
-            Notificador::aUsuario((int) $s["usuario_id"], "premium_por_vencer", "Tu Premium vence pronto",
-                "Tu Premium termina el " . self::fecha($s["fin"]) . ". Si quieres seguir en las clases en vivo y los grupos con docentes, renuévalo desde tu plan.",
+            $prueba = $s["plan"] === Plan::PRUEBA;
+            Notificador::aUsuario((int) $s["usuario_id"], "premium_por_vencer", $prueba ? "Tu prueba de Premium termina pronto" : "Tu Premium vence pronto",
+                $prueba
+                    ? "Tu prueba gratis termina el " . self::fecha($s["fin"]) . ". Si quieres seguir en las clases en vivo y los grupos con docentes, pásate a Premium desde tu plan."
+                    : "Tu Premium termina el " . self::fecha($s["fin"]) . ". Si quieres seguir en las clases en vivo y los grupos con docentes, renuévalo desde tu plan.",
                 "estudiante/index.php?page=plan");
             $r["recordatorios"]++;
         }

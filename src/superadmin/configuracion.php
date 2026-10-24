@@ -85,6 +85,22 @@ try {
 
 
         /* =====================================================
+           PRUEBA GRATIS DE PREMIUM (pestaña General)
+        ===================================================== */
+        case "prueba_premium":
+
+            $dias = (int) ($_POST["premium_prueba_dias"] ?? 7);
+            guardarConfig($accion, [
+                "premium_prueba_activa" => isset($_POST["premium_prueba_activa"]) ? "1" : "0",
+                "premium_prueba_dias"   => (string) max(1, min(30, $dias)),
+            ]);
+
+            redirigirCon("general", "ok", isset($_POST["premium_prueba_activa"])
+                ? "Prueba gratis encendida: " . max(1, min(30, $dias)) . " días."
+                : "Prueba gratis apagada.");
+
+
+        /* =====================================================
            APARIENCIA
         ===================================================== */
         case "apariencia":

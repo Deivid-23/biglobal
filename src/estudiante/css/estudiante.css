@@ -1111,6 +1111,9 @@ button.est-nav__enlace { width: 100%; border: 0; background: none; cursor: point
 /* ---------- Mi plan (Premium y pagos con Wompi) ---------- */
 .plan-aviso { margin-bottom: var(--esp-5); }
 .plan-actual, .plan-compra, .plan-historial { max-width: 820px; }
+.plan-gratis { display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-4); border-color: var(--azul-300); background: var(--azul-50); }
+.plan-gratis__icono { display: grid; place-items: center; width: 48px; height: 48px; flex-shrink: 0; border-radius: 50%; background: var(--superficie); color: var(--azul-700); font-size: 1.4rem; }
+.plan-gratis__texto { flex: 1; min-width: 220px; }
 .plan-actual + .plan-compra, .plan-compra + .plan-historial, .plan-actual + .plan-historial { margin-top: var(--esp-5); }
 .plan-actual form { margin-top: var(--esp-4); }
 

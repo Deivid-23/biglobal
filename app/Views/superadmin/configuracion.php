@@ -62,6 +62,20 @@ $g = fn(string $clave, $defecto = "") => Config::get($clave, $defecto);
         <div class="pnl-form__acciones"><button class="boton boton--primario" type="submit">Guardar</button></div>
     </form>
 
+    <div class="pnl-tarjeta__cabecera pnl-tarjeta__cabecera--separada"><div><h2 id="titulo-prueba">Prueba gratis de Premium</h2><p>Una vez por cuenta, sin tarjeta, para estudiantes que nunca han tenido Premium</p></div></div>
+    <form class="pnl-form" method="POST" action="configuracion.php" aria-labelledby="titulo-prueba">
+        <?= campoCsrf() ?><input type="hidden" name="accion" value="prueba_premium">
+        <label class="pnl-interruptor">
+            <span><strong>Ofrecer la prueba gratis</strong><small>Aparece en Mi plan, el perfil y lo que es de Premium (clases y grupos). Enciéndela cuando los pagos con Wompi funcionen: al terminar la prueba, el estudiante debe poder pagar.</small></span>
+            <input type="checkbox" name="premium_prueba_activa" <?= Plan::pruebaActiva() ? "checked" : "" ?>>
+        </label>
+        <div class="campo">
+            <label class="campo__etiqueta" for="c-prueba-dias">Días de la prueba</label>
+            <input class="entrada" type="number" id="c-prueba-dias" name="premium_prueba_dias" min="1" max="30" value="<?= Plan::diasPrueba() ?>">
+        </div>
+        <div class="pnl-form__acciones"><button class="boton boton--primario" type="submit">Guardar</button></div>
+    </form>
+
 <?php elseif ($tab === "apariencia"): ?>
     <div class="pnl-tarjeta__cabecera"><div><h2 id="titulo-config">Apariencia</h2><p>Tema por defecto y color de los botones de los paneles</p></div></div>
     <form class="pnl-form" method="POST" action="configuracion.php">

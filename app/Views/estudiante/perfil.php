@@ -43,7 +43,7 @@ $textoReglas = "Mínimo {$reglas['minimo']} caracteres"
                 <span class="chip chip--logro"><i class="fa-solid fa-crown" aria-hidden="true"></i> <?= e(Plan::nombre($suscripcion["plan"])) ?></span>
             </div>
             <p class="perfil-tarjeta__ayuda">
-                Tienes la ruta de aprendizaje completa y acceso a todas las clases en vivo.
+                Tienes la ruta de aprendizaje completa y acceso a todas las clases en vivo y los grupos con docentes.
                 <?php if ((int) $suscripcion["renovacion_automatica"] === 1 && $suscripcion["estado"] === "activa"): ?>
                     Se renueva el <strong><?= e(fechaCorta($suscripcion["fin"])) ?></strong>.
                 <?php else: ?>
@@ -69,7 +69,11 @@ $textoReglas = "Mínimo {$reglas['minimo']} caracteres"
                     <span class="chip chip--exito">2 meses gratis</span>
                 </li>
             </ul>
-            <a class="boton boton--primario" href="index.php?page=plan"><i class="fa-solid fa-crown" aria-hidden="true"></i> Ver Premium</a>
+            <?php if (!empty($puedeProbar)): ?>
+                <a class="boton boton--primario" href="index.php?page=plan#prueba"><i class="fa-solid fa-gift" aria-hidden="true"></i> Probar gratis <?= Plan::diasPrueba() ?> días</a>
+            <?php else: ?>
+                <a class="boton boton--primario" href="index.php?page=plan"><i class="fa-solid fa-crown" aria-hidden="true"></i> Ver Premium</a>
+            <?php endif; ?>
         <?php endif; ?>
     </section>
 

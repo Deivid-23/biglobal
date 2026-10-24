@@ -16,7 +16,8 @@
     <section class="grupo-unirse" aria-labelledby="titulo-unirse">
         <div>
             <h2 id="titulo-unirse">Entrar a un grupo</h2>
-            <p>Escribe el código de <?= GrupoModel::LARGO_CODIGO ?> caracteres que te dio tu docente. Los grupos con docentes son parte de Premium, salvo los que son gratuitos para todos.</p>
+            <p>Escribe el código de <?= GrupoModel::LARGO_CODIGO ?> caracteres que te dio tu docente. Los grupos con docentes son parte de Premium, salvo los que son gratuitos para todos.
+                <?php if (!empty($puedeProbar)): ?><a href="index.php?page=plan#prueba">Prueba Premium gratis <?= Plan::diasPrueba() ?> días</a>.<?php endif; ?></p>
         </div>
         <form class="grupo-unirse__form" method="POST" action="grupo.php">
             <?= campoCsrf() ?>
@@ -48,7 +49,7 @@
                                 · <?= e(plural((int) $g["miembros"], "estudiante", "estudiantes")) ?>
                                 <?php if ($g["curso"]): ?> · <?= e($g["curso"]) ?><?php endif; ?>
                             </small>
-                            <?php if (!$g["permitido"]): ?><small><span class="chip chip--logro"><i class="fa-solid fa-crown" aria-hidden="true"></i> Premium</span> Este grupo es parte de Premium. Toca para ver el plan.</small>
+                            <?php if (!$g["permitido"]): ?><small><span class="chip chip--logro"><i class="fa-solid fa-crown" aria-hidden="true"></i> Premium</span> Este grupo es parte de Premium. Toca para ver el plan<?= !empty($puedeProbar) ? " y la prueba gratis" : "" ?>.</small>
                             <?php elseif ($g["ultimo_anuncio"]): ?><small>Último anuncio <?= e(hace_panel($g["ultimo_anuncio"])) ?></small><?php endif; ?>
                         </span>
                         <i class="fa-solid fa-chevron-right grupo-tarjeta__flecha" aria-hidden="true"></i>

@@ -25,6 +25,12 @@ class Plan
     public const ANUAL    = "premium_anual";
     /** Premium dado a mano por el super admin (beca, soporte). No se vende. */
     public const CORTESIA = "premium_cortesia";
+    /**
+     * Prueba gratis: el estudiante la pide una vez, sin tarjeta. Se guarda con
+     * estado "manual" (como la cortesía), así vence, se recuerda y se puede
+     * quitar igual. Se enciende en Super admin → Configuración → General.
+     */
+    public const PRUEBA = "premium_prueba";
 
     /**
      * Catálogo de planes de pago. Precios en CENTAVOS de peso (así los pide
@@ -146,6 +152,70 @@ class Plan
     }
 
     /* =========================================================
+       PRUEBA GRATIS (una vez por cuenta, sin tarjeta)
+    ========================================================= */
+
+    public static function pruebaActiva(): bool
+    {
+        return Config::getBool("premium_prueba_activa", false);
+    }
+
+    /** Días de la prueba (1–30; 7 por defecto). */
+    public static function diasPrueba(): int
+    {
+        return max(1, min(30, Config::getInt("premium_prueba_dias", 7)));
+    }
+
+    /**
+     * ¿Puede empezar la prueba? Prueba encendida, es estudiante activo y
+     * nunca ha tenido Premium (ni pagado, ni de cortesía, ni otra prueba).
+     */
+    public static function puedeProbar(PDO $c, int $usuarioId): bool
+    {
+        if (!self::disponible($c) || !self::pruebaActiva()) {
+            return false;
+        }
+        $stmt = $c->prepare("
+            SELECT (r.nombre = 'estudiante' AND u.activo = 1)
+                   AND NOT EXISTS (SELECT 1 FROM suscripciones s WHERE s.usuario_id = u.id)
+            FROM usuarios u INNER JOIN roles r ON r.id = u.rol_id
+            WHERE u.id = ? LIMIT 1
+        ");
+        $stmt->execute([$usuarioId]);
+        return (bool) $stmt->fetchColumn();
+    }
+
+    /**
+     * Empieza la prueba. Bloquea la fila del usuario para que dos clics
+     * seguidos no creen dos pruebas. Devuelve la fecha de fin, o null si no puede.
+     */
+    public static function empezarPrueba(PDO $c, int $usuarioId): ?string
+    {
+        $c->beginTransaction();
+        try {
+            $c->prepare("SELECT id FROM usuarios WHERE id = ? FOR UPDATE")->execute([$usuarioId]);
+            if (!self::puedeProbar($c, $usuarioId)) {
+                $c->rollBack();
+                return null;
+            }
+            $c->prepare("
+                INSERT INTO suscripciones (usuario_id, plan, estado, inicio, fin, renovacion_automatica, nota)
+                VALUES (?, ?, 'manual', NOW(), NOW() + INTERVAL " . self::diasPrueba() . " DAY, 0, 'Prueba gratis')
+            ")->execute([$usuarioId, self::PRUEBA]);
+            $id = (int) $c->lastInsertId();
+            $c->commit();
+        } catch (Throwable $e) {
+            if ($c->inTransaction()) {
+                $c->rollBack();
+            }
+            throw $e;
+        }
+        $stmt = $c->prepare("SELECT fin FROM suscripciones WHERE id = ?");
+        $stmt->execute([$id]);
+        return (string) $stmt->fetchColumn();
+    }
+
+    /* =========================================================
        PREMIUM MANUAL (super admin: becas, soporte, pruebas)
     ========================================================= */
 
@@ -178,6 +248,9 @@ class Plan
     {
         if ($codigo === self::CORTESIA) {
             return "Premium (cortesía)";
+        }
+        if ($codigo === self::PRUEBA) {
+            return "Premium (prueba gratis)";
         }
         return self::PLANES[$codigo]["nombre"] ?? "Gratuito";
     }
