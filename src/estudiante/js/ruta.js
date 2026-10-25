@@ -9,6 +9,9 @@
  *   idioma_id y al final muestra el nivel donde quedó.
  * - data-modo="repaso": repaso de errores. Igual, y al final muestra cuántos
  *   resolvió y cuántos le quedan.
+ * - Combo: con 3, 5, 10… aciertos seguidos aparece «¡3 seguidas! 🔥». Al final,
+ *   confeti (más si fue perfecta o si cumplió la meta del día). Son solo
+ *   visuales: no cambian el XP. Con "reducir movimiento" no hay confeti.
  */
 (function () {
     "use strict";
@@ -36,6 +39,8 @@
     let modo = "comprobar";        // "comprobar" | "continuar" | "enviando"
     let siguiente = null;
     let resultado = null;
+    let seguidas = 0;              // aciertos seguidos (combo)
+    const sinMovimiento = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     /* ---------- Utilidades ---------- */
     function crear(etiqueta, clase, texto) {
@@ -578,6 +583,7 @@
         $("[data-retro-solucion]").textContent = r.correcto && porId[actual].tipo !== "error" ? "" : r.solucion;
         retro.hidden = false;
         avance(r.avance || 0);
+        combo(r.correcto);
 
         siguiente = r.siguiente;
         resultado = r.resultado || null;
@@ -585,6 +591,37 @@
         boton.textContent = resultado ? "Ver resultado" : (r.correcto ? "Continuar" : "Entendido");
         boton.disabled = false;
         boton.focus();
+    }
+
+    /** Combo de aciertos seguidos: avisa en 3, 5, 10, 15… (solo visual). */
+    function combo(acerto) {
+        seguidas = acerto ? seguidas + 1 : 0;
+        const viejo = retro.querySelector(".ruta-combo");
+        if (viejo) viejo.remove();
+        if (seguidas < 3 || !(seguidas === 3 || seguidas % 5 === 0)) return;
+        const aviso = crear("p", "ruta-combo", "¡" + seguidas + " seguidas! 🔥");
+        retro.prepend(aviso);
+    }
+
+    /** Confeti al terminar (más piezas si fue perfecta o cumplió la meta). Se borra solo. */
+    function confeti(fuerte) {
+        if (sinMovimiento) return;
+        const capa = crear("div", "confeti");
+        capa.setAttribute("aria-hidden", "true");
+        const colores = ["#2563EB", "#60A5FA", "#22C55E", "#F59E0B", "#F97316", "#A855F7"];
+        const piezas = fuerte ? 90 : 45;
+        for (let i = 0; i < piezas; i++) {
+            const p = crear("span", "confeti__pieza");
+            p.style.left = Math.random() * 100 + "%";
+            p.style.background = colores[i % colores.length];
+            p.style.animationDelay = Math.random() * 0.6 + "s";
+            p.style.animationDuration = 1.6 + Math.random() * 1.4 + "s";
+            p.style.setProperty("--giro", Math.round(Math.random() * 720 - 360) + "deg");
+            p.style.setProperty("--desvio", Math.round(Math.random() * 160 - 80) + "px");
+            capa.appendChild(p);
+        }
+        document.body.appendChild(capa);
+        setTimeout(() => capa.remove(), 3600);
     }
 
     function continuar() {
@@ -607,6 +644,7 @@
         if (!r.mejoro && r.antes) mensaje = "Esta vez no superaste tu resultado anterior: sigues en el " + r.antes + ".";
         $("[data-fin-mensaje]").textContent = mensaje;
         $("[data-fin-detalle]").textContent = r.detalle || "";
+        if (r.aprobados > 0) confeti(r.aprobados >= 3);
         const ir = $("[data-fin-ir]");
         if (typeof r.url === "string" && r.url.indexOf("index.php?page=ruta") === 0) ir.setAttribute("href", r.url);
         ir.textContent = "Ir al " + r.nivel;
@@ -641,6 +679,7 @@
         const otro = $("[data-fin-otro]");
         if (otro) otro.hidden = r.quedan === 0;
         avisarMeta(r);
+        if (r.resueltos > 0) confeti(r.quedan === 0 || !!(r.meta && r.meta.recienCumplida));
         const fin = $("[data-fin]");
         fin.hidden = false;
         fin.querySelector("a").focus();
@@ -668,6 +707,7 @@
             avisoInsignia.querySelector("span").textContent = (r.insignias.length === 1 ? "¡Nueva insignia: " : "¡Nuevas insignias: ") + r.insignias.join(", ") + "!";
             avisoInsignia.hidden = false;
         }
+        confeti(r.porcentaje === 100 || !!(r.meta && r.meta.recienCumplida));
         const fin = $("[data-fin]");
         fin.hidden = false;
         fin.querySelector("a").focus();

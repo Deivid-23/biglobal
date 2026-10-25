@@ -1710,6 +1710,43 @@ a.ruta-nodo__boton:active { transform: translateY(4px); box-shadow: 0 2px 0 var(
 .ruta-fin__mensaje { color: var(--texto-suave); }
 .ruta-fin__detalle { color: var(--texto-suave); font-size: var(--texto-sm); }
 
+/* ---------- Combo de aciertos y confeti (solo visuales) ---------- */
+.ruta-combo {
+    display: inline-block;
+    margin: 0 0 var(--esp-2);
+    padding: 2px var(--esp-3);
+    border-radius: var(--radio-pill, 999px);
+    background: var(--naranja-100);
+    color: var(--naranja-700);
+    font-family: var(--fuente-titulo);
+    font-weight: 800;
+    animation: combo-salta 380ms var(--ease-out);
+}
+@keyframes combo-salta {
+    0% { transform: scale(0.6); opacity: 0; }
+    60% { transform: scale(1.12); opacity: 1; }
+    100% { transform: none; }
+}
+.confeti { position: fixed; inset: 0; z-index: 90; overflow: hidden; pointer-events: none; }
+.confeti__pieza {
+    position: absolute;
+    top: -16px;
+    width: 9px;
+    height: 14px;
+    border-radius: 2px;
+    opacity: 0.95;
+    animation-name: confeti-cae;
+    animation-timing-function: cubic-bezier(0.25, 0.6, 0.4, 1);
+    animation-fill-mode: forwards;
+}
+@keyframes confeti-cae {
+    to { transform: translate(var(--desvio, 0), 105vh) rotate(var(--giro, 360deg)); opacity: 0.8; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .ruta-combo { animation: none; }
+    .confeti { display: none; }
+}
+
 /* ---------- Ejercicios nuevos: dibujo, elige, memoria ---------- */
 .ruta-dibujo { margin: 0 0 var(--esp-4); font-size: 4rem; line-height: 1; text-align: center; }
 
