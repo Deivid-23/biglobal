@@ -819,6 +819,7 @@ CREATE TABLE `usuarios` (
   `zona_horaria` varchar(40) NOT NULL DEFAULT 'America/Bogota',
   `zona_cambiada` date DEFAULT NULL,
   `recordatorio_racha` tinyint(1) NOT NULL DEFAULT 1,
+  `posiciones_visible` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`),
   UNIQUE KEY `correo` (`correo`),
   UNIQUE KEY `google_id` (`google_id`),

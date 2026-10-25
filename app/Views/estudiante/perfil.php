@@ -4,6 +4,7 @@
  * Variables: $cuenta (datos guardados), $valores (lo que se muestra en el formulario),
  *            $errores (["datos" => ?, "password" => ?]), $reglas, $estudiante,
  *            $suscripcion (Premium vigente, o null si es Gratuito),
+ *            $enPosiciones (true/false si aparece en la tabla de posiciones; null si no existe),
  *            $zonas (GamificacionModel::zonasParaElegir), $zonaActual
  */
 $tienePassword = (int) $cuenta["tiene_password"] === 1;
@@ -205,6 +206,24 @@ $textoReglas = "Mínimo {$reglas['minimo']} caracteres"
             <button class="boton boton--secundario" type="submit">Guardar</button>
         </form>
     </section>
+
+    <?php if ($enPosiciones !== null): ?>
+    <!-- ================= PRIVACIDAD: tabla de posiciones ================= -->
+    <section class="perfil-tarjeta" id="privacidad" aria-labelledby="titulo-privacidad">
+        <h2 id="titulo-privacidad">Privacidad</h2>
+        <p class="perfil-tarjeta__ayuda">En la tabla de posiciones se ve tu nombre con la inicial del apellido, tu foto y el XP de la semana. Nunca tu correo.</p>
+        <form method="POST" action="index.php?page=perfil">
+            <?= campoCsrf() ?>
+            <input type="hidden" name="accion" value="posiciones">
+            <label class="pnl-interruptor correos-opcion">
+                <input type="checkbox" name="posiciones_visible" value="1" <?= $enPosiciones ? "checked" : "" ?>>
+                <span><strong>Aparecer en la tabla de posiciones</strong>
+                    <small>Si lo apagas, los demás no te ven; tú sigues viendo tu puesto.</small></span>
+            </label>
+            <button class="boton boton--secundario" type="submit">Guardar</button>
+        </form>
+    </section>
+    <?php endif; ?>
 
     <?php $claseTarjeta = "perfil-tarjeta"; require __DIR__ . "/../panel/_personalizacion.php"; ?>
 

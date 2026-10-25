@@ -1690,6 +1690,27 @@ a.ruta-nodo__boton:active { transform: translateY(4px); box-shadow: 0 2px 0 var(
 .ruta-fin__mensaje { color: var(--texto-suave); }
 .ruta-fin__detalle { color: var(--texto-suave); font-size: var(--texto-sm); }
 
+/* ---------- Tabla de posiciones ---------- */
+.posiciones { list-style: none; margin: var(--esp-4) 0 0; padding: 0; display: grid; gap: var(--esp-2); max-width: 720px; }
+.posicion {
+    display: grid;
+    grid-template-columns: 40px 40px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--esp-3);
+    padding: var(--esp-3) var(--esp-4);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio-lg, var(--radio));
+    background: var(--superficie);
+}
+.posicion--podio { border-color: var(--azul-300); }
+.posicion--yo { background: var(--azul-50); border-color: var(--azul-500); }
+.posicion__puesto { font-family: var(--fuente-titulo); font-weight: 800; font-size: var(--texto-lg); text-align: center; }
+.posicion--podio .posicion__puesto { font-size: 1.5rem; }
+.posicion__nombre { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--fuente-titulo); font-weight: 700; }
+.posicion__xp { font-family: var(--fuente-titulo); font-weight: 800; color: var(--marca-texto); white-space: nowrap; }
+.posiciones-yo, .posiciones-nota { max-width: 720px; margin-top: var(--esp-4); color: var(--texto-suave); font-size: var(--texto-sm); }
+.posiciones-nota { margin: var(--esp-3) 0 0; }
+
 /* ---------- Repaso de errores ---------- */
 .repaso-aviso {
     display: flex;

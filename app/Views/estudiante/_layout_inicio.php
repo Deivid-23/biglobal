@@ -20,6 +20,7 @@ $menu = [
     ["page" => "clases",       "texto" => "Clases en vivo",  "icono" => "fa-video"],
     ["page" => "grupos",       "texto" => "Mis grupos",      "icono" => "fa-people-group", "corto" => "Grupos", "tabbar" => true],
     ["page" => "insignias",    "texto" => "Insignias",       "icono" => "fa-medal"],
+    ["page" => "posiciones",   "texto" => "Posiciones",      "icono" => "fa-trophy"],
     ["page" => "certificados", "texto" => "Certificados",    "icono" => "fa-award"],
 ];
 ?>

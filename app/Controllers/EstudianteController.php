@@ -10,6 +10,7 @@ require_once __DIR__ . "/../Models/ContenidoModel.php";
 require_once __DIR__ . "/../Models/TareaModel.php";
 require_once __DIR__ . "/../Models/RutaModel.php";
 require_once __DIR__ . "/../Models/InsigniaModel.php";
+require_once __DIR__ . "/../Models/PosicionesModel.php";
 require_once __DIR__ . "/../Views/estudiante/_helpers.php";
 
 /**
@@ -43,6 +44,7 @@ require_once __DIR__ . "/../Views/estudiante/_helpers.php";
  *   estudiante/repaso_responder.php (POST, JSON)          -> repasoResponder()
  *   estudiante/guardar_zona.php (POST, JSON)              -> guardarZona()
  *   estudiante/index.php?page=insignias                   -> insignias()
+ *   estudiante/index.php?page=posiciones[&grupo=N]         -> posiciones()  (XP de la semana)
  */
 class EstudianteController
 {
@@ -150,6 +152,14 @@ class EstudianteController
                     $_POST["password_nueva"] ?? "",
                     $_POST["password_confirmar"] ?? ""
                 );
+            } elseif ($accion === "posiciones") {
+                $visible = !empty($_POST["posiciones_visible"]);
+                PosicionesModel::guardarVisible($conexion, $id, $visible);
+                $_SESSION["flash_estudiante"] = ["tipo" => "exito", "mensaje" => $visible
+                    ? "Listo: apareces en la tabla de posiciones."
+                    : "Listo: ya no apareces en la tabla de posiciones para los demás."];
+                header("Location: index.php?page=perfil#privacidad");
+                exit;
             } elseif ($accion === "zona") {
                 $r = GamificacionModel::cambiarZona($conexion, $id, (string) ($_POST["zona_horaria"] ?? ""));
                 $_SESSION["flash_estudiante"] = [
@@ -180,7 +190,8 @@ class EstudianteController
         $zonas = GamificacionModel::zonasParaElegir();
         $zonaActual = GamificacionModel::zonaDe($conexion, $id);
         $puedeProbar = Plan::puedeProbar($this->conexion, $this->usuarioId);
-        $this->render("perfil", "perfil", "Mi perfil", compact("cuenta", "valores", "errores", "reglas", "suscripcion", "zonas", "zonaActual", "puedeProbar"));
+        $enPosiciones = PosicionesModel::disponible($conexion) ? PosicionesModel::visible($conexion, $id) : null;
+        $this->render("perfil", "perfil", "Mi perfil", compact("cuenta", "valores", "errores", "reglas", "suscripcion", "zonas", "zonaActual", "puedeProbar", "enPosiciones"));
     }
 
     /** Guarda nombre, apellido y correo. Devuelve null si salió bien o el mensaje de error. */
@@ -1143,6 +1154,40 @@ class EstudianteController
             "urlRuta"    => $urlRuta,
             "niveles"    => array_column($_SESSION["ruta_ubicacion"]["bloques"], "codigo"),
             "ejercicios" => array_map(fn($e) => RutaModel::vistaPublica($e, (string) $idioma["codigo"]), $ejercicios),
+        ]);
+    }
+
+    /* =========================================================
+       TABLA DE POSICIONES (PosicionesModel)
+       GET index.php?page=posiciones[&grupo=N]
+       Un grupo solo si es miembro y tiene acceso (Premium o grupo gratuito).
+    ========================================================= */
+    public function posiciones(): void
+    {
+        $c = $this->conexion;
+        $disponible = PosicionesModel::disponible($c);
+        $grupos = GrupoModel::disponible($c)
+            ? array_values(array_filter(GrupoModel::gruposEstudiante($c, $this->usuarioId), fn($g) => $g["permitido"]))
+            : [];
+        $grupoActivo = null;
+        $pedido = (int) ($_GET["grupo"] ?? 0);
+        foreach ($grupos as $g) {
+            if ((int) $g["id"] === $pedido) {
+                $grupoActivo = $g;
+            }
+        }
+        $tabla = ["filas" => [], "yo" => null, "total" => 0];
+        if ($disponible) {
+            $tabla = $grupoActivo
+                ? PosicionesModel::grupo($c, $this->usuarioId, (int) $grupoActivo["id"])
+                : PosicionesModel::general($c, $this->usuarioId);
+        }
+        $this->render("posiciones", "posiciones", "Posiciones", [
+            "disponible"  => $disponible,
+            "grupos"      => $grupos,
+            "grupoActivo" => $grupoActivo,
+            "tabla"       => $tabla,
+            "visible"     => $disponible ? PosicionesModel::visible($c, $this->usuarioId) : true,
         ]);
     }
 
