@@ -51,7 +51,8 @@ class RutaModel
     public const XP_PRACTICA = 2;
     public const ICONOS = ["fa-star", "fa-hand", "fa-comments", "fa-hashtag", "fa-palette", "fa-people-roof",
                            "fa-sun", "fa-utensils", "fa-house", "fa-briefcase", "fa-plane", "fa-heart", "fa-book-open", "fa-font",
-                           "fa-user-group", "fa-paw", "fa-bus", "fa-map-location-dot", "fa-hands", "fa-universal-access"];
+                           "fa-user-group", "fa-paw", "fa-bus", "fa-map-location-dot", "fa-hands", "fa-universal-access",
+                           "fa-newspaper", "fa-hands-asl-interpreting", "fa-scale-balanced"];
 
     /** Voz del navegador para "escuchar" según el idioma. */
     public const VOCES = ["EN" => "en-US", "ES" => "es-CO"];
