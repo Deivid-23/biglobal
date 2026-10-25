@@ -82,7 +82,9 @@ final class P
     {
         $d = json_decode((string) $e["datos"], true) ?: [];
         switch ($e["tipo"]) {
-            case "opcion": case "sena": case "escuchar": return (string) $d["opciones"][(int) ($d["correcta"] ?? 0)];
+            case "opcion": case "sena": case "escuchar": case "elegir": return (string) $d["opciones"][(int) ($d["correcta"] ?? 0)];
+            case "memoria": return array_keys($d["pares"]);
+            case "deletreo": return (string) $d["respuestas"][0];
             case "vf": return !empty($d["correcta"]) ? "1" : "0";
             case "completar": case "traducir": return (string) $d["respuestas"][0];
             case "ordenar": return (string) $d["frase"];
