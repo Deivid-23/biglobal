@@ -3,7 +3,8 @@
  * Mi ruta: el camino de lecciones de un idioma.
  * Variables: $disponible, $idiomas, $idioma, $mapa (niveles con unidades y lecciones), $nivelActivo,
  *            $examen (examen de ubicación: fila, puedeHoy, destacar; null si el idioma no tiene),
- *            $repasoPendientes (ejercicios fallados por repasar en este idioma)
+ *            $repasoPendientes (ejercicios fallados por repasar en este idioma),
+ *            $contrarreloj (cuantos ejercicios hay para la práctica rápida y la mejor marca; null si no existe)
  */
 $iconoEstado = ["completada" => "fa-check", "disponible" => "fa-star", "bloqueada" => "fa-lock", "preparacion" => "fa-screwdriver-wrench"];
 $textoEstado = ["completada" => "Completada", "disponible" => "Siguiente lección", "bloqueada" => "Bloqueada", "preparacion" => "En preparación"];
@@ -41,6 +42,18 @@ $codigoIdioma = $idioma ? strtoupper($idioma["codigo"]) : "";
             <p>Los ejercicios que fallaste en tus lecciones. Si los aciertas, salen de la lista.</p>
         </div>
         <a class="boton boton--primario" href="index.php?page=repaso&amp;idioma=<?= e(rawurlencode($idioma["codigo"])) ?>">Repasar</a>
+    </section>
+<?php endif; ?>
+
+<?php if (!empty($contrarreloj) && $contrarreloj["cuantos"] >= ContrarrelojModel::MINIMO): ?>
+    <section class="repaso-aviso contrarreloj-aviso" aria-labelledby="titulo-contrarreloj">
+        <span class="repaso-aviso__icono" aria-hidden="true"><i class="fa-solid fa-stopwatch"></i></span>
+        <div class="repaso-aviso__texto">
+            <h2 id="titulo-contrarreloj">Práctica rápida</h2>
+            <p><?= ContrarrelojModel::DURACION ?> segundos para responder todo lo que puedas de las lecciones que ya hiciste.
+                <?php if (!empty($contrarreloj["marca"]["mejor"])): ?>Tu récord: <strong><?= (int) $contrarreloj["marca"]["mejor"] ?></strong>.<?php endif; ?></p>
+        </div>
+        <a class="boton boton--secundario" href="index.php?page=contrarreloj&amp;idioma=<?= e(rawurlencode($idioma["codigo"])) ?>"><i class="fa-solid fa-play" aria-hidden="true"></i> Jugar</a>
     </section>
 <?php endif; ?>
 

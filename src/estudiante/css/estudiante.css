@@ -1710,6 +1710,12 @@ a.ruta-nodo__boton:active { transform: translateY(4px); box-shadow: 0 2px 0 var(
 .ruta-fin__mensaje { color: var(--texto-suave); }
 .ruta-fin__detalle { color: var(--texto-suave); font-size: var(--texto-sm); }
 
+/* ---------- Contrarreloj ---------- */
+.contrarreloj-marcador { display: flex; justify-content: space-between; align-items: center; gap: var(--esp-3); margin-top: var(--esp-4); font-family: var(--fuente-titulo); font-weight: 800; }
+.contrarreloj-marcador__reloj { display: inline-flex; align-items: center; gap: var(--esp-2); padding: 4px var(--esp-3); border-radius: var(--radio-pill, 999px); background: var(--azul-100); color: var(--azul-800); font-size: var(--texto-lg); }
+.contrarreloj-marcador__reloj.es-urgente { background: var(--naranja-100); color: var(--naranja-700); }
+.contrarreloj-marcador__aciertos { color: var(--verde-700); }
+
 /* ---------- Combo de aciertos y confeti (solo visuales) ---------- */
 .ruta-combo {
     display: inline-block;

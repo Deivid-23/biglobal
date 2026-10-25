@@ -11,6 +11,7 @@ require_once __DIR__ . "/../Models/TareaModel.php";
 require_once __DIR__ . "/../Models/RutaModel.php";
 require_once __DIR__ . "/../Models/InsigniaModel.php";
 require_once __DIR__ . "/../Models/PosicionesModel.php";
+require_once __DIR__ . "/../Models/ContrarrelojModel.php";
 require_once __DIR__ . "/../Views/estudiante/_helpers.php";
 
 /**
@@ -42,6 +43,8 @@ require_once __DIR__ . "/../Views/estudiante/_helpers.php";
  *   estudiante/ubicacion_responder.php (POST, JSON)       -> ubicacionResponder()
  *   estudiante/index.php?page=repaso&idioma=EN            -> repaso()  (repaso de errores)
  *   estudiante/repaso_responder.php (POST, JSON)          -> repasoResponder()
+ *   estudiante/index.php?page=contrarreloj&idioma=EN      -> contrarreloj()  (práctica rápida)
+ *   estudiante/contrarreloj_responder.php (POST, JSON)    -> contrarrelojResponder()
  *   estudiante/guardar_zona.php (POST, JSON)              -> guardarZona()
  *   estudiante/index.php?page=insignias                   -> insignias()
  *   estudiante/index.php?page=posiciones[&grupo=N]         -> posiciones()  (XP de la semana)
@@ -1085,7 +1088,11 @@ class EstudianteController
                 ];
             }
             $datos = ["idioma" => $idioma, "mapa" => $mapa, "nivelActivo" => $nivelActivo, "examen" => $examen,
-                      "repasoPendientes" => RepasoModel::pendientes($c, $this->usuarioId, (int) $idioma["id"])] + $datos;
+                      "repasoPendientes" => RepasoModel::pendientes($c, $this->usuarioId, (int) $idioma["id"]),
+                      "contrarreloj" => ContrarrelojModel::disponible($c) ? [
+                          "cuantos" => ContrarrelojModel::cuantos($c, $this->usuarioId, (int) $idioma["id"]),
+                          "marca"   => ContrarrelojModel::marca($c, $this->usuarioId, (int) $idioma["id"]),
+                      ] : null] + $datos;
         }
         $this->render("ruta", "ruta", "Mi ruta", $datos);
     }
@@ -1198,6 +1205,78 @@ class EstudianteController
             "tabla"       => $tabla,
             "visible"     => $disponible ? PosicionesModel::visible($c, $this->usuarioId) : true,
         ]);
+    }
+
+    /* =========================================================
+       CONTRARRELOJ (ContrarrelojModel): "Práctica rápida"
+       GET  index.php?page=contrarreloj&idioma=EN
+       POST contrarreloj_responder.php (accion=empezar|terminar o una respuesta; JSON)
+    ========================================================= */
+    public function contrarreloj(): void
+    {
+        $c = $this->conexion;
+        $volver = function (string $tipo, string $mensaje, string $url = "index.php?page=ruta"): void {
+            $_SESSION["flash_estudiante"] = ["tipo" => $tipo, "mensaje" => $mensaje];
+            header("Location: " . $url);
+            exit;
+        };
+        if (!ContrarrelojModel::disponible($c)) {
+            $volver("info", "La práctica rápida todavía no está disponible.");
+        }
+        $codigo = strtoupper(trim((string) ($_GET["idioma"] ?? "")));
+        $idioma = null;
+        foreach (RutaModel::idiomas($c, true) as $i) {
+            if (strtoupper($i["codigo"]) === $codigo) {
+                $idioma = $i;
+            }
+        }
+        if (!$idioma) {
+            $volver("info", "Ese idioma no tiene ruta.");
+        }
+        $urlRuta = "index.php?page=ruta&idioma=" . rawurlencode($idioma["codigo"]);
+        $ejercicios = ContrarrelojModel::iniciar($c, $this->usuarioId, (int) $idioma["id"]);
+        if (!$ejercicios) {
+            $volver("info", "Completa algunas lecciones más de " . $idioma["nombre"] . " para jugar la práctica rápida.", $urlRuta);
+        }
+        $this->render("contrarreloj", "ruta", "Práctica rápida", [
+            "idioma"     => $idioma,
+            "urlRuta"    => $urlRuta,
+            "marca"      => ContrarrelojModel::marca($c, $this->usuarioId, (int) $idioma["id"]),
+            "ejercicios" => array_map(fn($ej) => RutaModel::vistaPublica($ej, (string) $idioma["codigo"]), $ejercicios),
+        ]);
+    }
+
+    public function contrarrelojResponder(): void
+    {
+        header("Content-Type: application/json; charset=utf-8");
+        header("Cache-Control: no-store");
+        $responder = function (array $datos, int $codigo = 200): void {
+            http_response_code($codigo);
+            echo json_encode($datos, JSON_UNESCAPED_UNICODE);
+            exit;
+        };
+        if ($_SERVER["REQUEST_METHOD"] !== "POST" || !ContrarrelojModel::disponible($this->conexion)) {
+            $responder(["error" => "Petición no válida."], 405);
+        }
+        verificarCsrfFormulario($_POST["csrf_token"] ?? "");
+        if (!LimiteIntentos::permitir("ruta:usuario:" . $this->usuarioId, 400, 600)) {
+            $responder(["error" => "Vas muy rápido. Espera unos minutos."], 429);
+        }
+        $idiomaId = (int) ($_POST["idioma_id"] ?? 0);
+        try {
+            $accion = (string) ($_POST["accion"] ?? "");
+            if ($accion === "empezar") {
+                $r = ContrarrelojModel::arrancar($idiomaId);
+            } elseif ($accion === "terminar") {
+                $r = ["resultado" => ContrarrelojModel::terminar($this->conexion, $this->usuarioId)];
+            } else {
+                $r = ContrarrelojModel::responder($this->conexion, $this->usuarioId, $idiomaId, (int) ($_POST["ejercicio_id"] ?? 0), $this->respuestaRuta());
+            }
+        } catch (Throwable $e) {
+            error_log("[BiGlobal][contrarreloj] " . $e->getMessage());
+            $responder(["error" => "No pudimos guardar tu respuesta. Inténtalo de nuevo."], 500);
+        }
+        $responder($r, isset($r["error"]) ? 409 : 200);
     }
 
     /* =========================================================

@@ -9,6 +9,9 @@
  *   idioma_id y al final muestra el nivel donde quedó.
  * - data-modo="repaso": repaso de errores. Igual, y al final muestra cuántos
  *   resolvió y cuántos le quedan.
+ * - data-modo="contrarreloj": práctica rápida. El reloj (data-reloj) cuenta
+ *   hacia atrás; cada respuesta pasa sola a la siguiente; al llegar a 0 se
+ *   pide "terminar" al servidor, que es quien lleva el tiempo de verdad.
  * - Combo: con 3, 5, 10… aciertos seguidos aparece «¡3 seguidas! 🔥». Al final,
  *   confeti (más si fue perfecta o si cumplió la meta del día). Son solo
  *   visuales: no cambian el XP. Con "reducir movimiento" no hay confeti.
@@ -32,6 +35,9 @@
     const csrf = document.documentElement.dataset.csrf || "";
     const esExamen = raiz.dataset.modo === "ubicacion";
     const esRepaso = raiz.dataset.modo === "repaso";
+    const esContrarreloj = raiz.dataset.modo === "contrarreloj";
+    let reloj = null;              // intervalo del contrarreloj
+    let terminado = false;         // contrarreloj: ya se mostró el final
     const endpoint = raiz.dataset.endpoint || "ruta_responder.php";
 
     let actual = ejercicios.length ? ejercicios[0].id : null;
@@ -544,7 +550,7 @@
 
         const datos = new FormData();
         datos.append("csrf_token", csrf);
-        if (esExamen || esRepaso) datos.append("idioma_id", raiz.dataset.idioma);
+        if (esExamen || esRepaso || esContrarreloj) datos.append("idioma_id", raiz.dataset.idioma);
         else datos.append("leccion_id", raiz.dataset.leccion);
         datos.append("ejercicio_id", String(actual));
         if (Array.isArray(respuesta)) datos.append("respuesta_json", JSON.stringify(respuesta));
@@ -558,6 +564,9 @@
             r = { error: "Se perdió la conexión. Revisa tu internet e inténtalo de nuevo." };
         }
         delete boton.dataset.cargando;
+        if (terminado) return;
+        // Contrarreloj: la respuesta llegó tarde, el servidor ya cerró la partida
+        if (esContrarreloj && r.tiempo && r.resultado) return terminar(r.resultado);
 
         if (r.error) {
             retro.className = "ruta-retro ruta-retro--error";
@@ -582,11 +591,19 @@
         // En "encontrar el error" la frase corregida se muestra siempre: es lo que se aprende
         $("[data-retro-solucion]").textContent = r.correcto && porId[actual].tipo !== "error" ? "" : r.solucion;
         retro.hidden = false;
-        avance(r.avance || 0);
+        if (!esContrarreloj) avance(r.avance || 0);
         combo(r.correcto);
 
         siguiente = r.siguiente;
         resultado = r.resultado || null;
+        if (esContrarreloj) {
+            // Sin botón "Continuar": la siguiente aparece sola (es contra el reloj)
+            const marcador = $("[data-aciertos]");
+            if (marcador && r.aciertos !== undefined) marcador.textContent = aciertos(r.aciertos);
+            modo = "enviando";
+            setTimeout(() => { if (!terminado) continuar(); }, resultado ? 0 : (r.correcto ? 450 : 1100));
+            return;
+        }
         modo = "continuar";
         boton.textContent = resultado ? "Ver resultado" : (r.correcto ? "Continuar" : "Entendido");
         boton.disabled = false;
@@ -686,7 +703,67 @@
         avance(100);
     }
 
+    /** Contrarreloj: avisa al servidor (empezar / terminar). */
+    async function pedirContrarreloj(accion) {
+        const datos = new FormData();
+        datos.append("csrf_token", csrf);
+        datos.append("idioma_id", raiz.dataset.idioma);
+        datos.append("accion", accion);
+        try {
+            return await (await fetch(endpoint, { method: "POST", body: datos, credentials: "same-origin" })).json();
+        } catch (err) {
+            return { error: "Se perdió la conexión." };
+        }
+    }
+
+    function arrancarReloj(segundos) {
+        const caja = $("[data-reloj]");
+        let quedan = segundos;
+        caja.textContent = String(quedan);
+        reloj = setInterval(async () => {
+            quedan--;
+            caja.textContent = String(Math.max(0, quedan));
+            avance(Math.min(100, Math.round(((segundos - quedan) / segundos) * 100)));
+            if (quedan <= 10) caja.classList.add("es-urgente");
+            if (quedan <= 0) {
+                clearInterval(reloj);
+                if (terminado) return;
+                const r = await pedirContrarreloj("terminar");
+                if (!terminado && r.resultado && !r.resultado.error) terminar(r.resultado);
+            }
+        }, 1000);
+    }
+
+    const aciertos = (n) => n + (n === 1 ? " acierto" : " aciertos");
+
+    /** Final del contrarreloj: aciertos, récord y XP. */
+    function terminarContrarreloj(r) {
+        if (terminado) return;
+        terminado = true;
+        if (reloj) clearInterval(reloj);
+        caja.hidden = true;
+        pie.hidden = true;
+        retro.hidden = true;
+        $("[data-fin-porcentaje]").textContent = r.aciertos + " de " + r.respondidas;
+        $("[data-fin-xp]").textContent = "+" + r.xp;
+        $("[data-fin-mejor]").textContent = String(r.mejor);
+        if (r.racha) {
+            $("[data-fin-racha-caja]").hidden = false;
+            $("[data-fin-racha]").textContent = r.racha + (r.racha === 1 ? " día" : " días");
+        }
+        $("[data-fin-mensaje]").textContent = r.record
+            ? "¡Nuevo récord! " + aciertos(r.aciertos) + " en " + raiz.dataset.segundos + " segundos."
+            : (r.aciertos > 0 ? "¡Bien! Tu récord es " + r.mejor + ". Inténtalo otra vez para superarlo." : "Se acabó el tiempo. ¡Inténtalo otra vez!");
+        avisarMeta(r);
+        if (r.record) confeti(true);
+        const fin = $("[data-fin]");
+        fin.hidden = false;
+        fin.querySelector("a").focus();
+        avance(100);
+    }
+
     function terminar(r) {
+        if (esContrarreloj) return terminarContrarreloj(r);
         if (esExamen) return terminarExamen(r);
         if (esRepaso) return terminarRepaso(r);
         caja.hidden = true;
@@ -732,7 +809,13 @@
         }
     });
 
-    $("[data-empezar]").addEventListener("click", () => {
+    $("[data-empezar]").addEventListener("click", async () => {
+        if (esContrarreloj) {
+            const r = await pedirContrarreloj("empezar");
+            if (r.error) { window.location.reload(); return; }
+            $("[data-marcador]").hidden = false;
+            arrancarReloj(r.segundos || Number(raiz.dataset.segundos) || 60);
+        }
         $("[data-intro]").hidden = true;
         if (actual !== null) mostrar(actual);
     });

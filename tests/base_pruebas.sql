@@ -551,6 +551,21 @@ CREATE TABLE `roles` (
   UNIQUE KEY `nombre` (`nombre`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `ruta_contrarreloj`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `ruta_contrarreloj` (
+  `usuario_id` int(11) NOT NULL,
+  `idioma_id` int(11) NOT NULL,
+  `mejor` smallint(6) NOT NULL DEFAULT 0,
+  `mejor_en` datetime DEFAULT NULL,
+  `partidas` int(11) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`usuario_id`,`idioma_id`),
+  KEY `fk_contrarreloj_idioma` (`idioma_id`),
+  CONSTRAINT `fk_contrarreloj_idioma` FOREIGN KEY (`idioma_id`) REFERENCES `idiomas` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_contrarreloj_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `ruta_ejercicios`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
