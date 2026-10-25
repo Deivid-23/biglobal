@@ -111,7 +111,7 @@ final class P
             INNER JOIN ruta_unidades u ON u.id = l.unidad_id AND u.publicado = 1
             INNER JOIN ruta_niveles n ON n.id = u.nivel_id AND n.publicado = 1
             WHERE n.idioma_id = ? AND n.codigo = ? AND l.publicado = 1
-              AND EXISTS (SELECT 1 FROM ruta_ejercicios e WHERE e.leccion_id = l.id AND e.activo = 1 AND (e.tipo <> 'sena' OR COALESCE(e.video_url, '') <> ''))
+              AND EXISTS (SELECT 1 FROM ruta_ejercicios e WHERE e.leccion_id = l.id AND e.activo = 1 AND (e.tipo NOT IN ('sena', 'deletreo') OR COALESCE(e.video_url, '') <> ''))
             ORDER BY u.orden, u.id, l.orden, l.id
         ");
         $stmt->execute([$idiomaId, $nivel]);

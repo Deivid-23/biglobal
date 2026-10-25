@@ -63,7 +63,7 @@ class RepasoModel
     private const PENDIENTE = "
         FROM ruta_repaso r
         INNER JOIN ruta_ejercicios e ON e.id = r.ejercicio_id AND e.activo = 1
-                                     AND (e.tipo <> 'sena' OR COALESCE(e.video_url, '') <> '')
+                                     AND (e.tipo NOT IN ('sena', 'deletreo') OR COALESCE(e.video_url, '') <> '')
         INNER JOIN ruta_lecciones l ON l.id = e.leccion_id AND l.publicado = 1
         INNER JOIN ruta_unidades u ON u.id = l.unidad_id AND u.publicado = 1
         INNER JOIN ruta_niveles n ON n.id = u.nivel_id AND n.publicado = 1 AND n.idioma_id = ?

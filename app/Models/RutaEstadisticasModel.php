@@ -232,7 +232,7 @@ class RutaEstadisticasModel
                    (SELECT COUNT(*) FROM ruta_lecciones l INNER JOIN ruta_unidades u ON u.id = l.unidad_id AND u.publicado = 1
                     WHERE u.nivel_id = n.id AND l.publicado = 1
                       AND EXISTS (SELECT 1 FROM ruta_ejercicios e WHERE e.leccion_id = l.id AND e.activo = 1
-                                  AND (e.tipo <> 'sena' OR COALESCE(e.video_url, '') <> ''))) AS jugables
+                                  AND (e.tipo NOT IN ('sena', 'deletreo') OR COALESCE(e.video_url, '') <> ''))) AS jugables
             FROM ruta_niveles n WHERE n.idioma_id = ? AND n.publicado = 1 ORDER BY n.orden
         ");
         $niveles->execute([$idiomaId]);

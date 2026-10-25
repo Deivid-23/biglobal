@@ -1710,6 +1710,67 @@ a.ruta-nodo__boton:active { transform: translateY(4px); box-shadow: 0 2px 0 var(
 .ruta-fin__mensaje { color: var(--texto-suave); }
 .ruta-fin__detalle { color: var(--texto-suave); font-size: var(--texto-sm); }
 
+/* ---------- Ejercicios nuevos: dibujo, elige, memoria ---------- */
+.ruta-dibujo { margin: 0 0 var(--esp-4); font-size: 4rem; line-height: 1; text-align: center; }
+
+.ruta-elegir { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--esp-3); }
+.ruta-elegir__opcion {
+    display: grid;
+    gap: var(--esp-2);
+    justify-items: center;
+    padding: var(--esp-3);
+    border: 2px solid var(--borde);
+    border-radius: var(--radio-lg, var(--radio));
+    background: var(--superficie);
+    cursor: pointer;
+    transition: border-color var(--dur) ease, background-color var(--dur) ease;
+}
+.ruta-elegir__opcion.es-elegida { border-color: var(--azul-500); background: var(--azul-50); }
+.ruta-elegir__opcion.es-correcta { border-color: var(--verde-500); background: var(--verde-50, var(--superficie)); }
+.ruta-elegir__dibujo { font-size: 3rem; line-height: 1.2; text-align: center; overflow-wrap: anywhere; }
+.ruta-elegir__boton { width: 100%; }
+
+.ruta-video-mini { display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: var(--radio); overflow: hidden; background: #000; }
+.ruta-video-mini iframe { width: 100%; height: 100%; border: 0; }
+
+.ruta-memoria { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--esp-2); }
+@media (min-width: 560px) { .ruta-memoria { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.ruta-memoria__carta { position: relative; min-height: 88px; border-radius: var(--radio); }
+.ruta-memoria__dorso {
+    width: 100%;
+    height: 100%;
+    min-height: 88px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: var(--radio);
+    background: linear-gradient(135deg, var(--azul-500), var(--azul-700));
+    color: #fff;
+    font-size: 1.4rem;
+    cursor: pointer;
+    transition: transform var(--dur-rapida) var(--ease-out);
+}
+.ruta-memoria__dorso:active { transform: scale(0.95); }
+.ruta-memoria__cara {
+    display: none;
+    min-height: 88px;
+    place-items: center;
+    padding: var(--esp-2);
+    border: 2px solid var(--azul-300);
+    border-radius: var(--radio);
+    background: var(--superficie);
+    text-align: center;
+    animation: carta-voltea 200ms var(--ease-out);
+}
+.ruta-memoria__carta.es-abierta .ruta-memoria__dorso { display: none; }
+.ruta-memoria__carta.es-abierta .ruta-memoria__cara { display: grid; }
+.ruta-memoria__carta.es-pareja .ruta-memoria__cara { border-color: var(--verde-500); background: var(--verde-50, var(--superficie)); }
+.ruta-memoria__texto { font-family: var(--fuente-titulo); font-weight: 800; font-size: var(--texto-lg); overflow-wrap: anywhere; }
+.ruta-memoria__texto--dibujo { font-size: 2.4rem; line-height: 1; }
+.ruta-memoria__estado { margin-top: var(--esp-3); color: var(--texto-suave); font-size: var(--texto-sm); text-align: center; }
+@keyframes carta-voltea { from { transform: rotateY(90deg); } to { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .ruta-memoria__cara { animation: none; } }
+
 /* ---------- Tabla de posiciones ---------- */
 .posiciones { list-style: none; margin: var(--esp-4) 0 0; padding: 0; display: grid; gap: var(--esp-2); max-width: 720px; }
 .posicion {

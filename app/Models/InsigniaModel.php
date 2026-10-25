@@ -118,7 +118,7 @@ class InsigniaModel
             LEFT JOIN ruta_progreso p ON p.leccion_id = l.id AND p.usuario_id = ?
             WHERE l.publicado = 1
               AND EXISTS (SELECT 1 FROM ruta_ejercicios e WHERE e.leccion_id = l.id AND e.activo = 1
-                          AND (e.tipo <> 'sena' OR COALESCE(e.video_url, '') <> ''))
+                          AND (e.tipo NOT IN ('sena', 'deletreo') OR COALESCE(e.video_url, '') <> ''))
         ");
         $stmt->execute([$idiomaId, $nivel, $usuarioId]);
         $f = $stmt->fetch(PDO::FETCH_ASSOC);

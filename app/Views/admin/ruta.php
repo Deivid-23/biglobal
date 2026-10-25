@@ -184,11 +184,16 @@ $interruptor = function (string $nombre, bool $marcado, string $titulo, string $
                 <input class="entrada" id="e-audio" name="texto_audio" maxlength="200" value="<?= $v("texto_audio") ?>" aria-describedby="e-audio-ayuda">
                 <p class="campo__ayuda" id="e-audio-ayuda">Lo lee la voz del navegador (<?= e(RutaModel::VOCES[$codigoIdioma] ?? "es-CO") ?>).</p>
             </div>
-            <div class="campo" data-para-tipo="opcion sena escuchar">
-                <label class="campo__etiqueta" for="e-opciones">Opciones (una por línea, de 2 a 4)</label>
-                <textarea class="entrada" id="e-opciones" name="opciones" rows="4"><?= $v("opciones") ?></textarea>
+            <div class="campo" data-para-tipo="opcion vf">
+                <label class="campo__etiqueta" for="e-imagen">Dibujo <span class="campo__ayuda">(opcional: un emoji, ej. 🍎)</span></label>
+                <input class="entrada" id="e-imagen" name="imagen" maxlength="16" value="<?= $v("imagen") ?>" placeholder="🍎">
             </div>
-            <div class="campo" data-para-tipo="opcion sena escuchar">
+            <div class="campo" data-para-tipo="opcion sena escuchar elegir">
+                <label class="campo__etiqueta" for="e-opciones">Opciones (una por línea, de 2 a 4)</label>
+                <textarea class="entrada" id="e-opciones" name="opciones" rows="4" aria-describedby="e-opciones-ayuda"><?= $v("opciones") ?></textarea>
+                <p class="campo__ayuda" id="e-opciones-ayuda" data-para-tipo="elegir">Elige la imagen o la seña: cada opción es un emoji (🍎), una palabra corta o el enlace de un video de YouTube o Vimeo (la seña).</p>
+            </div>
+            <div class="campo" data-para-tipo="opcion sena escuchar elegir">
                 <label class="campo__etiqueta" for="e-correcta">Número de la opción correcta</label>
                 <input class="entrada" type="number" id="e-correcta" name="correcta" min="1" max="4" value="<?= $v("correcta") ?>" aria-describedby="e-correcta-ayuda">
                 <p class="campo__ayuda" id="e-correcta-ayuda">Al estudiante le aparecen mezcladas.</p>
@@ -211,10 +216,10 @@ $interruptor = function (string $nombre, bool $marcado, string $titulo, string $
                 <label class="campo__etiqueta" for="e-correccion">Palabra correcta</label>
                 <input class="entrada" id="e-correccion" name="correccion" maxlength="60" value="<?= $v("correccion") ?>" placeholder="Ej. goes">
             </div>
-            <div class="campo" data-para-tipo="completar traducir huecos">
+            <div class="campo" data-para-tipo="completar traducir huecos deletreo">
                 <label class="campo__etiqueta" for="e-respuestas">Respuestas aceptadas (una por línea)</label>
                 <textarea class="entrada" id="e-respuestas" name="respuestas" rows="3" aria-describedby="e-respuestas-ayuda"><?= $v("respuestas") ?></textarea>
-                <p class="campo__ayuda" id="e-respuestas-ayuda">No importan mayúsculas, tildes ni signos. Traducir: escribe todas las traducciones válidas. Varios espacios: una respuesta por espacio, en orden.</p>
+                <p class="campo__ayuda" id="e-respuestas-ayuda">No importan mayúsculas, tildes ni signos. Traducir: escribe todas las traducciones válidas. Varios espacios: una respuesta por espacio, en orden. Deletreo: la palabra que se deletrea en el video.</p>
             </div>
             <div class="campo" data-para-tipo="ordenar huecos">
                 <label class="campo__etiqueta" for="e-extra">Palabras de más <span class="campo__ayuda">(opcional, separadas por espacio)</span></label>
@@ -232,9 +237,10 @@ $interruptor = function (string $nombre, bool $marcado, string $titulo, string $
                 <label class="campo__etiqueta" for="e-items">Palabras (de 4 a 8, una por línea: palabra = grupo)</label>
                 <textarea class="entrada" id="e-items" name="items" rows="6" placeholder="went = Pasado&#10;go = Presente"><?= $v("items") ?></textarea>
             </div>
-            <div class="campo" data-para-tipo="emparejar">
-                <label class="campo__etiqueta" for="e-pares">Parejas (una por línea: palabra = traducción)</label>
-                <textarea class="entrada" id="e-pares" name="pares" rows="5" placeholder="cat = gato"><?= $v("pares") ?></textarea>
+            <div class="campo" data-para-tipo="emparejar memoria">
+                <label class="campo__etiqueta" for="e-pares">Parejas (una por línea: lado A = lado B)</label>
+                <textarea class="entrada" id="e-pares" name="pares" rows="5" placeholder="cat = gato" aria-describedby="e-pares-ayuda"><?= $v("pares") ?></textarea>
+                <p class="campo__ayuda" id="e-pares-ayuda" data-para-tipo="memoria">Memoria: de 2 a 6 parejas. Cada lado puede ser una palabra, un emoji (🍎 = manzana) o el enlace de un video de la seña (https://youtu.be/… = hola).</p>
             </div>
             <div class="campo" data-para-tipo="vf">
                 <label class="campo__etiqueta" for="e-vf">La afirmación del enunciado es…</label>
@@ -244,7 +250,7 @@ $interruptor = function (string $nombre, bool $marcado, string $titulo, string $
                 </select>
             </div>
             <div class="campo">
-                <label class="campo__etiqueta" for="e-video">Video <span class="campo__ayuda" data-para-tipo="sena">(obligatorio para que se muestre: la seña que el estudiante debe reconocer)</span></label>
+                <label class="campo__etiqueta" for="e-video">Video <span class="campo__ayuda" data-para-tipo="sena deletreo">(obligatorio para que se muestre: la seña o el deletreo que el estudiante debe reconocer)</span></label>
                 <input class="entrada" id="e-video" name="video_url" maxlength="255" inputmode="url" value="<?= $v("video_url") ?>" placeholder="https://youtu.be/... (opcional)">
             </div>
             <?php $interruptor("activo", (int) ($valores["activo"] ?? 1) === 1, "Activo", "Si lo apagas, no aparece en la lección."); ?>

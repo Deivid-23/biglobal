@@ -14,7 +14,8 @@ require_once __DIR__ . "/RutaModel.php";
  *   pasa al A2, y así hasta el C1. En el primer nivel que no aprueba, termina
  *   y queda ubicado en ese nivel (si aprueba todo, en el último).
  * - Los ejercicios salen al azar de los repasos (la última lección de cada
- *   unidad). Sin "escuchar" ni "dictado" (el navegador recibe su texto) ni "sena".
+ *   unidad). Sin "escuchar", "dictado" ni "memoria" (el navegador recibe la
+ *   respuesta) ni "sena" ni "deletreo" (necesitan video).
  * - Se califica en el servidor con RutaModel::calificar; el intento vive en
  *   la sesión y obliga a responder en orden. Un fallo no se repite.
  * - Una vez al día por idioma (día del estudiante). Solo sube: se guarda el
@@ -26,7 +27,7 @@ class UbicacionModel
     public const POR_NIVEL = 6;
     public const APROBAR = 4;
     public const IDIOMAS = ["EN", "ES"];
-    private const TIPOS_FUERA = ["escuchar", "dictado", "sena"];
+    private const TIPOS_FUERA = ["escuchar", "dictado", "sena", "memoria", "deletreo"];
 
     public static function disponible(PDO $c): bool
     {

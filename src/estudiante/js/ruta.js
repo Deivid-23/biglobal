@@ -135,12 +135,132 @@
         return () => (entrada.value.trim() === "" ? null : entrada.value.replace(/\s+/g, " "));
     }
 
+    /** Dibujo grande (un emoji) arriba de las opciones. */
+    function dibujo(e, cuerpo) {
+        if (!e.imagen) return;
+        const d = crear("p", "ruta-dibujo", e.imagen);
+        d.setAttribute("role", "img");
+        d.setAttribute("aria-label", "Dibujo: " + e.imagen);
+        cuerpo.appendChild(d);
+    }
+
+    /** Video pequeño (la seña) para una opción o una carta. */
+    function videoMini(src, titulo) {
+        const marco = crear("span", "ruta-video-mini");
+        const iframe = document.createElement("iframe");
+        iframe.src = src;
+        iframe.title = titulo;
+        iframe.loading = "lazy";
+        iframe.referrerPolicy = "strict-origin-when-cross-origin";
+        iframe.allow = "encrypted-media; picture-in-picture; fullscreen";
+        iframe.allowFullscreen = true;
+        marco.appendChild(iframe);
+        return marco;
+    }
+
     /* ---------- Cada tipo de ejercicio ---------- */
     const tipos = {
         opcion(e, cuerpo) {
+            dibujo(e, cuerpo);
             const o = opciones(e.opciones, () => {});
             cuerpo.appendChild(o.el);
             return o.valor;
+        },
+
+        /** Elige la imagen o la seña: tarjetas con emoji, palabra o video. */
+        elegir(e, cuerpo) {
+            const grupo = crear("div", "ruta-elegir");
+            grupo.setAttribute("role", "radiogroup");
+            let elegido = null;
+            e.opciones.forEach((o, i) => {
+                const tarjeta = crear("div", "ruta-elegir__opcion");
+                tarjeta.dataset.valor = o.valor;
+                if (o.video) {
+                    tarjeta.appendChild(videoMini(o.video, "Seña " + (i + 1)));
+                } else {
+                    tarjeta.appendChild(crear("span", "ruta-elegir__dibujo", o.valor));
+                }
+                const b = crear("button", "boton boton--secundario boton--sm ruta-elegir__boton", o.video ? "Elegir la seña " + (i + 1) : "Elegir");
+                b.type = "button";
+                b.setAttribute("role", "radio");
+                b.setAttribute("aria-checked", "false");
+                if (!o.video) b.setAttribute("aria-label", "Elegir " + o.valor);
+                b.addEventListener("click", () => {
+                    grupo.querySelectorAll(".ruta-elegir__opcion").forEach((x) => x.classList.remove("es-elegida"));
+                    grupo.querySelectorAll(".ruta-elegir__boton").forEach((x) => x.setAttribute("aria-checked", "false"));
+                    tarjeta.classList.add("es-elegida");
+                    b.setAttribute("aria-checked", "true");
+                    elegido = o.valor;
+                    listo();
+                });
+                // Tocar el dibujo también elige (en los videos no: tocarlos los reproduce)
+                if (!o.video) tarjeta.addEventListener("click", (ev) => { if (ev.target !== b) b.click(); });
+                tarjeta.appendChild(b);
+                grupo.appendChild(tarjeta);
+            });
+            cuerpo.appendChild(grupo);
+            return () => elegido;
+        },
+
+        /** Memoria: voltear dos cartas; si son pareja se quedan boca arriba. */
+        memoria(e, cuerpo) {
+            const tablero = crear("div", "ruta-memoria");
+            const estado = crear("p", "ruta-memoria__estado", "");
+            estado.setAttribute("aria-live", "polite");
+            const encontradas = [];
+            let abiertas = [];
+            let intentos = 0;
+            let ocupado = false;
+            const total = e.cartas.length / 2;
+            const contar = () => { estado.textContent = "Parejas: " + encontradas.length + " de " + total + " · Intentos: " + intentos; };
+            const mostrarCara = (carta, c) => {
+                carta.querySelector(".ruta-memoria__cara").replaceChildren(
+                    c.video ? videoMini(c.video, "Seña de la carta") : crear("span", "ruta-memoria__texto" + (/\p{Extended_Pictographic}/u.test(c.valor) && Array.from(c.valor).length <= 4 ? " ruta-memoria__texto--dibujo" : ""), c.valor)
+                );
+            };
+            e.cartas.forEach((c, i) => {
+                const carta = crear("div", "ruta-memoria__carta");
+                const dorso = crear("button", "ruta-memoria__dorso");
+                dorso.type = "button";
+                dorso.setAttribute("aria-label", "Carta " + (i + 1) + ", boca abajo");
+                dorso.appendChild(crear("i", "fa-solid fa-question"));
+                const cara = crear("div", "ruta-memoria__cara");
+                carta.append(dorso, cara);
+                dorso.addEventListener("click", () => {
+                    if (ocupado || carta.classList.contains("es-abierta")) return;
+                    carta.classList.add("es-abierta");
+                    mostrarCara(carta, c);
+                    abiertas.push({ carta, c });
+                    if (abiertas.length < 2) return;
+                    intentos++;
+                    const [a, b] = abiertas;
+                    abiertas = [];
+                    if (a.c.par === b.c.par) {
+                        a.carta.classList.add("es-pareja");
+                        b.carta.classList.add("es-pareja");
+                        encontradas.push(a.c.par);
+                        contar();
+                        listo();
+                        return;
+                    }
+                    ocupado = true;
+                    contar();
+                    // Si no son pareja, se voltean otra vez (más tiempo si hay videos para verlos)
+                    setTimeout(() => {
+                        [a, b].forEach((x) => { x.carta.classList.remove("es-abierta"); x.carta.querySelector(".ruta-memoria__cara").replaceChildren(); });
+                        ocupado = false;
+                    }, a.c.video || b.c.video ? 2500 : 1000);
+                });
+                tablero.appendChild(carta);
+            });
+            contar();
+            cuerpo.append(tablero, estado);
+            return () => (encontradas.length === total ? encontradas.slice() : null);
+        },
+
+        /** Deletreo (LSC): ver el video y escribir la palabra. */
+        deletreo(e, cuerpo) {
+            return campoDeTexto(cuerpo, "Escribe la palabra deletreada");
         },
         sena(e, cuerpo) { return tipos.opcion(e, cuerpo); },
 
@@ -263,6 +383,7 @@
         },
 
         vf(e, cuerpo) {
+            dibujo(e, cuerpo);
             const grupo = crear("div", "ruta-opciones ruta-opciones--dos");
             let valor = null;
             [["1", "Verdadero"], ["0", "Falso"]].forEach(([v, texto]) => {
@@ -380,6 +501,7 @@
             completar: "Completa la frase", ordenar: "Ordena las palabras", emparejar: "Une las parejas",
             dictado: "Escucha y escribe", traducir: "Traduce", error: "Encuentra el error",
             clasificar: "Clasifica", huecos: "Completa el texto",
+            memoria: "Encuentra las parejas", elegir: "Elige la correcta", deletreo: "Mira el deletreo",
         }[e.tipo] || ""));
         const enunciado = crear("h2", "ruta-ejercicio__enunciado", e.enunciado);
         enunciado.tabIndex = -1;   // recibe el foco al cambiar de ejercicio (lectores de pantalla)
@@ -404,7 +526,7 @@
         caja.hidden = false;
         pie.hidden = false;
         listo();
-        if (!["completar", "dictado", "traducir"].includes(e.tipo)) enunciado.focus({ preventScroll: true });
+        if (!["completar", "dictado", "traducir", "deletreo"].includes(e.tipo)) enunciado.focus({ preventScroll: true });
     }
 
     /* ---------- Comprobar en el servidor ---------- */
@@ -444,6 +566,12 @@
         }
 
         caja.querySelectorAll("button, input, textarea").forEach((x) => { x.disabled = true; });
+        // Elige la imagen o la seña: marcar en verde la correcta (los videos no se leen como texto)
+        if (r.correctaValor !== undefined) {
+            caja.querySelectorAll(".ruta-elegir__opcion").forEach((x) => {
+                if (x.dataset.valor === r.correctaValor) x.classList.add("es-correcta");
+            });
+        }
         retro.className = "ruta-retro " + (r.correcto ? "ruta-retro--bien" : "ruta-retro--mal");
         $("[data-retro-titulo]").textContent = r.correcto ? "¡Correcto!" : "Respuesta correcta:";
         // En "encontrar el error" la frase corregida se muestra siempre: es lo que se aprende

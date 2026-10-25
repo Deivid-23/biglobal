@@ -40,7 +40,12 @@ class RutaModel
         "error"     => "Encontrar el error",
         "clasificar" => "Clasificar en grupos",
         "huecos"    => "Varios espacios con fichas",
+        "memoria"   => "Memoria (encontrar parejas)",
+        "elegir"    => "Elige la imagen o la seña",
+        "deletreo"  => "Deletreo (LSC, con video)",
     ];
+    /** Tipos que no se muestran sin video (el video es el ejercicio). */
+    public const NECESITAN_VIDEO = ["sena", "deletreo"];
     public const NIVELES = ["A1", "A2", "B1", "B2", "C1"];
     public const XP_PERFECTA = 5;
     public const XP_PRACTICA = 2;
@@ -103,7 +108,13 @@ class RutaModel
     }
 
     /** Condición SQL de un ejercicio que se puede jugar (alias e). */
-    private const JUGABLE = "e.activo = 1 AND (e.tipo <> 'sena' OR COALESCE(e.video_url, '') <> '')";
+    private const JUGABLE = "e.activo = 1 AND (e.tipo NOT IN ('sena', 'deletreo') OR COALESCE(e.video_url, '') <> '')";
+
+    /** La misma condición de "se puede jugar" para otras consultas (alias del ejercicio). */
+    public static function condicionJugable(string $alias = "e"): string
+    {
+        return str_replace("e.", $alias . ".", self::JUGABLE);
+    }
 
     /* =========================================================
        ADMIN: ÁRBOL DE UN NIVEL
@@ -134,7 +145,7 @@ class RutaModel
             SELECT l.*,
                    (SELECT COUNT(*) FROM ruta_ejercicios e WHERE e.leccion_id = l.id) AS ejercicios,
                    (SELECT COUNT(*) FROM ruta_ejercicios e WHERE e.leccion_id = l.id AND " . self::JUGABLE . ") AS jugables,
-                   (SELECT COUNT(*) FROM ruta_ejercicios e WHERE e.leccion_id = l.id AND e.tipo = 'sena' AND COALESCE(e.video_url, '') = '') AS senas_sin_video
+                   (SELECT COUNT(*) FROM ruta_ejercicios e WHERE e.leccion_id = l.id AND e.tipo IN ('sena', 'deletreo') AND COALESCE(e.video_url, '') = '') AS senas_sin_video
             FROM ruta_lecciones l
             INNER JOIN ruta_unidades u ON u.id = l.unidad_id
             WHERE u.nivel_id = ?
@@ -200,7 +211,7 @@ class RutaModel
         $stmt = $c->prepare("
             SELECT * FROM (
                 SELECT l.id, l.titulo, n.codigo AS nivel, u.titulo AS unidad, n.orden AS o1, u.orden AS o2, l.orden AS o3,
-                       (SELECT COUNT(*) FROM ruta_ejercicios e WHERE e.leccion_id = l.id AND e.tipo = 'sena' AND COALESCE(e.video_url, '') = '') AS senas_sin_video,
+                       (SELECT COUNT(*) FROM ruta_ejercicios e WHERE e.leccion_id = l.id AND e.tipo IN ('sena', 'deletreo') AND COALESCE(e.video_url, '') = '') AS senas_sin_video,
                        (COALESCE(l.video_url, '') = '') AS sin_video_leccion
                 FROM ruta_lecciones l
                 INNER JOIN ruta_unidades u ON u.id = l.unidad_id
@@ -322,6 +333,11 @@ class RutaModel
         }
 
         $datos = [];
+        // Dibujo opcional (un emoji, ej. 🍎) para opción múltiple y verdadero o falso
+        $imagen = trim((string) ($post["imagen"] ?? ""));
+        if ($imagen !== "" && (mb_strlen($imagen) > 16 || preg_match('/[<>"]/', $imagen))) {
+            return "El dibujo debe ser un emoji o un texto muy corto (máximo 16 caracteres).";
+        }
         if (in_array($tipo, ["opcion", "sena", "escuchar"], true)) {
             $opciones = self::lineas((string) ($post["opciones"] ?? ""));
             if (count($opciones) < 2 || count($opciones) > 4) {
@@ -340,6 +356,9 @@ class RutaModel
                 return "Indica cuál opción es la correcta (de 1 a " . count($opciones) . ").";
             }
             $datos = ["opciones" => $opciones, "correcta" => $correcta - 1];
+            if ($tipo === "opcion" && $imagen !== "") {
+                $datos["imagen"] = $imagen;
+            }
             if ($tipo === "escuchar") {
                 $decir = trim((string) ($post["texto_audio"] ?? ""));
                 if ($decir === "" || mb_strlen($decir) > 200) {
@@ -391,6 +410,9 @@ class RutaModel
                 return "Indica si la afirmación es verdadera o falsa.";
             }
             $datos = ["correcta" => $post["correcta_vf"] === "1"];
+            if ($imagen !== "") {
+                $datos["imagen"] = $imagen;
+            }
         } elseif ($tipo === "dictado") {
             $decir = trim((string) ($post["texto_audio"] ?? ""));
             if ($decir === "" || mb_strlen($decir) > 200) {
@@ -450,6 +472,59 @@ class RutaModel
                 return "Cada grupo debe tener al menos una palabra.";
             }
             $datos = ["grupos" => $grupos, "items" => $items];
+        } elseif ($tipo === "elegir") {
+            // Cada opción es un emoji o palabra corta, o el enlace de un video (la seña)
+            $opciones = [];
+            foreach (self::lineas((string) ($post["opciones"] ?? "")) as $o) {
+                $opciones[] = self::valorConMedio($o, 40);
+                if (is_string(end($opciones)) && str_starts_with(end($opciones), "ERROR:")) {
+                    return substr(end($opciones), 6);
+                }
+            }
+            if (count($opciones) < 2 || count($opciones) > 4) {
+                return "Escribe de 2 a 4 opciones, una por línea (emoji, palabra o enlace de video).";
+            }
+            if (count(array_unique(array_map([self::class, "normalizar"], $opciones))) !== count($opciones)) {
+                return "Las opciones no se pueden repetir.";
+            }
+            $correcta = (int) ($post["correcta"] ?? 0);
+            if ($correcta < 1 || $correcta > count($opciones)) {
+                return "Indica cuál opción es la correcta (de 1 a " . count($opciones) . ").";
+            }
+            $datos = ["opciones" => $opciones, "correcta" => $correcta - 1];
+        } elseif ($tipo === "memoria") {
+            $pares = [];
+            foreach (self::lineas((string) ($post["pares"] ?? "")) as $l) {
+                $partes = array_map("trim", explode("=", $l, 2));
+                if (count($partes) !== 2 || $partes[0] === "" || $partes[1] === "") {
+                    return "Escribe cada pareja en una línea así: lado A = lado B (palabra, emoji o enlace de video).";
+                }
+                $a = self::valorConMedio($partes[0], 40);
+                $b = self::valorConMedio($partes[1], 40);
+                foreach ([$a, $b] as $v) {
+                    if (str_starts_with($v, "ERROR:")) {
+                        return substr($v, 6);
+                    }
+                }
+                $pares[] = [$a, $b];
+            }
+            if (count($pares) < 2 || count($pares) > 6) {
+                return "Escribe de 2 a 6 parejas.";
+            }
+            $todos = array_map([self::class, "normalizar"], array_merge(array_column($pares, 0), array_column($pares, 1)));
+            if (count(array_unique($todos)) !== count($todos)) {
+                return "Ninguna carta se puede repetir (ni en el mismo lado ni en el otro).";
+            }
+            $datos = ["pares" => $pares];
+        } elseif ($tipo === "deletreo") {
+            if ($video["url"] === null) {
+                return "El deletreo necesita el video de la palabra deletreada con el alfabeto manual.";
+            }
+            $respuestas = self::lineas((string) ($post["respuestas"] ?? ""));
+            if (!$respuestas || count($respuestas) > 10) {
+                return "Escribe de 1 a 10 respuestas aceptadas, una por línea.";
+            }
+            $datos = ["respuestas" => $respuestas];
         } elseif ($tipo === "huecos") {
             $texto = trim((string) ($post["texto_huecos"] ?? ""));
             $huecos = substr_count($texto, "___");
@@ -481,6 +556,32 @@ class RutaModel
         ];
     }
 
+    /**
+     * Una opción o carta que puede ser texto corto (o emoji) o un enlace de video.
+     * Devuelve el texto, el enlace normalizado del video, o "ERROR:mensaje".
+     */
+    private static function valorConMedio(string $texto, int $maximo): string
+    {
+        $texto = trim($texto);
+        if (preg_match('#^https?://#i', $texto)) {
+            $v = Video::normalizar($texto);
+            if (!is_array($v)) {
+                return "ERROR:" . (is_string($v) ? $v : "Ese enlace de video no es válido (usa YouTube o Vimeo).");
+            }
+            return $v["url"];
+        }
+        if (mb_strlen($texto) > $maximo) {
+            return "ERROR:Cada opción o carta puede tener máximo {$maximo} caracteres (o ser un enlace de video).";
+        }
+        return $texto;
+    }
+
+    /** ¿Es un enlace de video (opción de «elegir» o carta de «memoria»)? */
+    public static function esVideo(string $valor): bool
+    {
+        return (bool) preg_match('#^https?://#i', $valor);
+    }
+
     /** @return int|string */
     public static function guardarEjercicio(PDO $c, int $leccionId, ?array $ejercicio, array $post)
     {
@@ -508,6 +609,7 @@ class RutaModel
             $f["correcta"] = (int) $d["correcta"] + 1;
         }
         $f["texto_audio"] = $d["texto"] ?? "";
+        $f["imagen"] = $d["imagen"] ?? "";
         if ($e["tipo"] === "completar") {
             $f["frase"] = $d["frase"] ?? "";
             $f["respuestas"] = implode("\n", $d["respuestas"] ?? []);
@@ -517,7 +619,7 @@ class RutaModel
             $f["extra"] = implode(" ", $d["extra"] ?? []);
             $f["aceptadas"] = implode("\n", $d["aceptadas"] ?? []);
         }
-        if ($e["tipo"] === "emparejar") {
+        if (in_array($e["tipo"], ["emparejar", "memoria"], true)) {
             $f["pares"] = implode("\n", array_map(fn($p) => $p[0] . " = " . $p[1], $d["pares"] ?? []));
         }
         if ($e["tipo"] === "vf") {
@@ -528,6 +630,9 @@ class RutaModel
         }
         if ($e["tipo"] === "traducir") {
             $f["original"] = $d["original"] ?? "";
+            $f["respuestas"] = implode("\n", $d["respuestas"] ?? []);
+        }
+        if ($e["tipo"] === "deletreo") {
             $f["respuestas"] = implode("\n", $d["respuestas"] ?? []);
         }
         if ($e["tipo"] === "error") {
@@ -723,6 +828,9 @@ class RutaModel
             case "escuchar":
                 $v["opciones"] = $d["opciones"] ?? [];
                 shuffle($v["opciones"]);
+                if (!empty($d["imagen"])) {
+                    $v["imagen"] = $d["imagen"];
+                }
                 if ($e["tipo"] === "escuchar") {
                     // La voz del navegador necesita el texto: es práctica, no examen
                     $v["texto"] = $d["texto"] ?? "";
@@ -763,6 +871,29 @@ class RutaModel
                 $v["items"] = array_column($d["items"] ?? [], 0);
                 shuffle($v["items"]);
                 break;
+            case "vf":
+                if (!empty($d["imagen"])) {
+                    $v["imagen"] = $d["imagen"];
+                }
+                break;
+            case "elegir":
+                // Las opciones son visibles (texto, emoji o video); la correcta no viaja
+                $v["opciones"] = array_map(fn($o) => self::cartaPublica($o), $d["opciones"] ?? []);
+                shuffle($v["opciones"]);
+                break;
+            case "memoria":
+                // Para voltear las cartas el navegador necesita saber cuáles van juntas
+                // (como "escuchar" y "dictado": es práctica). "par" = número de la pareja.
+                $cartas = [];
+                foreach ($d["pares"] ?? [] as $i => [$a, $b]) {
+                    $cartas[] = ["par" => $i] + self::cartaPublica($a);
+                    $cartas[] = ["par" => $i] + self::cartaPublica($b);
+                }
+                shuffle($cartas);
+                $v["cartas"] = $cartas;
+                break;
+            case "deletreo":
+                break;   // solo el video (video_url) y el enunciado
             case "huecos":
                 $v["partes"] = explode("___", (string) ($d["texto"] ?? ""));
                 $v["fichas"] = array_merge($d["respuestas"] ?? [], $d["extra"] ?? []);
@@ -770,6 +901,16 @@ class RutaModel
                 break;
         }
         return $v;
+    }
+
+    /** Opción o carta para el navegador: ["valor" => texto] o, si es video, ["valor" => enlace, "video" => src]. */
+    private static function cartaPublica(string $valor): array
+    {
+        if (self::esVideo($valor)) {
+            $r = Video::reproductor($valor);
+            return ["valor" => $valor, "video" => $r["src"] ?? null];
+        }
+        return ["valor" => $valor];
     }
 
     /** "  ¡Hola,   MAMÁ! " -> "hola mama" (para comparar respuestas escritas). */
@@ -795,6 +936,27 @@ class RutaModel
             case "escuchar":
                 $correcta = (string) ($d["opciones"][(int) ($d["correcta"] ?? 0)] ?? "");
                 return ["correcto" => is_string($respuesta) && $respuesta === $correcta, "solucion" => $correcta];
+
+            case "elegir":
+                $correcta = (string) ($d["opciones"][(int) ($d["correcta"] ?? 0)] ?? "");
+                // "correctaValor" deja al navegador marcar cuál era (videos y emojis no se leen como texto)
+                return ["correcto" => is_string($respuesta) && $respuesta === $correcta,
+                        "solucion" => self::esVideo($correcta) ? "La opción correcta queda marcada en verde." : $correcta,
+                        "correctaValor" => $correcta];
+
+            case "memoria":
+                // Respuesta: los números de las parejas que encontró. Correcto si están todas.
+                $total = count($d["pares"] ?? []);
+                $encontradas = is_array($respuesta) ? array_values(array_unique(array_filter($respuesta, fn($p) => is_int($p) || ctype_digit((string) $p)))) : [];
+                $encontradas = array_map("intval", $encontradas);
+                sort($encontradas);
+                return ["correcto" => $total > 0 && $encontradas === range(0, $total - 1),
+                        "solucion" => implode(" · ", array_map(fn($p) => (self::esVideo($p[0]) ? "seña" : $p[0]) . " = " . (self::esVideo($p[1]) ? "seña" : $p[1]), $d["pares"] ?? []))];
+
+            case "deletreo":
+                $aceptadas = array_map([self::class, "normalizar"], $d["respuestas"] ?? []);
+                $ok = is_string($respuesta) && $respuesta !== "" && in_array(self::normalizar($respuesta), $aceptadas, true);
+                return ["correcto" => $ok, "solucion" => (string) ($d["respuestas"][0] ?? "")];
 
             case "vf":
                 $correcta = !empty($d["correcta"]);
