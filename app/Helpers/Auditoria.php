@@ -36,6 +36,7 @@ class Auditoria
         "plan.prueba"        => "Empezó la prueba gratis de Premium",
         "grupo.gratuito"     => "Cambió si un grupo es gratuito",
         "contenido.revision" => "Revisó contenido de un docente",
+        "ruta.videos"        => "Importó videos de LSC",
         "cuenta.solicita_eliminacion" => "Pidió eliminar su cuenta",
         "cuenta.recuperada"  => "Recuperó su cuenta",
         "cuenta.borrado_definitivo" => "Se borraron los datos de una cuenta",

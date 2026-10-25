@@ -10,6 +10,7 @@ require_once __DIR__ . "/../Models/RevisionModel.php";
 require_once __DIR__ . "/../Models/RutaModel.php";
 require_once __DIR__ . "/../Models/RutaEstadisticasModel.php";
 require_once __DIR__ . "/../Models/InsigniaModel.php";
+require_once __DIR__ . "/../Models/VideosLscModel.php";
 
 /**
  * AdminController
@@ -20,7 +21,7 @@ require_once __DIR__ . "/../Models/InsigniaModel.php";
  * SuperAdminController y se valida otra vez en el servidor.
  *
  * Páginas: inicio, usuarios, cursos, idiomas, lecciones, actividades,
- *          preguntas (de una actividad), solicitudes, ruta (ruta de aprendizaje), insignias,
+ *          preguntas (de una actividad), solicitudes, ruta (ruta de aprendizaje), videos (de LSC), insignias,
  *          clases, grupos, estadisticas (de la ruta), perfil.
  * POST:    accion=crear (modal "Nuevo"), accion=editar, accion=eliminar,
  *          accion=guardar_pregunta, accion=eliminar_pregunta, accion=abrir_clase,
@@ -273,6 +274,19 @@ class AdminController
             }
         }
         $this->render("ruta", "ruta", $leccion ? $leccion["titulo"] : "Ruta de aprendizaje", $datos);
+    }
+
+    /* =========================================================
+       VIDEOS DE LSC
+       ?page=videos  (descarga, subida y vista previa en src/admin/videos_acciones.php)
+    ========================================================= */
+    public function videos(): void
+    {
+        $this->render("videos", "ruta", "Videos de LSC", [
+            "disponible" => RutaModel::disponible($this->c),
+            "resumen"    => RutaModel::disponible($this->c) ? VideosLscModel::resumen($this->c) : [],
+            "previa"     => $_SESSION["videos_lsc"] ?? null,
+        ]);
     }
 
     /* =========================================================

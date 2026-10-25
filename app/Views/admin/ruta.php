@@ -357,6 +357,7 @@ $interruptor = function (string $nombre, bool $marcado, string $titulo, string $
                     <div class="pnl-tarjeta__cabecera">
                         <h2 id="titulo-videos">Videos pendientes</h2>
                         <p>Lecciones de LSC sin video propio o con señas sin video.</p>
+                        <a class="boton boton--secundario boton--sm" href="index.php?page=videos"><i class="fa-solid fa-file-import" aria-hidden="true"></i> Importar videos del INSOR</a>
                     </div>
                     <?php if (!$pendientesVideo): ?>
                         <p class="texto-suave">¡Todo tiene video!</p>
