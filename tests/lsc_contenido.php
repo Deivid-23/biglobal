@@ -1,8 +1,9 @@
 <?php
 /**
  * Contenido de LSC (fase 2, database/lsc_*_juegos.sql): todo ejercicio pasa
- * las reglas del formulario del admin, lo nuevo queda en borrador y lo que
- * espera video no se muestra.
+ * las reglas del formulario del admin, lo nuevo del A1 queda en borrador
+ * (el A2 entra activo porque el nivel sigue oculto) y lo que espera video
+ * no se muestra.
  */
 $lsc = P::idioma($c, "LSC");
 $filas = $c->prepare("
@@ -53,3 +54,30 @@ foreach ($ejs as $e) {
     $bien = $bien && RutaModel::calificar($e, P::respuestaCorrecta($e))["correcto"] === true;
 }
 P::ver("los juegos de «Animales de la casa» se califican bien con la respuesta correcta", $bien);
+
+// ---------- A2: el nivel sigue oculto, así que lo nuevo entra activo y publicado ----------
+$a2 = array_filter($ejercicios, fn($e) => $e["nivel"] === "A2");
+$juegosA2 = array_filter($a2, fn($e) => preg_match('/^lsc-a2-u[56]-|^lsc-a2-u[1-4]-l\d+-e([6-9]|\d\d)$/', $e["clave"]));
+P::ver("el A2 de LSC trae los juegos de la fase 2 (82 ejercicios)", count($juegosA2) === 82);
+$nivelA2 = $c->prepare("SELECT publicado FROM ruta_niveles WHERE idioma_id = ? AND codigo = 'A2'");
+$nivelA2->execute([$lsc]);
+P::ver("el nivel A2 de LSC sigue sin publicar", (string) $nivelA2->fetchColumn() === "0");
+P::ver("los juegos del A2 entran activos y en lecciones publicadas", !array_filter($juegosA2, fn($e) => (int) $e["activo"] !== 1 || (int) $e["leccion_publicada"] !== 1 || (int) $e["unidad_publicada"] !== 1));
+P::ver("el repaso de la unidad 4 del A2 cambia de nombre", $c->query("SELECT titulo FROM ruta_lecciones WHERE clave = 'lsc-a2-u4-l3'")->fetchColumn() === "Repaso: unidades 1 a 4");
+
+// Cada lección del A2 tiene al menos 4 ejercicios que se juegan sin esperar video
+$cortas = $c->query("
+    SELECT l.clave FROM ruta_lecciones l
+    WHERE l.clave LIKE 'lsc-a2-%'
+      AND (SELECT COUNT(*) FROM ruta_ejercicios e WHERE e.leccion_id = l.id AND " . RutaModel::condicionJugable("e") . ") < 4
+")->fetchAll(PDO::FETCH_COLUMN);
+$totalA2 = (int) $c->query("SELECT COUNT(*) FROM ruta_lecciones WHERE clave LIKE 'lsc-a2-%'")->fetchColumn();
+P::ver("las 20 lecciones del A2 tienen al menos 4 ejercicios jugables" . ($cortas ? " (" . implode(", ", $cortas) . ")" : ""), $totalA2 === 20 && !$cortas);
+
+$leccionId = (int) $c->query("SELECT id FROM ruta_lecciones WHERE clave = 'lsc-a2-u6-l3'")->fetchColumn();
+$ejs = RutaModel::ejercicios($c, $leccionId, true);
+$bien = count($ejs) === 4;
+foreach ($ejs as $e) {
+    $bien = $bien && RutaModel::calificar($e, P::respuestaCorrecta($e))["correcto"] === true;
+}
+P::ver("los juegos de «Los medios de transporte» se califican bien con la respuesta correcta", $bien);
