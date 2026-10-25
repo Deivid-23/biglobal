@@ -83,8 +83,8 @@ foreach ($ejs as $e) {
 P::ver("los juegos de «Los medios de transporte» se califican bien con la respuesta correcta", $bien);
 
 
-// ---------- B1 y B2: niveles nuevos, ocultos; sus unidades entran publicadas ----------
-foreach (["B1" => 16, "B2" => 16] as $codigo => $lecciones) {
+// ---------- B1, B2 y C1: niveles nuevos, ocultos; sus unidades entran publicadas ----------
+foreach (["B1" => 16, "B2" => 16, "C1" => 16] as $codigo => $lecciones) {
     $prefijo = "lsc-" . strtolower($codigo) . "-%";
     $delNivel = array_filter($ejercicios, fn($e) => $e["nivel"] === $codigo);
     P::ver("el $codigo de LSC trae sus " . ($lecciones * 6) . " ejercicios", count($delNivel) === $lecciones * 6);
