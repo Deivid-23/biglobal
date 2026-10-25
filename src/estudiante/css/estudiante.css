@@ -457,6 +457,26 @@ body.menu-abierto { overflow: hidden; }
 /* La barra del nivel crece rápido (menos de 300 ms) */
 .juego__nivel .progreso__relleno { animation-duration: var(--dur-lenta); }
 
+/* Meta de hoy: azul mientras avanza, verde al cumplirla. Ocupa todo el ancho. */
+@media (min-width: 640px) { .juego__meta { grid-column: 1 / -1; } }
+.juego__meta .juego__icono { background: var(--azul-100); color: var(--marca-texto); }
+.juego__meta.es-cumplida { background: var(--verde-50, var(--superficie)); border-color: var(--verde-100); }
+.juego__meta.es-cumplida .juego__icono { background: var(--verde-100); color: var(--verde-700); }
+.juego__meta .juego__numero { display: flex; align-items: baseline; justify-content: space-between; gap: var(--esp-2); }
+.juego__meta .progreso__relleno { animation-duration: var(--dur-lenta); }
+.juego__meta a { margin-left: var(--esp-1); font-weight: 700; }
+
+/* Mi perfil: elegir la meta diaria */
+.meta-opciones { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: var(--esp-2); margin: var(--esp-3) 0; padding: 0; border: 0; }
+.meta-opcion { display: flex; align-items: center; gap: var(--esp-2); padding: var(--esp-3); border: 1px solid var(--borde); border-radius: var(--radio); cursor: pointer; }
+.meta-opcion span { display: grid; }
+.meta-opcion small { color: var(--texto-suave); font-size: var(--texto-xs); }
+.meta-opcion:has(input:checked) { border-color: var(--azul-500); background: var(--azul-50); }
+.meta-opcion input { accent-color: var(--azul-600); }
+
+/* Final de lección: meta cumplida */
+.ruta-fin__meta { padding: var(--esp-3); border-radius: var(--radio); background: var(--verde-100); color: var(--verde-700); font-family: var(--fuente-titulo); font-weight: 800; }
+
 /* ---------- Insignias (antes «medallas») ---------- */
 .medallas {
     list-style: none;

@@ -820,6 +820,7 @@ CREATE TABLE `usuarios` (
   `zona_cambiada` date DEFAULT NULL,
   `recordatorio_racha` tinyint(1) NOT NULL DEFAULT 1,
   `posiciones_visible` tinyint(1) NOT NULL DEFAULT 1,
+  `meta_xp_diaria` smallint(6) NOT NULL DEFAULT 20,
   PRIMARY KEY (`id`),
   UNIQUE KEY `correo` (`correo`),
   UNIQUE KEY `google_id` (`google_id`),

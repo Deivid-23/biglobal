@@ -996,6 +996,7 @@ class RutaModel
             $c->rollBack();
             throw $e;
         }
-        return ["porcentaje" => $porcentaje, "xp" => $xp, "racha" => $racha, "primera" => !$previo];
+        $meta = $xp > 0 && GamificacionModel::conMeta($c) ? GamificacionModel::estadoMeta($c, $usuarioId, $xp) : null;
+        return ["porcentaje" => $porcentaje, "xp" => $xp, "racha" => $racha, "primera" => !$previo, "meta" => $meta];
     }
 }

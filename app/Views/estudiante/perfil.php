@@ -5,6 +5,7 @@
  *            $errores (["datos" => ?, "password" => ?]), $reglas, $estudiante,
  *            $suscripcion (Premium vigente, o null si es Gratuito),
  *            $enPosiciones (true/false si aparece en la tabla de posiciones; null si no existe),
+ *            $metaDiaria (XP de la meta diaria; null si no existe la columna),
  *            $zonas (GamificacionModel::zonasParaElegir), $zonaActual
  */
 $tienePassword = (int) $cuenta["tiene_password"] === 1;
@@ -206,6 +207,28 @@ $textoReglas = "Mínimo {$reglas['minimo']} caracteres"
             <button class="boton boton--secundario" type="submit">Guardar</button>
         </form>
     </section>
+
+    <?php if ($metaDiaria !== null): ?>
+    <!-- ================= META DIARIA ================= -->
+    <section class="perfil-tarjeta" id="meta" aria-labelledby="titulo-meta">
+        <h2 id="titulo-meta">Meta diaria</h2>
+        <p class="perfil-tarjeta__ayuda">¿Cuánto XP quieres ganar cada día? Lo verás en tu inicio. Una lección da unos 10 XP.</p>
+        <form method="POST" action="index.php?page=perfil">
+            <?= campoCsrf() ?>
+            <input type="hidden" name="accion" value="meta">
+            <fieldset class="meta-opciones">
+                <legend class="sr-only">Meta diaria</legend>
+                <?php foreach (GamificacionModel::METAS as $xpMeta => $nombreMeta): ?>
+                    <label class="meta-opcion">
+                        <input type="radio" name="meta_xp_diaria" value="<?= (int) $xpMeta ?>" <?= $xpMeta === $metaDiaria ? "checked" : "" ?>>
+                        <span><strong><?= e($nombreMeta) ?></strong><small><?= (int) $xpMeta ?> XP al día</small></span>
+                    </label>
+                <?php endforeach; ?>
+            </fieldset>
+            <button class="boton boton--secundario" type="submit">Guardar</button>
+        </form>
+    </section>
+    <?php endif; ?>
 
     <?php if ($enPosiciones !== null): ?>
     <!-- ================= PRIVACIDAD: tabla de posiciones ================= -->

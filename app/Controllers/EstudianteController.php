@@ -152,6 +152,13 @@ class EstudianteController
                     $_POST["password_nueva"] ?? "",
                     $_POST["password_confirmar"] ?? ""
                 );
+            } elseif ($accion === "meta") {
+                $ok = GamificacionModel::guardarMeta($conexion, $id, (int) ($_POST["meta_xp_diaria"] ?? 0));
+                $_SESSION["flash_estudiante"] = $ok
+                    ? ["tipo" => "exito", "mensaje" => "Listo: tu meta diaria ahora es de " . (int) $_POST["meta_xp_diaria"] . " XP."]
+                    : ["tipo" => "error", "mensaje" => "Elige una de las metas de la lista."];
+                header("Location: index.php?page=perfil#meta");
+                exit;
             } elseif ($accion === "posiciones") {
                 $visible = !empty($_POST["posiciones_visible"]);
                 PosicionesModel::guardarVisible($conexion, $id, $visible);
@@ -191,7 +198,8 @@ class EstudianteController
         $zonaActual = GamificacionModel::zonaDe($conexion, $id);
         $puedeProbar = Plan::puedeProbar($this->conexion, $this->usuarioId);
         $enPosiciones = PosicionesModel::disponible($conexion) ? PosicionesModel::visible($conexion, $id) : null;
-        $this->render("perfil", "perfil", "Mi perfil", compact("cuenta", "valores", "errores", "reglas", "suscripcion", "zonas", "zonaActual", "puedeProbar", "enPosiciones"));
+        $metaDiaria = GamificacionModel::conMeta($conexion) ? GamificacionModel::meta($conexion, $id) : null;
+        $this->render("perfil", "perfil", "Mi perfil", compact("cuenta", "valores", "errores", "reglas", "suscripcion", "zonas", "zonaActual", "puedeProbar", "enPosiciones", "metaDiaria"));
     }
 
     /** Guarda nombre, apellido y correo. Devuelve null si salió bien o el mensaje de error. */
@@ -353,6 +361,7 @@ class EstudianteController
         if (GamificacionModel::disponible($c)) {
             $gamificacion = GamificacionModel::obtenerResumen($c, $u);
             $gamificacion["insignias"] = InsigniaModel::delEstudiante($c, $u);
+            $gamificacion["meta"] = GamificacionModel::conMeta($c) ? GamificacionModel::estadoMeta($c, $u) : null;
         }
 
         $this->render("inicio", "inicio", "Inicio", [

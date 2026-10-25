@@ -81,5 +81,27 @@ $textoRecarga = !empty($g["recarga"]) ? "Se recargan el 1 de " . $meses[(int) su
             </p>
         </div>
     </div>
+    <?php if (!empty($g["meta"])): $m = $g["meta"]; $pctMeta = porcentaje(min($m["xpHoy"], $m["meta"]), $m["meta"]); $faltanMeta = max(0, $m["meta"] - $m["xpHoy"]); ?>
+    <!-- Meta de hoy (en la zona del estudiante) -->
+    <div class="juego__tarjeta juego__meta <?= $m["cumplida"] ? "es-cumplida" : "" ?>">
+        <span class="juego__icono" aria-hidden="true"><i class="fa-solid <?= $m["cumplida"] ? "fa-circle-check" : "fa-bullseye" ?>"></i></span>
+        <div class="juego__nivel-cuerpo">
+            <p class="juego__numero">
+                <span>Meta de hoy</span>
+                <span class="juego__xp numeros"><?= (int) $m["xpHoy"] ?> / <?= (int) $m["meta"] ?> XP</span>
+            </p>
+            <div class="progreso" role="progressbar" aria-valuemin="0" aria-valuemax="<?= (int) $m["meta"] ?>"
+                 aria-valuenow="<?= (int) min($m["xpHoy"], $m["meta"]) ?>" aria-label="XP de hoy para tu meta">
+                <div class="progreso__relleno" data-valor="<?= $pctMeta ?>" style="width: <?= $pctMeta ?>%"></div>
+            </div>
+            <p class="juego__texto">
+                <?= $m["cumplida"]
+                    ? "¡Meta cumplida! Mañana vuelve a empezar."
+                    : "Te faltan <span class=\"numeros\">" . (int) $faltanMeta . "</span> XP. Una lección más y lo logras." ?>
+                <a href="index.php?page=perfil#meta">Cambiar meta</a>
+            </p>
+        </div>
+    </div>
+    <?php endif; ?>
 </section>
 

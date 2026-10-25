@@ -488,6 +488,14 @@
         avance(100);
     }
 
+    /** Si el XP de recién cumplió la meta diaria, lo dice debajo del mensaje final. */
+    function avisarMeta(r) {
+        if (!r.meta || !r.meta.recienCumplida) return;
+        const mensaje = $("[data-fin-mensaje]");
+        const aviso = crear("p", "ruta-fin__meta", "¡Cumpliste tu meta del día! (" + r.meta.xpHoy + " de " + r.meta.meta + " XP)");
+        mensaje.insertAdjacentElement("afterend", aviso);
+    }
+
     /** Final del repaso de errores. */
     function terminarRepaso(r) {
         caja.hidden = true;
@@ -504,6 +512,7 @@
             : "¡Resolviste todos tus errores de este idioma!";
         const otro = $("[data-fin-otro]");
         if (otro) otro.hidden = r.quedan === 0;
+        avisarMeta(r);
         const fin = $("[data-fin]");
         fin.hidden = false;
         fin.querySelector("a").focus();
@@ -525,6 +534,7 @@
         $("[data-fin-mensaje]").textContent = r.porcentaje === 100
             ? "¡Perfecta! No fallaste ninguna."
             : (r.primera ? "Se abrió la siguiente lección de tu ruta." : "Buen repaso.");
+        avisarMeta(r);
         if (r.insignias && r.insignias.length) {
             const avisoInsignia = $("[data-fin-insignia]");
             avisoInsignia.querySelector("span").textContent = (r.insignias.length === 1 ? "¡Nueva insignia: " : "¡Nuevas insignias: ") + r.insignias.join(", ") + "!";

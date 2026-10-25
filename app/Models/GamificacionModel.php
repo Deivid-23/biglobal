@@ -455,6 +455,83 @@ class GamificacionModel
     }
 
     /* =========================================================
+       META DIARIA DE XP (database/meta_diaria.sql)
+       "Hoy" = el día del estudiante en su zona horaria. No da XP extra.
+    ========================================================= */
+
+    /** Metas que se pueden elegir: XP => nombre. */
+    public const METAS = [10 => "Relajada", 20 => "Normal", 30 => "Seria", 50 => "Intensa"];
+    public const META_DEFECTO = 20;
+
+    public static function conMeta(PDO $conexion): bool
+    {
+        static $hay = null;
+        if ($hay === null) {
+            try {
+                $hay = (int) $conexion->query("
+                    SELECT COUNT(*) FROM information_schema.columns
+                    WHERE table_schema = DATABASE() AND table_name = 'usuarios' AND column_name = 'meta_xp_diaria'
+                ")->fetchColumn() === 1;
+            } catch (Throwable $e) {
+                $hay = false;
+            }
+        }
+        return $hay;
+    }
+
+    public static function meta(PDO $conexion, int $usuarioId): int
+    {
+        if (!self::conMeta($conexion)) {
+            return self::META_DEFECTO;
+        }
+        $stmt = $conexion->prepare("SELECT meta_xp_diaria FROM usuarios WHERE id = ? LIMIT 1");
+        $stmt->execute([$usuarioId]);
+        $meta = (int) $stmt->fetchColumn();
+        return isset(self::METAS[$meta]) ? $meta : self::META_DEFECTO;
+    }
+
+    /** Solo acepta las metas de METAS. */
+    public static function guardarMeta(PDO $conexion, int $usuarioId, int $meta): bool
+    {
+        if (!self::conMeta($conexion) || !isset(self::METAS[$meta])) {
+            return false;
+        }
+        $conexion->prepare("UPDATE usuarios SET meta_xp_diaria = ? WHERE id = ?")->execute([$meta, $usuarioId]);
+        return true;
+    }
+
+    /** XP ganado hoy, contando desde la medianoche de la zona del estudiante. $ahora solo en las pruebas. */
+    public static function xpDeHoy(PDO $conexion, int $usuarioId, ?int $ahora = null): int
+    {
+        $zona = new DateTimeZone(self::zonaDe($conexion, $usuarioId));
+        $inicio = (new DateTimeImmutable("@" . ($ahora ?? time())))->setTimezone($zona)->setTime(0, 0);
+        $bd = new DateTimeZone("-05:00");   // la hora con la que guarda la base
+        $stmt = $conexion->prepare("SELECT COALESCE(SUM(puntos), 0) FROM xp_movimientos WHERE usuario_id = ? AND fecha >= ? AND fecha < ?");
+        $stmt->execute([
+            $usuarioId,
+            $inicio->setTimezone($bd)->format("Y-m-d H:i:s"),
+            $inicio->modify("+1 day")->setTimezone($bd)->format("Y-m-d H:i:s"),
+        ]);
+        return (int) $stmt->fetchColumn();
+    }
+
+    /**
+     * Meta del día para mostrar: meta, xpHoy, cumplida y "recienCumplida" si
+     * el XP que se acaba de ganar ($ganado) fue el que la cumplió.
+     */
+    public static function estadoMeta(PDO $conexion, int $usuarioId, int $ganado = 0): array
+    {
+        $meta = self::meta($conexion, $usuarioId);
+        $hoy = self::xpDeHoy($conexion, $usuarioId);
+        return [
+            "meta"           => $meta,
+            "xpHoy"          => $hoy,
+            "cumplida"       => $hoy >= $meta,
+            "recienCumplida" => $ganado > 0 && $hoy >= $meta && $hoy - $ganado < $meta,
+        ];
+    }
+
+    /* =========================================================
        RECORDATORIO DE RACHA (database/recordatorio_racha.sql)
        Lo lanza src/tareas/recordatorio_racha.php cada hora.
     ========================================================= */

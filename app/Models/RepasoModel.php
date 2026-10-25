@@ -161,6 +161,7 @@ class RepasoModel
             "quedan"    => self::pendientes($c, $usuarioId, $idiomaId),
             "xp"        => $xp,
             "racha"     => $racha,
+            "meta"      => $xp > 0 && GamificacionModel::conMeta($c) ? GamificacionModel::estadoMeta($c, $usuarioId, $xp) : null,
         ];
     }
 
