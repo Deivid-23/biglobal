@@ -81,3 +81,33 @@ foreach ($ejs as $e) {
     $bien = $bien && RutaModel::calificar($e, P::respuestaCorrecta($e))["correcto"] === true;
 }
 P::ver("los juegos de «Los medios de transporte» se califican bien con la respuesta correcta", $bien);
+
+// ---------- B1: nivel nuevo, oculto; sus unidades entran publicadas ----------
+$b1 = array_filter($ejercicios, fn($e) => $e["nivel"] === "B1");
+P::ver("el B1 de LSC trae sus 96 ejercicios", count($b1) === 96);
+$nivelB1 = $c->prepare("SELECT publicado FROM ruta_niveles WHERE idioma_id = ? AND codigo = 'B1'");
+$nivelB1->execute([$lsc]);
+P::ver("el nivel B1 de LSC sigue sin publicar", (string) $nivelB1->fetchColumn() === "0");
+P::ver("los ejercicios del B1 entran activos y en lecciones publicadas", !array_filter($b1, fn($e) => (int) $e["activo"] !== 1 || (int) $e["leccion_publicada"] !== 1 || (int) $e["unidad_publicada"] !== 1));
+
+$cortas = $c->query("
+    SELECT l.clave FROM ruta_lecciones l
+    WHERE l.clave LIKE 'lsc-b1-%'
+      AND (SELECT COUNT(*) FROM ruta_ejercicios e WHERE e.leccion_id = l.id AND " . RutaModel::condicionJugable("e") . ") < 4
+")->fetchAll(PDO::FETCH_COLUMN);
+$totalB1 = (int) $c->query("SELECT COUNT(*) FROM ruta_lecciones WHERE clave LIKE 'lsc-b1-%'")->fetchColumn();
+P::ver("las 16 lecciones del B1 tienen al menos 4 ejercicios jugables" . ($cortas ? " (" . implode(", ", $cortas) . ")" : ""), $totalB1 === 16 && !$cortas);
+
+// Todo lo jugable del B1 se califica bien con la respuesta correcta
+$malCalificados = [];
+foreach ($c->query("SELECT id FROM ruta_lecciones WHERE clave LIKE 'lsc-b1-%'")->fetchAll(PDO::FETCH_COLUMN) as $id) {
+    foreach (RutaModel::ejercicios($c, (int) $id, true) as $e) {
+        if (RutaModel::calificar($e, P::respuestaCorrecta($e))["correcto"] !== true) {
+            $malCalificados[] = $e["clave"];
+        }
+    }
+}
+P::ver("todo lo jugable del B1 se califica bien" . ($malCalificados ? " (" . implode(", ", $malCalificados) . ")" : ""), !$malCalificados);
+// Los íconos de todas las unidades están en la lista del admin (si no, al editar la unidad vuelve a fa-star)
+$iconosFuera = array_diff($c->query("SELECT DISTINCT icono FROM ruta_unidades")->fetchAll(PDO::FETCH_COLUMN), RutaModel::ICONOS);
+P::ver("los íconos de todas las unidades se pueden elegir en Admin › Ruta" . ($iconosFuera ? " (" . implode(", ", $iconosFuera) . ")" : ""), !$iconosFuera);
