@@ -78,16 +78,17 @@
                 <!-- Pestañas -->
                 <div class="pestanas" role="tablist" aria-label="Elige una opción" data-activa="login">
                     <button type="button" class="pestana" role="tab" id="tab-login"
-                            aria-selected="true" aria-controls="form-login">Iniciar sesión</button>
+                            aria-selected="true" aria-controls="panel-login">Iniciar sesión</button>
                     <button type="button" class="pestana" role="tab" id="tab-registro"
-                            aria-selected="false" aria-controls="form-register" tabindex="-1">Crear cuenta</button>
+                            aria-selected="false" aria-controls="panel-registro" tabindex="-1">Crear cuenta</button>
                 </div>
 
                 <!-- Mensajes de éxito o error (los lee también el lector de pantalla) -->
                 <div id="mensaje-auth" role="status" aria-live="polite"></div>
 
                 <!-- ============ INICIAR SESIÓN ============ -->
-                <form id="form-login" class="form-auth" role="tabpanel" aria-labelledby="tab-login" novalidate>
+                <div id="panel-login" role="tabpanel" aria-labelledby="tab-login">
+                <form id="form-login" class="form-auth" novalidate>
                     <h1 class="auth-title">¡Hola de nuevo!</h1>
                     <p class="auth-text">Entra para seguir con tus lecciones.</p>
 
@@ -119,9 +120,11 @@
                     <button type="submit" class="boton boton--primario boton--bloque">Iniciar sesión</button>
                     <input type="hidden" name="csrf_token" value="">
                 </form>
+                </div>
 
                 <!-- ============ CREAR CUENTA ============ -->
-                <form id="form-register" class="form-auth" role="tabpanel" aria-labelledby="tab-registro" novalidate hidden>
+                <div id="panel-registro" role="tabpanel" aria-labelledby="tab-registro" hidden>
+                <form id="form-register" class="form-auth" novalidate>
                     <h1 class="auth-title">Crea tu cuenta gratis</h1>
                     <p class="auth-text">Tu primera lección está a un minuto.</p>
 
@@ -218,6 +221,7 @@
                     <button type="submit" class="boton boton--primario boton--bloque">Crear cuenta</button>
                     <input type="hidden" name="csrf_token" value="">
                 </form>
+                </div>
 
                 <div class="separador">o continúa con</div>
 

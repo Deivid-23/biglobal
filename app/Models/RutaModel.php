@@ -46,6 +46,8 @@ class RutaModel
     ];
     /** Tipos que no se muestran sin video (el video es el ejercicio). */
     public const NECESITAN_VIDEO = ["sena", "deletreo"];
+    /** Tipos que se pueden saltar con «No puedo escuchar ahora» (sin contar como error). */
+    public const SIN_AUDIO = ["escuchar", "dictado"];
     public const NIVELES = ["A1", "A2", "B1", "B2", "C1"];
     public const XP_PERFECTA = 5;
     public const XP_PRACTICA = 2;
@@ -1054,6 +1056,18 @@ class RutaModel
     }
 
     /**
+     * «No puedo escuchar ahora»: solo para los tipos SIN_AUDIO. Devuelve lo
+     * que se muestra (saltado y la solución, para aprenderla) o un error.
+     */
+    public static function saltar(array $e): array
+    {
+        if (!in_array($e["tipo"], self::SIN_AUDIO, true)) {
+            return ["error" => "Este ejercicio no se puede saltar."];
+        }
+        return ["saltado" => true, "correcto" => false, "solucion" => self::calificar($e, "")["solucion"]];
+    }
+
+    /**
      * Empieza (o reinicia) el intento de una lección en la sesión.
      * $registro = id en ruta_intentos (RutaEstadisticasModel), o null.
      */
@@ -1072,10 +1086,13 @@ class RutaModel
 
     /**
      * Respuesta a UN ejercicio del intento en curso.
+     * Con $saltar («No puedo escuchar ahora», solo SIN_AUDIO) el ejercicio
+     * sale de la cola sin contar como error: no vuelve, no va al repaso y no
+     * cuenta para el porcentaje.
      * @return array correcto, solucion, siguiente (id o null), avance (0–100) y,
      *               al terminar, "resultado" (porcentaje, xp, racha, primera)
      */
-    public static function responder(PDO $c, int $usuarioId, int $leccionId, int $ejercicioId, $respuesta): array
+    public static function responder(PDO $c, int $usuarioId, int $leccionId, int $ejercicioId, $respuesta, bool $saltar = false): array
     {
         $intento = $_SESSION["ruta_intento"] ?? null;
         if (!$intento || (int) $intento["leccion"] !== $leccionId || !$intento["cola"]) {
@@ -1089,20 +1106,30 @@ class RutaModel
             return ["error" => "Ese ejercicio ya no existe. Vuelve a abrir la lección."];
         }
 
-        $r = self::calificar($e, $respuesta);
-        // Estadísticas: "primera" = todavía no lo había fallado en este intento
-        RutaEstadisticasModel::respuesta($c, $intento["registro"] ?? null, $ejercicioId, (bool) $r["correcto"], empty($intento["fallados"][$ejercicioId]));
-        if (!$r["correcto"]) {
-            RepasoModel::anotarFallo($c, $usuarioId, $ejercicioId);   // entra a su repaso de errores
-        }
-        array_shift($intento["cola"]);
-        if ($r["correcto"]) {
+        if ($saltar) {
+            $r = self::saltar($e);
+            if (isset($r["error"])) {
+                return $r;
+            }
+            // Ni acierto ni fallo: sale de la cola y del total (si ya lo había fallado, ese fallo se queda)
+            $intento["cola"] = array_values(array_filter($intento["cola"], fn($id) => (int) $id !== $ejercicioId));
             if (empty($intento["fallados"][$ejercicioId])) {
-                $intento["aciertos"]++;
+                $intento["total"]--;
             }
         } else {
-            $intento["fallados"][$ejercicioId] = true;
-            $intento["cola"][] = $ejercicioId;   // vuelve al final
+            $r = self::calificar($e, $respuesta);
+            // Estadísticas: "primera" = todavía no lo había fallado en este intento
+            RutaEstadisticasModel::respuesta($c, $intento["registro"] ?? null, $ejercicioId, (bool) $r["correcto"], empty($intento["fallados"][$ejercicioId]));
+            array_shift($intento["cola"]);
+            if ($r["correcto"]) {
+                if (empty($intento["fallados"][$ejercicioId])) {
+                    $intento["aciertos"]++;
+                }
+            } else {
+                RepasoModel::anotarFallo($c, $usuarioId, $ejercicioId);   // entra a su repaso de errores
+                $intento["fallados"][$ejercicioId] = true;
+                $intento["cola"][] = $ejercicioId;   // vuelve al final
+            }
         }
 
         $pendientes = count(array_unique($intento["cola"]));

@@ -82,8 +82,9 @@ function activarPestana(nombre, enfocar = true) {
     tabRegistro.setAttribute("aria-selected", String(esRegistro));
     tabLogin.tabIndex = esRegistro ? -1 : 0;
     tabRegistro.tabIndex = esRegistro ? 0 : -1;
-    formLogin.hidden = esRegistro;
-    formRegistro.hidden = !esRegistro;
+    // Se oculta el panel de la pestaña (role="tabpanel"), no solo el formulario
+    formLogin.parentElement.hidden = esRegistro;
+    formRegistro.parentElement.hidden = !esRegistro;
 
     document.title = (esRegistro ? "Crea tu cuenta" : "Inicia sesión") + " | BiGlobal";
     limpiarMensaje();

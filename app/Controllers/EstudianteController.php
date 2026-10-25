@@ -1270,7 +1270,7 @@ class EstudianteController
             } elseif ($accion === "terminar") {
                 $r = ["resultado" => ContrarrelojModel::terminar($this->conexion, $this->usuarioId)];
             } else {
-                $r = ContrarrelojModel::responder($this->conexion, $this->usuarioId, $idiomaId, (int) ($_POST["ejercicio_id"] ?? 0), $this->respuestaRuta());
+                $r = ContrarrelojModel::responder($this->conexion, $this->usuarioId, $idiomaId, (int) ($_POST["ejercicio_id"] ?? 0), $this->respuestaRuta(), null, $this->saltarRuta());
             }
         } catch (Throwable $e) {
             error_log("[BiGlobal][contrarreloj] " . $e->getMessage());
@@ -1335,7 +1335,7 @@ class EstudianteController
             $responder(["error" => "Vas muy rápido. Espera unos minutos."], 429);
         }
         try {
-            $r = RepasoModel::responder($this->conexion, $this->usuarioId, (int) ($_POST["idioma_id"] ?? 0), (int) ($_POST["ejercicio_id"] ?? 0), $this->respuestaRuta());
+            $r = RepasoModel::responder($this->conexion, $this->usuarioId, (int) ($_POST["idioma_id"] ?? 0), (int) ($_POST["ejercicio_id"] ?? 0), $this->respuestaRuta(), $this->saltarRuta());
         } catch (Throwable $e) {
             error_log("[BiGlobal][repaso] " . $e->getMessage());
             $responder(["error" => "No pudimos guardar tu respuesta. Inténtalo de nuevo."], 500);
@@ -1383,6 +1383,12 @@ class EstudianteController
         return $respuesta;
     }
 
+    /** «No puedo escuchar ahora»: el modelo valida que el ejercicio sea de escuchar o dictado. */
+    private function saltarRuta(): bool
+    {
+        return ($_POST["saltar"] ?? "") === "1";
+    }
+
     /** POST (fetch) con una respuesta. Contesta JSON. */
     public function rutaResponder(): void
     {
@@ -1404,7 +1410,7 @@ class EstudianteController
         $respuesta = $this->respuestaRuta();
 
         try {
-            $r = RutaModel::responder($this->conexion, $this->usuarioId, (int) ($_POST["leccion_id"] ?? 0), (int) ($_POST["ejercicio_id"] ?? 0), $respuesta);
+            $r = RutaModel::responder($this->conexion, $this->usuarioId, (int) ($_POST["leccion_id"] ?? 0), (int) ($_POST["ejercicio_id"] ?? 0), $respuesta, $this->saltarRuta());
             if (isset($r["resultado"])) {
                 $r["resultado"]["insignias"] = InsigniaModel::revisar($this->conexion, $this->usuarioId, "ruta");
             }

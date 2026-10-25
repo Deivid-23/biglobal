@@ -38,9 +38,9 @@
         <a class="boton boton--fantasma boton--bloque" href="<?= e($urlRuta) ?>">Ahora no</a>
     </section>
 
-    <section class="ruta-ejercicio" data-ejercicio hidden aria-live="polite"></section>
+    <section class="ruta-ejercicio" data-ejercicio hidden></section>
 
-    <div class="ruta-retro" data-retro hidden role="status">
+    <div class="ruta-retro" data-retro hidden>
         <p class="ruta-retro__titulo" data-retro-titulo></p>
         <p class="ruta-retro__solucion" data-retro-solucion></p>
     </div>

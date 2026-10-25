@@ -111,7 +111,7 @@ class ContrarrelojModel
     }
 
     /** Respuesta a UN ejercicio. Si se acabó el tiempo o la cola, devuelve "resultado". */
-    public static function responder(PDO $c, int $usuarioId, int $idiomaId, int $ejercicioId, $respuesta, ?int $ahora = null): array
+    public static function responder(PDO $c, int $usuarioId, int $idiomaId, int $ejercicioId, $respuesta, ?int $ahora = null, bool $saltar = false): array
     {
         $ahora = $ahora ?? time();
         $x = $_SESSION["ruta_contrarreloj"] ?? null;
@@ -125,11 +125,20 @@ class ContrarrelojModel
             return ["error" => "Responde los ejercicios en orden.", "siguiente" => $x["cola"][0] ?? null];
         }
         $e = RutaModel::ejercicio($c, $ejercicioId);
-        $r = $e ? RutaModel::calificar($e, $respuesta) : ["correcto" => false, "solucion" => ""];
-        array_shift($x["cola"]);
-        $x["respondidas"]++;
-        if ($r["correcto"]) {
-            $x["aciertos"]++;
+        if ($saltar) {
+            // «No puedo escuchar ahora»: pasa al siguiente sin sumar ni restar
+            $r = $e ? RutaModel::saltar($e) : ["error" => "Este ejercicio no se puede saltar."];
+            if (isset($r["error"])) {
+                return $r + ["siguiente" => $x["cola"][0]];
+            }
+            array_shift($x["cola"]);
+        } else {
+            $r = $e ? RutaModel::calificar($e, $respuesta) : ["correcto" => false, "solucion" => ""];
+            array_shift($x["cola"]);
+            $x["respondidas"]++;
+            if ($r["correcto"]) {
+                $x["aciertos"]++;
+            }
         }
         $_SESSION["ruta_contrarreloj"] = $x;
         $r["aciertos"] = $x["aciertos"];

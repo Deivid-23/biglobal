@@ -1289,7 +1289,7 @@ button.est-nav__enlace { width: 100%; border: 0; background: none; cursor: point
 .aviso-item__titulo { display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-2); font-family: var(--fuente-titulo); font-weight: 800; overflow-wrap: anywhere; }
 .aviso-item__titulo a { color: inherit; }
 .aviso-item__texto { margin-top: var(--esp-1); color: var(--texto-suave); font-size: var(--texto-sm); line-height: 1.6; overflow-wrap: anywhere; }
-.aviso-item__fecha { display: block; margin-top: var(--esp-1); color: var(--texto-tenue); font-size: var(--texto-xs); }
+.aviso-item__fecha { display: block; margin-top: var(--esp-1); color: var(--texto-suave); font-size: var(--texto-xs); }
 @media (prefers-reduced-motion: reduce) { .est-icono-boton, .est-lateral, .est-velo { transition: none; } }
 
 /* ---------- Perfil: tarjeta "Correos" (no hay panel.css en el estudiante) ---------- */
@@ -1487,9 +1487,10 @@ button.est-nav__enlace { width: 100%; border: 0; background: none; cursor: point
     background: rgba(255, 255, 255, 0.18);
     font-size: 1.3rem;
 }
-.ruta-unidad__numero { font-size: var(--texto-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.85; }
+/* Texto blanco sin transparencia: sobre el azul debe llegar a 4.5:1 */
+.ruta-unidad__numero { font-size: var(--texto-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
 .ruta-unidad h3 { font-size: var(--texto-lg); font-weight: 800; overflow-wrap: anywhere; }
-.ruta-unidad__cabecera p:not(.ruta-unidad__numero) { font-size: var(--texto-sm); opacity: 0.9; }
+.ruta-unidad__cabecera p:not(.ruta-unidad__numero) { font-size: var(--texto-sm); }
 
 /* El camino en zigzag */
 .ruta-camino { list-style: none; margin: var(--esp-6) 0 0; padding: 0; display: grid; gap: var(--esp-5); justify-items: center; }
@@ -1620,6 +1621,19 @@ a.ruta-nodo__boton:active { transform: translateY(4px); box-shadow: 0 2px 0 var(
 .ruta-emparejar__columna { display: grid; gap: var(--esp-3); align-content: start; }
 .ruta-ficha--par { width: 100%; overflow-wrap: anywhere; }
 .ruta-ficha.es-marcada { border-color: var(--azul-600); background: var(--azul-50); }
+/* Número de la pareja: así no depende solo del color */
+.ruta-ficha__par {
+    display: inline-grid;
+    place-items: center;
+    min-width: 1.5em;
+    height: 1.5em;
+    margin-right: var(--esp-2);
+    border: 2px solid currentColor;
+    border-radius: 50%;
+    font-size: var(--texto-xs);
+    font-weight: 800;
+    line-height: 1;
+}
 .ruta-ficha[data-par="1"] { border-color: var(--azul-600);   background: var(--azul-100);    color: var(--azul-800); }
 .ruta-ficha[data-par="2"] { border-color: var(--verde-700);  background: var(--verde-100);   color: var(--verde-700); }
 .ruta-ficha[data-par="3"] { border-color: var(--naranja-700); background: var(--naranja-100); color: var(--naranja-700); }
@@ -1685,6 +1699,11 @@ a.ruta-nodo__boton:active { transform: translateY(4px); box-shadow: 0 2px 0 var(
 .ruta-retro { margin-top: var(--esp-5); padding: var(--esp-4); border-radius: var(--radio-lg); }
 .ruta-retro--bien { background: var(--verde-100); color: var(--verde-700); }
 .ruta-retro--mal, .ruta-retro--error { background: var(--rojo-100); color: var(--rojo-700); }
+.ruta-retro--saltado { background: var(--neutro-100); color: var(--texto); }
+.ruta-retro__titulo i { margin-right: var(--esp-1); }
+
+/* «No puedo escuchar ahora» */
+.ruta-saltar { display: flex; margin: var(--esp-4) auto 0; }
 .ruta-retro__titulo { font-family: var(--fuente-titulo); font-weight: 800; font-size: var(--texto-lg); }
 .ruta-retro__solucion { margin-top: var(--esp-1); font-weight: 700; overflow-wrap: anywhere; }
 

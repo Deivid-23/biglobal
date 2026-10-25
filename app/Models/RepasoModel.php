@@ -103,7 +103,7 @@ class RepasoModel
      * @return array correcto, solucion, siguiente (id o null), avance (0–100) y,
      *               al terminar, "resultado" (resueltos, total, quedan, xp, racha)
      */
-    public static function responder(PDO $c, int $usuarioId, int $idiomaId, int $ejercicioId, $respuesta): array
+    public static function responder(PDO $c, int $usuarioId, int $idiomaId, int $ejercicioId, $respuesta, bool $saltar = false): array
     {
         $x = $_SESSION["ruta_repaso"] ?? null;
         if (!$x || (int) $x["idioma"] !== $idiomaId || !$x["cola"]) {
@@ -119,12 +119,21 @@ class RepasoModel
             return ["error" => "Ese ejercicio ya no existe.", "siguiente" => $x["cola"][0] ?? null];
         }
 
-        $r = RutaModel::calificar($e, $respuesta);
-        if ($r["correcto"]) {
-            $c->prepare("UPDATE ruta_repaso SET resuelto_en = NOW() WHERE usuario_id = ? AND ejercicio_id = ?")->execute([$usuarioId, $ejercicioId]);
-            $x["resueltos"]++;
+        if ($saltar) {
+            // «No puedo escuchar ahora»: sigue en la lista para otro día y no cuenta en el total
+            $r = RutaModel::saltar($e);
+            if (isset($r["error"])) {
+                return $r;
+            }
+            $x["total"]--;
         } else {
-            $c->prepare("UPDATE ruta_repaso SET fallado_en = NOW() WHERE usuario_id = ? AND ejercicio_id = ?")->execute([$usuarioId, $ejercicioId]);
+            $r = RutaModel::calificar($e, $respuesta);
+            if ($r["correcto"]) {
+                $c->prepare("UPDATE ruta_repaso SET resuelto_en = NOW() WHERE usuario_id = ? AND ejercicio_id = ?")->execute([$usuarioId, $ejercicioId]);
+                $x["resueltos"]++;
+            } else {
+                $c->prepare("UPDATE ruta_repaso SET fallado_en = NOW() WHERE usuario_id = ? AND ejercicio_id = ?")->execute([$usuarioId, $ejercicioId]);
+            }
         }
         array_shift($x["cola"]);   // en el repaso un fallo no se repite: queda para otro día
 
